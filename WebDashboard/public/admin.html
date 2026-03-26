@@ -118,23 +118,8 @@
                     </div>
                 </div>
 
-                <div class="devices-list-panel glass-panel">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Device ID</th>
-                                <th>Owner / Info</th>
-                                <th>OS / Specs</th>
-                                <th>Hardware (CPU & GPU)</th>
-                                <th>Status</th>
-                                <th>Last Seen</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="devicesTableBody">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
+                <div id="devicesList" class="devices-grid">
+                    <!-- Cards populated dynamically -->
                 </div>
             </section>
 
@@ -483,7 +468,7 @@
                 renderDevices(devices);
             } catch (err) {
                 console.error(err);
-                document.getElementById('devicesTableBody').innerHTML = `<tr><td colspan="5" class="text-danger">Failed to connect to backend server.</td></tr>`;
+                document.getElementById('devicesList').innerHTML = `<div class="loading-state text-danger">Failed to connect to backend server.</div>`;
             }
         }
 
@@ -506,44 +491,62 @@
         }
 
         function renderDevices(devices) {
-            const tbody = document.getElementById('devicesTableBody');
-            tbody.innerHTML = '';
-            if(!devices || devices.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-dim">No devices registered yet.</td></tr>`;
-                return;
-            }
+            const devicesList = document.getElementById('devicesList');
+            devicesList.innerHTML = '';
+
             devices.forEach(dev => {
-                const tr = document.createElement('tr');
+                const card = document.createElement('div');
+                card.className = 'device-card glass-panel';
+                if (dev.status === 'suspended') {
+                    card.style.borderTop = '3px solid var(--danger)';
+                    card.style.opacity = '0.86';
+                }
+                
                 const dateStr = new Date(dev.lastSeen).toLocaleString();
                 const statusBadge = dev.status === 'active' 
-                    ? '<span class="badge" style="background: rgba(16,185,129,0.15); color: var(--success);">Active</span>' 
+                    ? '<span class="badge" style="background: rgba(16,185,129,0.15); color: var(--success);">Online / Active</span>' 
                     : '<span class="badge" style="background: rgba(239,68,68,0.15); color: var(--danger);">Suspended</span>';
-                
-                const hardwareInfo = `
-                    <div style="font-size: 11px; opacity: 0.8;">CPU: ${dev.cpu || 'N/A'}</div>
-                    <div style="font-size: 11px; opacity: 0.8;">GPU: ${dev.gpu || 'N/A'}</div>
-                `;
 
-                tr.innerHTML = `
-                    <td style="font-family: monospace; font-size: 11px; color: var(--accent-blue); max-width: 120px; overflow: hidden; text-overflow: ellipsis;">${dev.deviceId}</td>
-                    <td style="font-weight: 600;">
-                        <div>${dev.ownerInfo || 'Pending Setup'}</div>
-                        <div style="font-size: 11px; color: var(--accent-blue); font-weight: 400;">${dev.deviceModel || ''}</div>
-                    </td>
-                    <td>
-                        <div style="font-size: 13px;">${dev.os || 'Unknown OS'}</div>
-                        <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700;">${dev.ram || '0 GB'} RAM</div>
-                    </td>
-                    <td>${hardwareInfo}</td>
-                    <td>${statusBadge}</td>
-                    <td style="font-size: 12px; color: var(--text-dim);">${dateStr}</td>
-                    <td>
-                        <button class="btn-secondary" style="padding: 5px 12px; font-size: 12px; color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; border-color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'};" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
-                            ${dev.status === 'active' ? 'Suspend' : 'Activate'}
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div>
+                            <div class="owner-name">${dev.ownerInfo || 'New VR Headset'}</div>
+                            <div class="device-id">${dev.deviceId}</div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+
+                    <div style="font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-bottom: -5px; padding-left: 5px;">
+                        ${dev.deviceModel || 'General VR Model'}
+                    </div>
+
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">OS</span>
+                            <span class="spec-value">${dev.os || 'N/A'}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">RAM</span>
+                            <span class="spec-value">${dev.ram || 'N/A'}</span>
+                        </div>
+                        <div class="spec-item" style="grid-column: span 2;">
+                            <span class="spec-label">CPU / Processor</span>
+                            <span class="spec-value" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${dev.cpu || ''}">${dev.cpu || 'Unknown CPU'}</span>
+                        </div>
+                        <div class="spec-item" style="grid-column: span 2;">
+                            <span class="spec-label">GPU / Graphics</span>
+                            <span class="spec-value" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${dev.gpu || ''}">${dev.gpu || 'Unknown GPU'}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="last-seen">Last: ${dateStr}</div>
+                        <button class="btn-secondary" style="color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; border-color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; padding: 8px 18px; font-weight: 700;" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                            ${dev.status === 'active' ? 'Suspend Access' : 'Reactivate Device'}
                         </button>
-                    </td>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                devicesList.appendChild(card);
             });
         }
 
