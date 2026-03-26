@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroTwin XR | Immersive Aviation Training</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+
+    <!-- ─── INTRO VIDEO OVERLAY ─── -->
+    <div id="introOverlay">
+        <video id="introVid" autoplay muted playsinline>
+            <source src="intro.mp4" type="video/mp4">
+        </video>
+        <button id="skipBtn" onclick="skipIntro()">Skip Intro ✕</button>
+    </div>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav id="navbar">
+        <a href="#" class="nav-logo">
+            <img src="logo.png" alt="AeroTwin Logo">
+            AeroTwin XR
+        </a>
+        <ul class="nav-links">
+            <li class="hide-mobile"><a href="#features">Features</a></li>
+            <li class="hide-mobile"><a href="#showcase">Showcase</a></li>
+            <li><a href="/admin" class="btn-primary" style="padding: 10px 20px;">Instructor Portal ➔</a></li>
+        </ul>
+    </nav>
+
+    <!-- ─── HERO SECTION ─── -->
+    <section class="hero" id="home">
+        <h1 class="text-gradient">The Future of Aviation Maintenance</h1>
+        <p>Step inside an ultra-realistic virtual environment. Validate skills, diagnose engines, and master critical safety procedures with AI-driven analytics.</p>
+        <a href="#showcase" class="btn-primary" style="text-decoration: none; display: inline-block;">Experience the Platform</a>
+    </section>
+
+    <!-- ─── VR SHOWCASE (MOBILE OPTIMIZED) ─── -->
+    <section id="showcase" class="vr-showcase glass-panel">
+        <div class="vr-video-wrapper">
+            <div class="vr-frame"></div>
+            <!-- In the future, this can be an actual gameplay video -->
+            <video autoplay loop muted playsinline>
+                <source src="intro.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+            <h3 style="font-family: var(--font-heading); font-size: 24px; color: white;">Hyper-Realistic Engine Diagnosis</h3>
+            <p class="text-dim" style="margin-top: 10px;">Train on true-to-life turbofan engines with real-time telemetry.</p>
+        </div>
+    </section>
+
+    <!-- ─── PUBLIC LEADERBOARD / REPORTS ─── -->
+    <section id="leaderboard" class="features" style="padding-top: 40px; padding-bottom: 40px;">
+        <h2 class="section-title text-gradient" style="margin-bottom: 30px;">Trainee Leaderboard</h2>
+        <p class="text-center text-dim" style="margin-bottom: 40px;">Live performance metrics of recent maintenance sessions.</p>
+        
+        <div class="reports-grid" id="publicReportsList">
+            <div class="loading-state text-center text-dim">Loading live data from MongoDB Atlas...</div>
+        </div>
+    </section>
+
+    <!-- ─── FEATURES GRID ─── -->
+    <section id="features" class="features">
+        <h2 class="section-title text-gradient">Unparalleled Training Metrics</h2>
+        
+        <div class="features-grid">
+            <div class="feat-card glass-panel">
+                <div class="feat-icon">🎯</div>
+                <h3 class="text-gradient">Precision Accuracy</h3>
+                <p class="text-dim">Real-time tracking of tool usage, parts inspected, and diagnostic accuracy with millimeter precision.</p>
+            </div>
+            
+            <div class="feat-card glass-panel">
+                <div class="feat-icon">🛡️</div>
+                <h3 class="text-gradient">Safety Protocols</h3>
+                <p class="text-dim">Measure adherence to strict safety procedures, including fire extinguishing and risk mitigation.</p>
+            </div>
+            
+            <div class="feat-card glass-panel">
+                <div class="feat-icon">🤖</div>
+                <h3 class="text-gradient">Gemini AI Tutor</h3>
+                <p class="text-dim">An intelligent virtual assistant guides trainees, answers questions in real-time, and provides final evaluations.</p>
+            </div>
+            
+            <div class="feat-card glass-panel">
+                <div class="feat-icon">📊</div>
+                <h3 class="text-gradient">Instructor Portal</h3>
+                <p class="text-dim">A secure, comprehensive dashboard for instructors to review trainee sessions, chat logs, and telemetry.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer style="text-align: center; padding: 40px; border-top: 1px solid var(--border-glass); margin-top: 80px;">
+        <img src="logo.png" alt="Logo" style="height: 40px; margin-bottom: 20px; opacity: 0.5;">
+        <p class="text-dim">© 2026 AeroTwin XR built by TechNest. All rights reserved.</p>
+    </footer>
+
+    <!-- ─── SCRIPTS ─── -->
+    <script>
+        // Intro Video Logic
+        const introOverlay = document.getElementById('introOverlay');
+        const introVid = document.getElementById('introVid');
+        
+        function skipIntro() {
+            introOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                introOverlay.style.display = 'none';
+                introVid.pause();
+            }, 1000);
+        }
+
+        introVid.onended = skipIntro;
+
+        // Auto-skip logic for debugging or if video fails
+        setTimeout(skipIntro, 12000); 
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Fetch Public Reports
+        async function fetchPublicReports() {
+            try {
+                const res = await fetch('/api/reports');
+                const reports = await res.json();
+                
+                const container = document.getElementById('publicReportsList');
+                container.innerHTML = '';
+
+                if (!Array.isArray(reports) || reports.length === 0) {
+                    container.innerHTML = `<div class="loading-state text-dim" style="grid-column: 1/-1;">No public records available yet.</div>`;
+                    return;
+                }
+
+                // Show top 6 most recent
+                reports.slice(0, 6).forEach(r => {
+                    const scoreClass = r.score >= 80 ? 'green' : (r.score >= 50 ? 'orange' : 'red');
+                    const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
+
+                    const card = document.createElement('div');
+                    card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
+                    card.innerHTML = `
+                        <div class="rc-header">
+                            <div>
+                                <div class="rc-title">${r.trainee_name}</div>
+                                <div class="rc-meta">Doctor Code: <span class="badge blue">${r.doctor_code || 'N/A'}</span></div>
+                            </div>
+                            <div class="rc-score ${scoreClass}">${r.score || 0}%</div>
+                        </div>
+
+                        <div class="rc-stats-grid">
+                            <div class="stat-box">
+                                <span class="label">Safety</span>
+                                <span class="val">${Math.round(r.safety_score || 0)}%</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="label">Speed</span>
+                                <span class="val">${Math.round(r.speed_score || 0)}%</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="label">Tasks</span>
+                                <span class="val">${r.tasks_completed || 0}/${r.total_tasks || 7}</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="label">Parts</span>
+                                <span class="val">${r.parts_inspected_count || 0}</span>
+                            </div>
+                        </div>
+
+                        <div class="rc-telemetry" style="margin-top: 15px;">
+                            <div>🚩 Fault: <span>${r.fault_type || 'N/A'}</span></div>
+                            <div>🔥 Temp: <span class="${r.temp > 800 ? 'text-danger' : ''}">${r.temp?.toFixed(1) || 0}°C</span></div>
+                            <div>🗜 Vib: <span class="${r.vibration > 5 ? 'text-danger' : ''}">${r.vibration?.toFixed(2) || 0} ips</span></div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                document.getElementById('publicReportsList').innerHTML = `<div class="loading-state text-danger" style="grid-column: 1/-1;">Could not fetch reports from server.</div>`;
+            }
+        }
+
+        // Initialize fetching
+        fetchPublicReports();
+    </script>
+</body>
+</html>
