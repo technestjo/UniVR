@@ -365,7 +365,7 @@ app.post('/api/device/stream', (req, res) => {
 });
 
 // Retrieve latest frame for Admin Dashboard (ADMIN PROTECTED)
-app.get('/api/device/stream/:deviceId', authenticateAdmin, (req, res) => {
+app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
     const frame = deviceFrames[req.params.deviceId];
     if (!frame) return res.status(404).json({ error: 'No live stream available' });
     
