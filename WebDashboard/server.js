@@ -367,14 +367,14 @@ app.post('/api/device/stream', (req, res) => {
 // Retrieve latest frame for Admin Dashboard (ADMIN PROTECTED)
 app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
     const frame = deviceFrames[req.params.deviceId];
-    if (!frame) return res.status(404).json({ error: 'No live stream available' });
     
-    // Auto-timeout frame if older than 10 seconds
-    if (Date.now() - frame.timestamp > 10000) {
-        return res.status(404).json({ error: 'Stream offline' });
+    // If no frame exists or it's older than 10 seconds -> Return "Offline" status (No 404 to avoid console Clutter)
+    if (!frame || (Date.now() - frame.timestamp > 10000)) {
+        return res.json({ status: 'offline' });
     }
 
     res.json({ 
+        status: 'online',
         frame: frame.data,
         timestamp: frame.timestamp
     });

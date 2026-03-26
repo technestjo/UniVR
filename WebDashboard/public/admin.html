@@ -642,16 +642,22 @@
                     const res = await fetch(`/api/device/stream/${deviceId}`, {
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
-                    if (!res.ok) throw new Error('Offline');
+                    if (!res.ok) throw new Error('Network Error');
                     const data = await res.json();
-                    frameImg.src = `data:image/jpeg;base64,${data.frame}`;
-                    statusText.innerText = `● LIVE (Last: ${new Date(data.timestamp).toLocaleTimeString()})`;
-                    statusText.style.color = 'var(--success)';
+                    
+                    if (data.status === 'online') {
+                        frameImg.src = `data:image/jpeg;base64,${data.frame}`;
+                        statusText.innerText = `● LIVE (Last: ${new Date(data.timestamp).toLocaleTimeString()})`;
+                        statusText.style.color = 'var(--success)';
+                    } else {
+                        statusText.innerText = '● STREAM OFFLINE / WAITING';
+                        statusText.style.color = 'var(--danger)';
+                    }
                 } catch (err) {
                     statusText.innerText = '● STREAM OFFLINE / WAITING';
                     statusText.style.color = 'var(--danger)';
                 }
-            }, 200); // 5 FPS
+            }, 100); // 10 FPS (High-speed sync)
         }
 
         function closeLiveStream() {
