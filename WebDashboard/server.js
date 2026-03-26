@@ -4,10 +4,28 @@ const path = require('path');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'AeroTwinXR_SuperSecretKey_2026';
+const DEVICE_STREAM_SECRET = 'AeroTwin_Device_Stream_Secure_Key_9988';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://technestjo_db_user:QqaoVP8GaFQiCWID@cluster0.2evazsh.mongodb.net/univr?retryWrites=true&w=majority';
+
+// ─── SECURITY MIDDLEWARE ───
+app.use(helmet({
+    contentSecurityPolicy: false, // Allow data URLs for images
+}));
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply rate limiting specifically to streaming and login
+app.use('/api/admin/login', limiter);
 
 // In-memory storage for latest device frames (Live Stream)
 const deviceFrames = {};
@@ -183,11 +201,12 @@ function calculateScore(data) {
 
 // ─── ADMIN API ROUTES ───
 
-// Admin Login
+// Admin Login (HARDENED)
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    // Hardcoded credentials as requested by user ("admin" / "admin123")
-    if (username === 'admin' && password === 'admin123') {
+    
+    // High-security credentials
+    if (username === 'AeroTwin_SuperAdmin' && password === 'XR_Secure_Admin_Access_Pass_2026!!') {
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ success: true, token });
     } else {
@@ -329,6 +348,13 @@ app.listen(PORT, () => {
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
     const { deviceId, frameBase64 } = req.body;
+    const deviceSecret = req.headers['x-device-secret'];
+
+    // Security Check: Ensure only authenticated devices can stream
+    if (deviceSecret !== DEVICE_STREAM_SECRET) {
+        return res.status(403).json({ error: 'Invalid device secret' });
+    }
+
     if (!deviceId || !frameBase64) return res.status(400).send('Missing data');
 
     deviceFrames[deviceId] = {
@@ -338,12 +364,12 @@ app.post('/api/device/stream', (req, res) => {
     res.json({ success: true });
 });
 
-// Retrieve latest frame for Admin Dashboard
-app.get('/api/device/stream/:deviceId', (req, res) => {
+// Retrieve latest frame for Admin Dashboard (ADMIN PROTECTED)
+app.get('/api/device/stream/:deviceId', authenticateAdmin, (req, res) => {
     const frame = deviceFrames[req.params.deviceId];
     if (!frame) return res.status(404).json({ error: 'No live stream available' });
     
-    // Auto-timeout frame if older than 10 seconds (device offline/stopped streaming)
+    // Auto-timeout frame if older than 10 seconds
     if (Date.now() - frame.timestamp > 10000) {
         return res.status(404).json({ error: 'Stream offline' });
     }

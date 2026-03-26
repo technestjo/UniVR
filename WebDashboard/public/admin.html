@@ -20,12 +20,12 @@
             backdrop-filter: blur(10px);
         }
         #liveStreamModal img {
-            max-width: 90%;
-            max-height: 80%;
+            max-width: 95%;
+            max-height: 90%;
             border: 2px solid var(--accent-blue);
-            box-shadow: 0 0 30px rgba(0,186,242,0.4);
-            border-radius: 8px;
-            background: #111;
+            box-shadow: 0 0 40px rgba(0,186,242,0.5);
+            border-radius: 12px;
+            background: #000;
         }
         .stream-controls {
             margin-top: 20px;
@@ -639,7 +639,9 @@
             if(streamInterval) clearInterval(streamInterval);
             streamInterval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/api/device/stream/${deviceId}`);
+                    const res = await fetch(`/api/device/stream/${deviceId}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
                     if (!res.ok) throw new Error('Offline');
                     const data = await res.json();
                     frameImg.src = `data:image/jpeg;base64,${data.frame}`;
@@ -649,7 +651,7 @@
                     statusText.innerText = '● STREAM OFFLINE / WAITING';
                     statusText.style.color = 'var(--danger)';
                 }
-            }, 500); // 2 FPS
+            }, 200); // 5 FPS
         }
 
         function closeLiveStream() {
