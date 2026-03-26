@@ -6,8 +6,49 @@
     <title>AeroTwin XR | Admin Portal</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        /* Live Stream Modal */
+        #liveStreamModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        #liveStreamModal img {
+            max-width: 90%;
+            max-height: 80%;
+            border: 2px solid var(--accent-blue);
+            box-shadow: 0 0 30px rgba(0,186,242,0.4);
+            border-radius: 8px;
+            background: #111;
+        }
+        .stream-controls {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+    </style>
 </head>
 <body class="admin-body">
+
+    <!-- Live Stream Modal -->
+    <div id="liveStreamModal">
+        <h2 id="streamTitle" style="color: var(--accent-blue); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;">LIVE VR FEED</h2>
+        <img id="liveFrame" src="" alt="Waiting for stream...">
+        <div class="stream-controls">
+            <span id="streamStatus" style="color: var(--text-dim); font-size: 14px; font-weight: 600;">Connecting...</span>
+            <button class="btn-secondary" onclick="closeLiveStream()" style="border-color: var(--danger); color: var(--danger); padding: 8px 25px; border-radius: 20px;">Close Feed</button>
+        </div>
+    </div>
 
     <!-- ─── LOGIN OVERLAY ─── -->
     <div id="loginOverlay" class="admin-login-overlay">
@@ -541,9 +582,14 @@
 
                     <div class="card-footer">
                         <div class="last-seen">Last: ${dateStr}</div>
-                        <button class="btn-secondary" style="color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; border-color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; padding: 8px 18px; font-weight: 700;" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
-                            ${dev.status === 'active' ? 'Suspend Access' : 'Reactivate Device'}
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-secondary" style="padding: 8px 12px;" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">
+                                📡 View Live
+                            </button>
+                            <button class="btn-secondary" style="color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; border-color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; padding: 8px 18px; font-weight: 700;" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                                ${dev.status === 'active' ? 'Suspend Access' : 'Reactivate Device'}
+                            </button>
+                        </div>
                     </div>
                 `;
                 devicesList.appendChild(card);
@@ -577,6 +623,39 @@
         }
         window.onclick = function(e){ if(e.target == document.getElementById('chatModal')) closeModal(); }
 
+        /* Live Stream Logic */
+        let streamInterval = null;
+        async function openLiveStream(deviceId, name) {
+            document.getElementById('liveStreamModal').style.display = 'flex';
+            document.getElementById('streamTitle').innerText = `LIVE FEED: ${name.toUpperCase()}`;
+            
+            const frameImg = document.getElementById('liveFrame');
+            const statusText = document.getElementById('streamStatus');
+            
+            statusText.innerText = "Connecting to device...";
+            statusText.style.color = "var(--text-dim)";
+
+            // Poll for new frames
+            if(streamInterval) clearInterval(streamInterval);
+            streamInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/device/stream/${deviceId}`);
+                    if (!res.ok) throw new Error('Offline');
+                    const data = await res.json();
+                    frameImg.src = `data:image/jpeg;base64,${data.frame}`;
+                    statusText.innerText = `● LIVE (Last: ${new Date(data.timestamp).toLocaleTimeString()})`;
+                    statusText.style.color = 'var(--success)';
+                } catch (err) {
+                    statusText.innerText = '● STREAM OFFLINE / WAITING';
+                    statusText.style.color = 'var(--danger)';
+                }
+            }, 500); // 2 FPS
+        }
+
+        function closeLiveStream() {
+            clearInterval(streamInterval);
+            document.getElementById('liveStreamModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

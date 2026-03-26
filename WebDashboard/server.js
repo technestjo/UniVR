@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'AeroTwinXR_SuperSecretKey_2026';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://technestjo_db_user:QqaoVP8GaFQiCWID@cluster0.2evazsh.mongodb.net/univr?retryWrites=true&w=majority';
 
+// In-memory storage for latest device frames (Live Stream)
+const deviceFrames = {};
+
 // ─── MIDDLEWARE ───
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -319,4 +322,34 @@ app.get('/admin', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 AeroTwin XR Dashboard running on port ${PORT}`);
+});
+
+// === Live Stream Endpoints ===
+
+// Upload a frame from VR Device (Base64 JPG)
+app.post('/api/device/stream', (req, res) => {
+    const { deviceId, frameBase64 } = req.body;
+    if (!deviceId || !frameBase64) return res.status(400).send('Missing data');
+
+    deviceFrames[deviceId] = {
+        data: frameBase64,
+        timestamp: Date.now()
+    };
+    res.json({ success: true });
+});
+
+// Retrieve latest frame for Admin Dashboard
+app.get('/api/device/stream/:deviceId', (req, res) => {
+    const frame = deviceFrames[req.params.deviceId];
+    if (!frame) return res.status(404).json({ error: 'No live stream available' });
+    
+    // Auto-timeout frame if older than 10 seconds (device offline/stopped streaming)
+    if (Date.now() - frame.timestamp > 10000) {
+        return res.status(404).json({ error: 'Stream offline' });
+    }
+
+    res.json({ 
+        frame: frame.data,
+        timestamp: frame.timestamp
+    });
 });
