@@ -44,9 +44,18 @@ mongoose.connect(MONGO_URI)
 const DoctorSchema = new mongoose.Schema({
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
+    password: { type: String, required: true, default: '123456' },
     createdAt: { type: Date, default: Date.now }
 });
 const Doctor = mongoose.model('Doctor', DoctorSchema);
+
+const ContentSchema = new mongoose.Schema({
+    page: { type: String, required: true },
+    key: { type: String, required: true, unique: true },
+    content: { type: String, required: true },
+    updatedAt: { type: Date, default: Date.now }
+});
+const Content = mongoose.model('Content', ContentSchema);
 
 const ReportSchema = new mongoose.Schema({
     timestamp: { type: String },
@@ -201,23 +210,36 @@ function calculateScore(data) {
 
 // ─── ADMIN API ROUTES ───
 
-// Admin Login (HARDENED)
-app.post('/api/admin/login', (req, res) => {
+// Admin & Doctor Login (Unified)
+app.post('/api/admin/login', async (req, res) => {
     const { username, password } = req.body;
     
-    // High-security credentials
+    // High-security credentials for Admin
     if (username === 'AeroTwin_SuperAdmin' && password === 'XR_Secure_Admin_Access_Pass_2026!!') {
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
-        res.json({ success: true, token });
-    } else {
-        res.status(401).json({ success: false, message: "Invalid username or password" });
-    }
+        return res.json({ success: true, token, role: 'admin' });
+    } 
+    
+    // Check Doctor credentials
+    try {
+        const doc = await Doctor.findOne({ code: username });
+        if (doc && doc.password === password) {
+            const token = jwt.sign({ role: 'doctor', code: doc.code }, JWT_SECRET, { expiresIn: '12h' });
+            return res.json({ success: true, token, role: 'doctor' });
+        }
+    } catch (err) {}
+
+    res.status(401).json({ success: false, message: "Invalid username or password" });
 });
 
-// Get all reports (Protected)
+// Get all reports (Protected & Multi-Tenant)
 app.get('/api/admin/reports', verifyToken, async (req, res) => {
     try {
-        const reports = await Report.find().sort({ createdAt: -1 });
+        let query = {};
+        if (req.user.role === 'doctor') {
+            query = { doctor_code: req.user.code };
+        }
+        const reports = await Report.find(query).sort({ createdAt: -1 });
         res.json(reports);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch reports" });
@@ -244,14 +266,15 @@ app.get('/api/admin/doctors', verifyToken, async (req, res) => {
     }
 });
 
-// Add a new doctor (Protected)
+// Add a new doctor (Protected Admin Only)
 app.post('/api/admin/doctors', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
     try {
-        const { name, code } = req.body;
+        const { name, code, password } = req.body;
         const exists = await Doctor.findOne({ code });
         if (exists) return res.status(400).json({ error: "Doctor code already exists" });
 
-        const newDoc = new Doctor({ name, code });
+        const newDoc = new Doctor({ name, code, password: password || '123456' });
         await newDoc.save();
         res.json({ success: true, doctor: newDoc });
     } catch (err) {
@@ -331,6 +354,38 @@ app.post('/api/device/check', async (req, res) => {
     } catch (err) {
         console.error("Device Check Error:", err);
         res.status(500).json({ error: "Failed to verify device" });
+    }
+});
+
+// ─── CMS CONTENT API ROUTES ───
+
+// Get all content for public rendering
+app.get('/api/content', async (req, res) => {
+    try {
+        const allContent = await Content.find();
+        const dict = {};
+        allContent.forEach(item => { dict[item.key] = item.content; });
+        res.json(dict);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch content" });
+    }
+});
+
+// Admin mass updates content
+app.post('/api/admin/content', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
+    try {
+        const { items } = req.body; // array of { page, key, content }
+        for (const item of items) {
+            await Content.findOneAndUpdate(
+                { key: item.key },
+                { page: item.page, content: item.content, updatedAt: new Date() },
+                { upsert: true, new: true }
+            );
+        }
+        res.json({ success: true });
+    } catch (err) {
+         res.status(500).json({ error: "Failed to save content" });
     }
 });
 

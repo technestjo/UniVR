@@ -1,123 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroTwin XR | Immersive Aviation Training</title>
+    <title>AeroTwin XR | Fly Beyond Reality</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
-<body>
 
-    <!-- ─── INTRO VIDEO OVERLAY ─── -->
-    <div id="introOverlay">
-        <video id="introVid" autoplay muted playsinline>
-            <source src="intro.mp4" type="video/mp4">
-        </video>
-        <button id="skipBtn" onclick="skipIntro()">Skip Intro ✕</button>
-    </div>
+<body>
 
     <!-- ─── NAVBAR ─── -->
     <nav id="navbar">
-        <a href="#" class="nav-logo">
+        <a href="index.html" class="nav-logo">
             <img src="logo.png" alt="AeroTwin Logo">
             AeroTwin XR
         </a>
         <ul class="nav-links">
-            <li class="hide-mobile"><a href="#features">Features</a></li>
-            <li class="hide-mobile"><a href="#showcase">Showcase</a></li>
-            <li><a href="/admin" class="btn-primary" style="padding: 10px 20px;">Instructor Portal ➔</a></li>
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="leaderboard.html">Trainee Leaderboard</a></li>
+            <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
         </ul>
     </nav>
 
     <!-- ─── HERO SECTION ─── -->
     <section class="hero" id="home">
-        <h1 class="text-gradient">The Future of Aviation Maintenance</h1>
-        <p>Step inside an ultra-realistic virtual environment. Validate skills, diagnose engines, and master critical safety procedures with AI-driven analytics.</p>
-        <a href="#showcase" class="btn-primary" style="text-decoration: none; display: inline-block;">Experience the Platform</a>
-    </section>
-
-    <!-- ─── VR SHOWCASE (MOBILE OPTIMIZED) ─── -->
-    <section id="showcase" class="vr-showcase glass-panel">
-        <div class="vr-video-wrapper">
-            <div class="vr-frame"></div>
-            <!-- In the future, this can be an actual gameplay video -->
-            <video autoplay loop muted playsinline>
-                <source src="intro.mp4" type="video/mp4">
-            </video>
-        </div>
-        <div style="text-align: center; margin-top: 25px;">
-            <h3 style="font-family: var(--font-heading); font-size: 24px; color: white;">Hyper-Realistic Engine Diagnosis</h3>
-            <p class="text-dim" style="margin-top: 10px;">Train on true-to-life turbofan engines with real-time telemetry.</p>
+        <div class="hero-content">
+            <div class="hero-tagline" data-cms="index-hero-tag">Fly Beyond Reality</div>
+            <h1 data-cms="index-hero-title">Ultimate VR Flight<br><span class="text-cyan">Simulation</span></h1>
+            <p data-cms="index-hero-desc">Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.</p>
+            <div class="hero-actions">
+                <a href="features.html" class="btn-main" data-cms="index-btn-primary">Start Your Adventure</a>
+                <a href="about.html" class="btn-outline" data-cms="index-btn-secondary">Learn More</a>
+            </div>
         </div>
     </section>
 
-    <!-- ─── PUBLIC LEADERBOARD / REPORTS ─── -->
-    <section id="leaderboard" class="features" style="padding-top: 40px; padding-bottom: 40px;">
-        <h2 class="section-title text-gradient" style="margin-bottom: 30px;">Trainee Leaderboard</h2>
-        <p class="text-center text-dim" style="margin-bottom: 40px;">Live performance metrics of recent maintenance sessions.</p>
+    <!-- ─── IMMERSIVE SCROLL SECTION (OSSO VR STYLE) ─── -->
+    <div class="animation-stage" id="scroll-stage">
         
-        <div class="reports-grid" id="publicReportsList">
-            <div class="loading-state text-center text-dim">Loading live data from MongoDB Atlas...</div>
+        <!-- Text layer that fades out when scrolling starts -->
+        <div class="stage-text-layer" id="stage-text">
+            <h2 class="stage-title">Step Inside the Cockpit</h2>
+            <p class="stage-subtitle">Scroll to enter the simulation.</p>
+        </div>
+
+        <!-- The Canvas that renders the 3D rotating frames -->
+        <canvas id="vr-canvas"></canvas>
+
+        <!-- The Video that appears "behind" the lenses once inside -->
+        <div class="video-container" id="video-container">
+            <!-- Placeholder for user's actual demo video -->
+            <video id="demo-video" src="demo.mp4" poster="hero-bg.jpg" loop muted playsinline crossorigin="anonymous"></video>
+            <div class="video-overlay-ui">
+                <div class="ui-recording">🔴 REC</div>
+                <div class="ui-crosshair"></div>
+                <div class="ui-stats">ALT: 12000 | SPD: 450</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── NEW PLATFORM FEATURES ─── -->
+    <section class="features-grid-section section-padding">
+        <div class="container">
+            <div class="section-title text-center">
+                <h2 style="font-size: 36px; margin-bottom: 20px;">Why Choose <span class="text-cyan">AeroTwin</span></h2>
+            </div>
+            <div class="glass-grid">
+                <div class="glass-card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Real-Time Multiplayer</h3>
+                    <p class="text-dim">Train simultaneously with co-pilots across the globe with zero latency networking.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="card-icon">🌐</div>
+                    <h3>True-to-Life Telemetry</h3>
+                    <p class="text-dim">Every switch, gauge, and flight model matches real-world aerospace physics.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="card-icon">🌧️</div>
+                    <h3>Dynamic Weather</h3>
+                    <p class="text-dim">Experience intense weather variations and severe turbulence precisely simulated.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="card-icon">🤖</div>
+                    <h3>AI-Powered Instructor</h3>
+                    <p class="text-dim">Automated debriefs, voice recognition, and personalized skill tracking in real-time.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- ─── FEATURES GRID ─── -->
-    <section id="features" class="features">
-        <h2 class="section-title text-gradient">Unparalleled Training Metrics</h2>
-        
-        <div class="features-grid">
-            <div class="feat-card glass-panel">
-                <div class="feat-icon">🎯</div>
-                <h3 class="text-gradient">Precision Accuracy</h3>
-                <p class="text-dim">Real-time tracking of tool usage, parts inspected, and diagnostic accuracy with millimeter precision.</p>
-            </div>
-            
-            <div class="feat-card glass-panel">
-                <div class="feat-icon">🛡️</div>
-                <h3 class="text-gradient">Safety Protocols</h3>
-                <p class="text-dim">Measure adherence to strict safety procedures, including fire extinguishing and risk mitigation.</p>
-            </div>
-            
-            <div class="feat-card glass-panel">
-                <div class="feat-icon">🤖</div>
-                <h3 class="text-gradient">Gemini AI Tutor</h3>
-                <p class="text-dim">An intelligent virtual assistant guides trainees, answers questions in real-time, and provides final evaluations.</p>
-            </div>
-            
-            <div class="feat-card glass-panel">
-                <div class="feat-icon">📊</div>
-                <h3 class="text-gradient">Instructor Portal</h3>
-                <p class="text-dim">A secure, comprehensive dashboard for instructors to review trainee sessions, chat logs, and telemetry.</p>
+    <!-- ─── IMPACT STATISTICS ─── -->
+    <section class="stats-section pb-50">
+        <div class="container text-center">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h2 class="stat-number">500K+</h2>
+                    <p class="stat-label">Flight Hours Logged</p>
+                </div>
+                <div class="stat-item">
+                    <h2 class="stat-number">40+</h2>
+                    <p class="stat-label">Aircraft Models</p>
+                </div>
+                <div class="stat-item">
+                    <h2 class="stat-number">99.9%</h2>
+                    <p class="stat-label">Reality Match</p>
+                </div>
             </div>
         </div>
-    </section>
-
-    <!-- ─── FOOTER ─── -->
-    <footer style="text-align: center; padding: 40px; border-top: 1px solid var(--border-glass); margin-top: 80px;">
-        <img src="logo.png" alt="Logo" style="height: 40px; margin-bottom: 20px; opacity: 0.5;">
-        <p class="text-dim">© 2026 AeroTwin XR built by TechNest. All rights reserved.</p>
+    </section>    <!-- ─── FOOTER ─── -->
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo-box">
+                    <img src="logo.png" alt="AeroTwin Logo">
+                    <span>AEROTWIN XR<br>MISSION SYSTEMS</span>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Navigation</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="news.html">News</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="features.html">Features</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="support.html">Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="updates.html">Updates</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">Licensing</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-bottom-logo">AEROTWIN</div>
+            <div class="footer-icons">
+                <span>📡</span> <span>⚙️</span> <span>☁️</span> <span>✈️</span>
+            </div>
+            <div class="footer-copy">
+                <span>Copyright © 2026</span>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+            </div>
+        </div>
     </footer>
 
     <!-- ─── SCRIPTS ─── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script>
-        // Intro Video Logic
-        const introOverlay = document.getElementById('introOverlay');
-        const introVid = document.getElementById('introVid');
-        
-        function skipIntro() {
-            introOverlay.classList.add('fade-out');
-            setTimeout(() => {
-                introOverlay.style.display = 'none';
-                introVid.pause();
-            }, 1000);
-        }
-
-        introVid.onended = skipIntro;
-
-        // Auto-skip logic for debugging or if video fails
-        setTimeout(skipIntro, 12000); 
-
         // Navbar Scroll Effect
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('navbar');
@@ -128,70 +177,128 @@
             }
         });
 
-        // Fetch Public Reports
-        async function fetchPublicReports() {
-            try {
-                const res = await fetch('/api/reports');
-                const reports = await res.json();
-                
-                const container = document.getElementById('publicReportsList');
-                container.innerHTML = '';
+        // ─── SMART DYNAMIC CANVAS ENGINE ───
+        gsap.registerPlugin(ScrollTrigger);
 
-                if (!Array.isArray(reports) || reports.length === 0) {
-                    container.innerHTML = `<div class="loading-state text-dim" style="grid-column: 1/-1;">No public records available yet.</div>`;
-                    return;
+        const canvas = document.getElementById("vr-canvas");
+        const context = canvas.getContext("2d");
+        
+        // Define internal canvas resolution
+        canvas.width = 1920; 
+        canvas.height = 1080;
+
+        const images = [];
+        const vrSequence = { progress: 0 }; // scrubs from 0.0 to 1.0
+        let consecutiveMisses = 0;
+
+        // Auto-detect & preload images sequentially
+        function loadNextImage(index) {
+            const img = new Image();
+            img.onload = () => {
+                images.push(img);
+                consecutiveMisses = 0;
+                if (index === 0) render(); // initial paint once first frame is found
+                loadNextImage(index + 1);  // keep probing
+            };
+            img.onerror = () => {
+                consecutiveMisses++;
+                // Stop searching after 2 consecutive missing files to prevent infinite 404s
+                if (consecutiveMisses < 2 && index < 300) {
+                    loadNextImage(index + 1);
+                } else {
+                    if (images.length === 0) render(); // Still empty, show placeholder
                 }
+            };
+            img.src = `frames/${(index + 1).toString().padStart(4, '0')}.png`;
+        }
+        
+        // Start the smart loader!
+        loadNextImage(0);
 
-                // Show top 6 most recent
-                reports.slice(0, 6).forEach(r => {
-                    const scoreClass = r.score >= 80 ? 'green' : (r.score >= 50 ? 'orange' : 'red');
-                    const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
-
-                    const card = document.createElement('div');
-                    card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
-                    card.innerHTML = `
-                        <div class="rc-header">
-                            <div>
-                                <div class="rc-title">${r.trainee_name}</div>
-                                <div class="rc-meta">Doctor Code: <span class="badge blue">${r.doctor_code || 'N/A'}</span></div>
-                            </div>
-                            <div class="rc-score ${scoreClass}">${r.score || 0}%</div>
-                        </div>
-
-                        <div class="rc-stats-grid">
-                            <div class="stat-box">
-                                <span class="label">Safety</span>
-                                <span class="val">${Math.round(r.safety_score || 0)}%</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="label">Speed</span>
-                                <span class="val">${Math.round(r.speed_score || 0)}%</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="label">Tasks</span>
-                                <span class="val">${r.tasks_completed || 0}/${r.total_tasks || 7}</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="label">Parts</span>
-                                <span class="val">${r.parts_inspected_count || 0}</span>
-                            </div>
-                        </div>
-
-                        <div class="rc-telemetry" style="margin-top: 15px;">
-                            <div>🚩 Fault: <span>${r.fault_type || 'N/A'}</span></div>
-                            <div>🔥 Temp: <span class="${r.temp > 800 ? 'text-danger' : ''}">${r.temp?.toFixed(1) || 0}°C</span></div>
-                            <div>🗜 Vib: <span class="${r.vibration > 5 ? 'text-danger' : ''}">${r.vibration?.toFixed(2) || 0} ips</span></div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                document.getElementById('publicReportsList').innerHTML = `<div class="loading-state text-danger" style="grid-column: 1/-1;">Could not fetch reports from server.</div>`;
+        // Render current progress
+        function render() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (images.length > 0) {
+                // Map the 0-1 progress to the currently loaded frames
+                const maxIndex = images.length - 1;
+                const frameToDraw = Math.floor(vrSequence.progress * maxIndex);
+                const img = images[frameToDraw];
+                
+                if (img && img.complete && img.naturalWidth > 0) {
+                    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                    const x = (canvas.width / 2) - (img.width / 2) * scale;
+                    const y = (canvas.height / 2) - (img.height / 2) * scale;
+                    context.drawImage(img, x, y, img.width * scale, img.height * scale);
+                }
+            } else {
+                // FALLBACK PLACEHOLDER (Waits for files)
+                context.fillStyle = "rgba(0,0,0,0)";
+                context.fillRect(0,0, canvas.width, canvas.height);
+                
+                context.fillStyle = "#00f2ff";
+                context.font = "bold 60px Orbitron, sans-serif";
+                context.textAlign = "center";
+                context.textBaseline = "middle";
+                context.fillText(`[ SMART 3D ENGINE : WAITING FOR IMAGES ]`, canvas.width/2, canvas.height/2);
+                
+                context.font = "30px Rajdhani, sans-serif";
+                context.fillStyle = "#94a3b8";
+                context.fillText("Save your transparent frames as: public/frames/0001.png, 0002.png... It will auto-detect them!", canvas.width/2, canvas.height/2 + 80);
             }
         }
 
-        // Initialize fetching
-        fetchPublicReports();
+        // Run an initial render for the placeholder
+        render();
+
+        // Master Timeline Setup
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#scroll-stage",
+                start: "top top",     
+                end: "+=4000",        
+                pin: true,            
+                scrub: 1,             
+                anticipatePin: 1
+            }
+        });
+
+        // 1. Text fades out smoothly
+        tl.to("#stage-text", { opacity: 0, y: -50, duration: 0.5 }, 0);
+
+        // 2. Play 3D Sequence (Dynamic Progress 0 to 1)
+        tl.to(vrSequence, {
+            progress: 1,
+            ease: "none",
+            duration: 3,          
+            onUpdate: render
+        }, 0);
+
+        // 3. Scale up final frame into the lenses
+        tl.to(canvas, {
+            scale: 25,
+            opacity: 0,
+            ease: "power2.inOut",
+            duration: 1.5
+        }, 3); // Starts right after rotation is done
+
+        // 4. Fade in the inside-the-VR-simulation video
+        tl.fromTo("#video-container", {
+            opacity: 0,
+            scale: 0.8
+        }, {
+            opacity: 1,
+            scale: 1,
+            ease: "power2.out",
+            duration: 1.5,
+            onStart: () => {
+                const vid = document.getElementById('demo-video');
+                if (vid && vid.paused) vid.play().catch(e => console.log('Video autoplay blocked:', e));
+            }
+        }, 3.5);
+
     </script>
+    <script src="cms.js"></script>
 </body>
+
 </html>

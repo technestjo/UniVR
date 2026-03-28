@@ -55,8 +55,8 @@
         <div class="login-box glass-panel">
             <img src="logo.png" alt="Logo" class="login-logo">
             <h2>Admin Login</h2>
-            <p>Enter your credentials to access reports.</p>
-            <input type="text" id="adminUsername" placeholder="Username" class="admin-input">
+            <p>Enter Admin or Doctor credentials.</p>
+            <input type="text" id="adminUsername" placeholder="Username or Doctor Code" class="admin-input">
             <input type="password" id="adminPassword" placeholder="Password" class="admin-input">
             <button onclick="loginAdmin()" class="btn-primary w-full mt-4">Login</button>
             <div id="loginError" class="text-danger mt-3" style="display: none; font-size: 14px;">Invalid credentials</div>
@@ -74,8 +74,9 @@
             </div>
             <ul class="sidebar-nav">
                 <li><button onclick="switchTab('reports')" id="tab-reports" class="nav-btn active">📊 Reports</button></li>
-                <li><button onclick="switchTab('doctors')" id="tab-doctors" class="nav-btn">🧑‍⚕️ Doctors</button></li>
+                <li class="admin-only"><button onclick="switchTab('doctors')" id="tab-doctors" class="nav-btn">🧑‍⚕️ Doctors</button></li>
                 <li><button onclick="switchTab('devices')" id="tab-devices" class="nav-btn">🖥️ Devices</button></li>
+                <li class="admin-only"><button onclick="switchTab('cms')" id="tab-cms" class="nav-btn">⚙️ Website CMS</button></li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="logoutAdmin()" class="btn-logout">Logout 🚪</button>
@@ -124,6 +125,10 @@
                             <label>Unique Code</label>
                             <input type="text" id="newDocCode" placeholder="e.g. DOC-999" class="admin-input">
                         </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="text" id="newDocPass" placeholder="Default: 123456" class="admin-input">
+                        </div>
                         <button onclick="addDoctor()" class="btn-primary w-full">Register Doctor</button>
                     </div>
 
@@ -164,6 +169,28 @@
                 </div>
             </section>
 
+            <!-- CMS VIEW -->
+            <section id="view-cms" class="admin-view admin-only" style="display: none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 class="text-gradient">Website Content CMS</h2>
+                        <p class="text-dim">Update website text dynamically in JSON format.</p>
+                    </div>
+                    <div class="dashboard-controls">
+                        <button onclick="loadCmsContent()" class="btn-secondary">🔃 Load Data</button>
+                    </div>
+                </div>
+                
+                <div class="glass-panel" style="padding: 30px;">
+                    <h3 style="margin-bottom: 10px;">Edit JSON Database</h3>
+                    <p class="text-dim" style="margin-bottom: 15px;">Modify the JSON values below to update text across all website pages. Keys should match HTML Component IDs.</p>
+                    <textarea id="cmsJsonEditor" style="width: 100%; height: 400px; font-family: monospace; background: rgba(0,0,0,0.5); color: #0f0; border: 1px solid var(--border-cyan); padding: 15px; border-radius: 8px;">{}</textarea>
+                    
+                    <button onclick="saveCmsContent()" class="btn-primary" style="margin-top: 20px;">💾 Save & Deploy to Website</button>
+                    <div id="cmsStatus" style="margin-top: 15px; font-weight: bold; color: var(--success);"></div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -181,10 +208,20 @@
     <!-- ─── SCRIPTS ─── -->
     <script>
         let authToken = localStorage.getItem('adminToken');
+        let userRole = localStorage.getItem('userRole') || 'admin';
         let allReports = [];
+
+        function applyRolePermissions() {
+            if (userRole === 'doctor') {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            }
+        }
 
         // ─── INIT ───
         window.onload = () => {
+            applyRolePermissions();
             if (authToken) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'flex';
@@ -286,7 +323,10 @@
                 
                 if (data.success) {
                     authToken = data.token;
+                    userRole = data.role || 'admin';
                     localStorage.setItem('adminToken', authToken);
+                    localStorage.setItem('userRole', userRole);
+                    applyRolePermissions();
                     err.style.display = 'none';
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'flex';
@@ -303,7 +343,9 @@
 
         function logoutAdmin() {
             localStorage.removeItem('adminToken');
+            localStorage.removeItem('userRole');
             authToken = null;
+            userRole = null;
             location.reload();
         }
 
@@ -316,8 +358,9 @@
             document.getElementById(`view-${tab}`).style.display = 'block';
             
             if (tab === 'reports') fetchReports();
-            if (tab === 'doctors') fetchDoctors();
+            if (tab === 'doctors' && userRole === 'admin') fetchDoctors();
             if (tab === 'devices') fetchDevices();
+            if (tab === 'cms' && userRole === 'admin') loadCmsContent();
         }
 
         // ─── REPORTS API ───
@@ -435,7 +478,8 @@
         async function addDoctor() {
             const name = document.getElementById('newDocName').value;
             const code = document.getElementById('newDocCode').value;
-            if(!name || !code) return alert("Fill all fields");
+            const password = document.getElementById('newDocPass').value || '123456';
+            if(!name || !code) return alert("Fill all required fields");
 
             try {
                 const res = await fetch('/api/admin/doctors', {
@@ -444,12 +488,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ name, code })
+                    body: JSON.stringify({ name, code, password })
                 });
                 const data = await res.json();
                 if(data.success) {
                     document.getElementById('newDocName').value = '';
                     document.getElementById('newDocCode').value = '';
+                    document.getElementById('newDocPass').value = '';
                     fetchDoctors();
                 } else {
                     alert(data.error);
@@ -663,6 +708,61 @@
         function closeLiveStream() {
             clearInterval(streamInterval);
             document.getElementById('liveStreamModal').style.display = 'none';
+        }
+
+        // ─── CMS LOGIC ───
+        async function loadCmsContent() {
+            try {
+                const res = await fetch('/api/content');
+                const data = await res.json();
+                document.getElementById('cmsJsonEditor').value = JSON.stringify(data, null, 2);
+                document.getElementById('cmsStatus').innerText = 'Data loaded successfully.';
+                document.getElementById('cmsStatus').style.color = 'var(--accent-cyan)';
+            } catch (err) {
+                document.getElementById('cmsStatus').innerText = 'Failed to load CMS data.';
+                document.getElementById('cmsStatus').style.color = 'var(--danger)';
+            }
+            setTimeout(() => { document.getElementById('cmsStatus').innerText = ''; }, 3000);
+        }
+
+        async function saveCmsContent() {
+            const statusEl = document.getElementById('cmsStatus');
+            statusEl.innerText = 'Saving...';
+            statusEl.style.color = 'var(--accent-cyan)';
+            
+            try {
+                const jsonText = document.getElementById('cmsJsonEditor').value;
+                const parsed = JSON.parse(jsonText);
+                
+                // Convert JSON dict back into expected array format for the backend
+                const items = [];
+                for (const [key, val] of Object.entries(parsed)) {
+                    // For simplicity, we assign everything to a 'global' page
+                    items.push({ page: 'global', key: key, content: val });
+                }
+
+                const res = await fetch('/api/admin/content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ items })
+                });
+                
+                const result = await res.json();
+                if (result.success) {
+                    statusEl.innerText = '✅ Content saved and deployed globally!';
+                    statusEl.style.color = 'var(--success)';
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (err) {
+                statusEl.innerText = '❌ Failed to save: Invalid JSON or Network Error.';
+                statusEl.style.color = 'var(--danger)';
+                console.error(err);
+            }
+            setTimeout(() => { statusEl.innerText = ''; }, 4000);
         }
     </script>
 </body>
