@@ -382,6 +382,55 @@ app.get('/api/admin/raw-content', verifyToken, async (req, res) => {
     }
 });
 
+// Seed CMS Data (One-time use / Admin only)
+app.get('/api/admin/seed', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
+    const seedData = [
+        // Home Page
+        { page: 'home', key: 'index-hero-tag', content: 'Fly Beyond Reality' },
+        { page: 'home', key: 'index-hero-title', content: 'Ultimate VR Flight Simulation' },
+        { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
+        { page: 'home', key: 'index-btn-primary', content: 'Start Your Adventure' },
+        { page: 'home', key: 'index-btn-secondary', content: 'Learn More' },
+        { page: 'home', key: 'home-features-title', content: 'Why Choose AeroTwin' },
+        { page: 'home', key: 'home-f1-icon', content: '⚡' },
+        { page: 'home', key: 'home-f1-title', content: 'Real-Time Multiplayer' },
+        { page: 'home', key: 'home-f1-desc', content: 'Train simultaneously with co-pilots across the globe with zero latency networking.' },
+        { page: 'home', key: 'home-f2-icon', content: '🌐' },
+        { page: 'home', key: 'home-f2-title', content: 'True-to-Life Telemetry' },
+        { page: 'home', key: 'home-f2-desc', content: 'Every switch, gauge, and flight model matches real-world aerospace physics.' },
+        { page: 'home', key: 'home-f3-icon', content: '🌧️' },
+        { page: 'home', key: 'home-f3-title', content: 'Dynamic Weather' },
+        { page: 'home', key: 'home-f3-desc', content: 'Experience intense weather variations and severe turbulence precisely simulated.' },
+        { page: 'home', key: 'home-f4-icon', content: '🤖' },
+        { page: 'home', key: 'home-f4-title', content: 'AI-Powered Instructor' },
+        { page: 'home', key: 'home-f4-desc', content: 'Automated debriefs, voice recognition, and personalized skill tracking in real-time.' },
+        { page: 'home', key: 'home-stat-1-val', content: '500K+' },
+        { page: 'home', key: 'home-stat-1-label', content: 'Flight Hours Logged' },
+        { page: 'home', key: 'home-stat-2-val', content: '40+' },
+        { page: 'home', key: 'home-stat-2-label', content: 'Aircraft Models' },
+        { page: 'home', key: 'home-stat-3-val', content: '99.9%' },
+        { page: 'home', key: 'home-stat-3-label', content: 'Reality Match' },
+        { page: 'home', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
+        { page: 'home', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
+        { page: 'home', key: 'home-icon-1', content: '📡' },
+        { page: 'home', key: 'home-icon-2', content: '⚙️' },
+        { page: 'home', key: 'home-icon-3', content: '☁️' },
+        { page: 'home', key: 'home-icon-4', content: '✈️' },
+        // Global / Footer
+        { page: 'global', key: 'footer-copyright', content: 'Copyright © 2026' }
+    ];
+
+    try {
+        for (const item of seedData) {
+            await Content.findOneAndUpdate({ key: item.key }, item, { upsert: true });
+        }
+        res.json({ success: true, message: "Large seed operation completed." });
+    } catch (err) {
+        res.status(500).json({ error: "Seed failed" });
+    }
+});
+
 // Admin mass updates content
 app.post('/api/admin/content', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });

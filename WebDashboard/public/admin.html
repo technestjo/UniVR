@@ -163,6 +163,7 @@
                         <p class="text-dim">Update website text dynamically across all pages.</p>
                     </div>
                     <div class="dashboard-controls">
+                        <button onclick="syncCmsDefaults()" class="btn-secondary" title="Import all default site text">🔄 Sync Site Content</button>
                         <button onclick="addNewCmsRow()" class="btn-secondary">➕ Add Entry</button>
                         <button onclick="saveCmsContent()" class="btn-primary">💾 Deploy Changes</button>
                     </div>
@@ -703,22 +704,31 @@
 
         async function loadCmsContent() {
             try {
+                let rawData = [];
                 const adminRes = await fetch('/api/admin/raw-content', {
                      headers: { 'Authorization': `Bearer ${authToken}` }
                 });
+                
                 if(adminRes.ok) {
-                    cmsFullData = await adminRes.json();
+                    rawData = await adminRes.json();
                 } else {
                     const res = await fetch('/api/content');
                     const data = await res.json();
-                    cmsFullData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
+                    rawData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
                 }
+
+                // IMPORTANT: Normalize data. If page is missing or invalid, move to global.
+                cmsFullData = rawData.map(item => ({
+                    ...item,
+                    page: (item.page && item.page !== 'undefined' && item.page !== 'null') ? item.page : 'global'
+                }));
 
                 // If currently selected page is empty, try to find one with data
                 const pageHasData = (p) => cmsFullData.some(i => i.page === p);
-                if (!pageHasData(activeCmsPage)) {
-                    const firstNonEmpty = cmsFullData.find(i => i.page && i.page !== '')?.page || 'home';
-                    activeCmsPage = firstNonEmpty;
+                if (cmsFullData.length > 0 && !pageHasData(activeCmsPage)) {
+                    // Find the first page button that has a count > 0
+                    const pagesWithData = [...new Set(cmsFullData.map(i => i.page))];
+                    if (pagesWithData.length > 0) activeCmsPage = pagesWithData[0];
                 }
 
                 updateCmsSidebar();
@@ -727,6 +737,7 @@
                 document.getElementById('cmsStatus').innerText = 'CMS data synchronized.';
                 document.getElementById('cmsStatus').style.color = '#00ff88';
             } catch (err) {
+                console.error("CMS Load Error:", err);
                 document.getElementById('cmsStatus').innerText = 'Failed to sync CMS.';
                 document.getElementById('cmsStatus').style.color = '#ff3333';
             }
@@ -822,6 +833,28 @@
                 }
             } catch (err) {
                 statusEl.innerText = '❌ Deployment failed.';
+                statusEl.style.color = '#ff3333';
+            }
+        }
+
+        async function syncCmsDefaults() {
+            if(!confirm("This will import all default website text into your CMS. Continue?")) return;
+            const statusEl = document.getElementById('cmsStatus');
+            statusEl.innerText = 'Syncing default site content...';
+            statusEl.style.color = 'var(--accent-cyan)';
+
+            try {
+                const res = await fetch('/api/admin/seed', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if(data.success) {
+                    statusEl.innerText = '✅ Site content synced successfully!';
+                    statusEl.style.color = '#00ff88';
+                    loadCmsContent(); // Reload everything
+                }
+            } catch (err) {
+                statusEl.innerText = '❌ Sync failed.';
                 statusEl.style.color = '#ff3333';
             }
         }

@@ -57,9 +57,9 @@
             <!-- Placeholder for user's actual demo video -->
             <video id="demo-video" src="demo.mp4" poster="hero-bg.jpg" loop muted playsinline crossorigin="anonymous"></video>
             <div class="video-overlay-ui">
-                <div class="ui-recording">🔴 REC</div>
+                <div class="ui-recording" data-cms="index-video-rec">🔴 REC</div>
                 <div class="ui-crosshair"></div>
-                <div class="ui-stats">ALT: 12000 | SPD: 450</div>
+                <div class="ui-stats" data-cms="index-video-stats">ALT: 12000 | SPD: 450</div>
             </div>
         </div>
     </div>
@@ -68,28 +68,28 @@
     <section class="features-grid-section section-padding">
         <div class="container">
             <div class="section-title text-center">
-                <h2 style="font-size: 36px; margin-bottom: 20px;">Why Choose <span class="text-cyan">AeroTwin</span></h2>
+                <h2 style="font-size: 36px; margin-bottom: 20px;" data-cms="home-features-title">Why Choose <span class="text-cyan">AeroTwin</span></h2>
             </div>
             <div class="glass-grid">
                 <div class="glass-card">
-                    <div class="card-icon">⚡</div>
-                    <h3>Real-Time Multiplayer</h3>
-                    <p class="text-dim">Train simultaneously with co-pilots across the globe with zero latency networking.</p>
+                    <div class="card-icon" data-cms="home-f1-icon">⚡</div>
+                    <h3 data-cms="home-f1-title">Real-Time Multiplayer</h3>
+                    <p class="text-dim" data-cms="home-f1-desc">Train simultaneously with co-pilots across the globe with zero latency networking.</p>
                 </div>
                 <div class="glass-card">
-                    <div class="card-icon">🌐</div>
-                    <h3>True-to-Life Telemetry</h3>
-                    <p class="text-dim">Every switch, gauge, and flight model matches real-world aerospace physics.</p>
+                    <div class="card-icon" data-cms="home-f2-icon">🌐</div>
+                    <h3 data-cms="home-f2-title">True-to-Life Telemetry</h3>
+                    <p class="text-dim" data-cms="home-f2-desc">Every switch, gauge, and flight model matches real-world aerospace physics.</p>
                 </div>
                 <div class="glass-card">
-                    <div class="card-icon">🌧️</div>
-                    <h3>Dynamic Weather</h3>
-                    <p class="text-dim">Experience intense weather variations and severe turbulence precisely simulated.</p>
+                    <div class="card-icon" data-cms="home-f3-icon">🌧️</div>
+                    <h3 data-cms="home-f3-title">Dynamic Weather</h3>
+                    <p class="text-dim" data-cms="home-f3-desc">Experience intense weather variations and severe turbulence precisely simulated.</p>
                 </div>
                 <div class="glass-card">
-                    <div class="card-icon">🤖</div>
-                    <h3>AI-Powered Instructor</h3>
-                    <p class="text-dim">Automated debriefs, voice recognition, and personalized skill tracking in real-time.</p>
+                    <div class="card-icon" data-cms="home-f4-icon">🤖</div>
+                    <h3 data-cms="home-f4-title">AI-Powered Instructor</h3>
+                    <p class="text-dim" data-cms="home-f4-desc">Automated debriefs, voice recognition, and personalized skill tracking in real-time.</p>
                 </div>
             </div>
         </div>
@@ -100,21 +100,36 @@
         <div class="container text-center">
             <div class="stats-grid">
                 <div class="stat-item">
-                    <h2 class="stat-number">500K+</h2>
-                    <p class="stat-label">Flight Hours Logged</p>
+                    <h2 class="stat-number" data-cms="home-stat-1-val">500K+</h2>
+                    <p class="stat-label" data-cms="home-stat-1-label">Flight Hours Logged</p>
                 </div>
                 <div class="stat-item">
-                    <h2 class="stat-number">40+</h2>
-                    <p class="stat-label">Aircraft Models</p>
+                    <h2 class="stat-number" data-cms="home-stat-2-val">40+</h2>
+                    <p class="stat-label" data-cms="home-stat-2-label">Aircraft Models</p>
                 </div>
                 <div class="stat-item">
-                    <h2 class="stat-number">99.9%</h2>
-                    <p class="stat-label">Reality Match</p>
+                    <h2 class="stat-number" data-cms="home-stat-3-val">99.9%</h2>
+                    <p class="stat-label" data-cms="home-stat-3-label">Reality Match</p>
                 </div>
             </div>
         </div>
-    </section>    <!-- ─── FOOTER ─── -->
-    <footer class="main-footer">
+    </section>
+
+    <!-- ─── NAVIGATOR CTA ─── -->
+    <section class="navigation-cta section-padding">
+        <div class="container text-center">
+             <div class="glass-panel" style="padding: 60px 20px;">
+                 <h2 style="font-size: 40px; margin-bottom: 20px;" data-cms="home-cta-title">AEROTWIN XR MISSION SYSTEMS</h2>
+                 <p class="text-dim" style="max-width: 600px; margin: 0 auto 30px;" data-cms="home-cta-desc">Comprehensive navigation and resource management for pilots, instructors, and licensing.</p>
+                 <div class="footer-icons" style="font-size: 32px; gap: 30px;">
+                    <span data-cms="home-icon-1">📡</span> <span data-cms="home-icon-2">⚙️</span> <span data-cms="home-icon-3">☁️</span> <span data-cms="home-icon-4">✈️</span>
+                 </div>
+             </div>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer class="main-footer" data-cms="global-footer">
         <div class="footer-grid">
             <div class="footer-brand">
                 <div class="footer-logo-box">
