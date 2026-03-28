@@ -27,104 +27,38 @@
 
     <header class="page-header">
         <div class="container">
-            <h1 class="text-cyan">Latest Updates</h1>
-            <p class="text-dim">Stay informed about new features, improvements, and bug fixes.</p>
+            <h1 class="text-cyan" data-cms="updates-title">Latest Updates</h1>
+            <p class="text-dim" data-cms="updates-desc">Stay informed about new features, improvements, and bug fixes.</p>
         </div>
     </header>
 
     <section class="section-padding">
-        <div class="container" style="max-width: 900px;">
+        <div class="container" style="max-width: 900px;" data-cms-array="updates-array">
             <div class="card glass-panel"
                 style="padding: 40px; margin-bottom: 30px; border-left: 4px solid var(--accent-cyan);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
                     <div>
-                        <h3 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 5px;">Version 2.5.0
-                            - Major Release</h3>
-                        <p class="text-dim" style="font-size: 14px;">Released March 27, 2026</p>
+                        <h3 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 5px;">{{version}}</h3>
+                        <p class="text-dim" style="font-size: 14px;">{{date}}</p>
                     </div>
-                    <span class="badge badge-green">LATEST</span>
+                    <span class="badge {{badgeClass}}">{{badgeText}}</span>
                 </div>
-                <div style="margin-bottom: 20px;">
+                
+                <p class="text-dim" style="margin-bottom: 20px;">{{intro}}</p>
+                
+                <div style="margin-bottom: 20px;" data-cms-visibility="features">
                     <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">✨ New Features</h4>
-                    <ul style="list-style: none; margin-left: 0;">
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> F-35 Lightning
-                            II aircraft now available</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Advanced
-                            weather simulation system</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Real-time
-                            multiplayer training missions</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Enhanced AI
-                            tutor with voice recognition</li>
+                    <ul style="list-style: none; margin-left: 0; color: var(--text-dim);">
+                        {{features}}
                     </ul>
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">🐛 Bug Fixes</h4>
-                    <ul style="list-style: none; margin-left: 0;">
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Fixed
-                            controller calibration issues</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Improved
-                            network stability for multiplayer</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Resolved data
-                            sync delays</li>
+                
+                <div style="margin-bottom: 20px;" data-cms-visibility="fixes">
+                    <h4 style="color: var(--accent-orange); margin-bottom: 10px;">🐛 Bug Fixes</h4>
+                    <ul style="list-style: none; margin-left: 0; color: var(--text-dim);">
+                        {{fixes}}
                     </ul>
                 </div>
-            </div>
-
-            <div class="card glass-panel" style="padding: 40px; margin-bottom: 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                    <div>
-                        <h3 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 5px;">Version 2.4.5
-                            - Maintenance Update</h3>
-                        <p class="text-dim" style="font-size: 14px;">Released March 15, 2026</p>
-                    </div>
-                    <span class="badge badge-orange">STABLE</span>
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">🔧 Improvements</h4>
-                    <ul style="list-style: none; margin-left: 0;">
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Performance
-                            optimization for lower-end hardware</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Improved
-                            graphics rendering pipeline</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Enhanced
-                            instructor dashboard UI</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card glass-panel" style="padding: 40px; margin-bottom: 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                    <div>
-                        <h3 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 5px;">Version 2.4.0
-                            - Feature Release</h3>
-                        <p class="text-dim" style="font-size: 14px;">Released March 1, 2026</p>
-                    </div>
-                    <span class="badge badge-orange">STABLE</span>
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">✨ New Features</h4>
-                    <ul style="list-style: none; margin-left: 0;">
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Custom
-                            scenario builder for instructors</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Advanced
-                            telemetry analytics dashboard</li>
-                        <li style="margin-bottom: 8px;"><span style="color: var(--accent-cyan);">→</span> Integration
-                            with learning management systems</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card glass-panel" style="padding: 40px;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                    <div>
-                        <h3 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 5px;">Version 2.3.0
-                            - Initial Release</h3>
-                        <p class="text-dim" style="font-size: 14px;">Released February 15, 2026</p>
-                    </div>
-                    <span class="badge badge-red">LEGACY</span>
-                </div>
-                <p class="text-dim">Initial public release with core flight simulation features, basic instructor
-                    portal, and trainee performance tracking.</p>
             </div>
         </div>
     </section>
@@ -177,6 +111,7 @@
             </div>
         </div>
     </footer>
+    <script src="cms.js"></script>
 </body>
 
 </html>

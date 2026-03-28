@@ -35,17 +35,37 @@
     <section class="section-padding">
         <div class="container">
             <div class="grid-3" data-cms-array="news-articles-array">
-                <div class="card glass-panel">
+                <div class="card glass-panel" style="cursor: pointer; position: relative; overflow: hidden;" onclick="openNewsModal(this)">
+                    <!-- Hidden data safely stored as HTML -->
+                    <div class="n-full-title" style="display:none">{{title}}</div>
+                    <div class="n-full-date" style="display:none">{{date}}</div>
+                    <div class="n-full-img" style="display:none">{{image}}</div>
+                    <div class="n-full-desc" style="display:none">{{fullContent}}</div>
+                    
+                    <div style="height: 150px; background-image: url('{{image}}'); background-size: cover; background-position: center; margin: -40px -40px 20px -40px; border-bottom: 2px solid var(--accent-cyan);"></div>
                     <div class="text-orange" style="font-size: 12px; font-weight: 700; margin-bottom: 10px;">{{date}}</div>
                     <h3 style="font-family: var(--font-heading); margin-bottom: 15px;">{{title}}</h3>
                     <p class="text-dim">{{desc}}</p>
-                    <a href="#" class="text-cyan"
-                        style="display: inline-block; margin-top: 20px; text-decoration: none; font-weight: 700;">READ
-                        MORE ➔</a>
+                    <span class="text-cyan" style="display: inline-block; margin-top: 20px; text-decoration: none; font-weight: 700;">READ MORE ➔</span>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- ─── MODERN NEWS MODAL ─── -->
+    <div id="newsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
+        <div class="glass-panel" style="max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 0; border: 1px solid var(--border-cyan); position: relative;">
+            <button onclick="closeNewsModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); border: 1px solid var(--accent-cyan); color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
+            <img id="nm-img" src="" alt="News Image" style="width: 100%; height: 300px; object-fit: cover; border-bottom: 2px solid var(--accent-cyan);">
+            <div style="padding: 40px;">
+                <div id="nm-date" class="text-orange" style="font-size: 14px; font-weight: 700; margin-bottom: 10px;"></div>
+                <h2 id="nm-title" style="font-family: var(--font-heading); margin-bottom: 30px; font-size: 32px;"></h2>
+                <div id="nm-content" class="text-dim" style="line-height: 1.8; font-size: 16px;">
+                    <!-- Content injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="main-footer">
         <div class="footer-grid">
@@ -96,6 +116,34 @@
         </div>
     </footer>
     <script src="cms.js"></script>
+    <script>
+        function openNewsModal(el) {
+            document.getElementById('nm-title').innerText = el.querySelector('.n-full-title').innerText;
+            document.getElementById('nm-date').innerText = el.querySelector('.n-full-date').innerText;
+            document.getElementById('nm-img').src = el.querySelector('.n-full-img').innerText;
+            
+            // Format content to maintain paragraphs
+            const rawContent = el.querySelector('.n-full-desc').innerText;
+            const formattedContent = rawContent.split('\n').filter(p => p.trim() !== '').map(p => `<p style="margin-bottom: 15px;">${p}</p>`).join('');
+            document.getElementById('nm-content').innerHTML = formattedContent;
+            
+            document.getElementById('newsModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
+        }
+
+        function closeNewsModal() {
+            document.getElementById('newsModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('newsModal');
+            if (event.target === modal) {
+                closeNewsModal();
+            }
+        }
+    </script>
 </body>
 
 </html>

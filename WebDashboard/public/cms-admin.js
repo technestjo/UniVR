@@ -21,7 +21,8 @@ const TN_SCHEMA = {
                     { key: "index-hero-title", label: "Title", type: "text", width: "100%" },
                     { key: "index-hero-desc", label: "Subtitle", type: "textarea", width: "100%" },
                     { key: "index-btn-primary", label: "CTA 1", type: "text", width: "50%" },
-                    { key: "index-btn-secondary", label: "CTA 2", type: "text", width: "50%" }
+                    { key: "index-btn-secondary", label: "CTA 2", type: "text", width: "50%" },
+                    { key: "index-video-src", label: "Background Video URL (.mp4)", type: "text", width: "100%" }
                 ]
             },
             {
@@ -45,6 +46,15 @@ const TN_SCHEMA = {
                 fields: [
                     { key: "val", label: "Statistic Value", type: "text", width: "50%" },
                     { key: "label", label: "Label", type: "text", width: "50%" }
+                ]
+            },
+            {
+                id: "home-cta",
+                title: "Bottom Action Banner",
+                type: "fixed",
+                fields: [
+                    { key: "home-cta-title", label: "Banner Title", type: "text", width: "100%" },
+                    { key: "home-cta-desc", label: "Banner Subtitle", type: "textarea", width: "100%" }
                 ]
             }
         ]
@@ -80,11 +90,22 @@ const TN_SCHEMA = {
         sections: [
             {
                 id: "about-hero",
-                title: "Mission Statement",
+                title: "Hero Banner",
                 type: "fixed",
                 fields: [
                     { key: "about-hero-title", label: "Headline", type: "text", width: "100%" },
-                    { key: "about-mission-text", label: "Mission Text", type: "textarea", width: "100%" }
+                    { key: "about-hero-desc", label: "Subtitle", type: "text", width: "100%" }
+                ]
+            },
+            {
+                id: "about-mission",
+                title: "Our Mission Statement",
+                type: "fixed",
+                fields: [
+                    { key: "about-mission-title", label: "Section Title", type: "text", width: "100%" },
+                    { key: "about-mission-p1", label: "Paragraph 1", type: "textarea", width: "100%" },
+                    { key: "about-mission-p2", label: "Paragraph 2", type: "textarea", width: "100%" },
+                    { key: "about-mission-img", label: "Side Image URL", type: "text", width: "100%" }
                 ]
             },
             {
@@ -126,6 +147,36 @@ const TN_SCHEMA = {
             }
         ]
     },
+    updates: {
+        title: "Platform Updates Content",
+        sections: [
+            {
+                id: "updates-hero",
+                title: "Updates Header",
+                type: "fixed",
+                fields: [
+                    { key: "updates-title", label: "Page Title", type: "text", width: "100%" },
+                    { key: "updates-desc", label: "Description", type: "textarea", width: "100%" }
+                ]
+            },
+            {
+                id: "updates-list",
+                title: "Release Notes",
+                type: "array",
+                arrayKey: "updates-array",
+                defaultItem: { version: "Version 1.0", date: "Jan 1, 2026", badgeClass: "badge-green", badgeText: "LATEST", intro: "Main release info...", features: "Feature 1\nFeature 2", fixes: "Bug 1\nBug 2" },
+                fields: [
+                    { key: "version", label: "Version/Title", type: "text", width: "50%" },
+                    { key: "date", label: "Release Date", type: "text", width: "50%" },
+                    { key: "badgeText", label: "Badge Text (e.g. LATEST, STABLE)", type: "text", width: "50%" },
+                    { key: "badgeClass", label: "Badge Color (badge-green, badge-orange, badge-red)", type: "text", width: "50%" },
+                    { key: "intro", label: "Intro Paragraph", type: "textarea", width: "100%" },
+                    { key: "features", label: "New Features (One per line)", type: "textarea", width: "100%" },
+                    { key: "fixes", label: "Bug Fixes (One per line)", type: "textarea", width: "100%" }
+                ]
+            }
+        ]
+    },
     news: {
         title: "News & Blog Content",
         sections: [
@@ -134,11 +185,13 @@ const TN_SCHEMA = {
                 title: "Latest Announcements",
                 type: "array",
                 arrayKey: "news-articles-array",
-                defaultItem: { title: "New Update", date: "Jan 1, 2026", desc: "Details here" },
+                defaultItem: { title: "New Update", date: "Jan 1, 2026", desc: "Short summary...", image: "assets/placeholder.jpg", fullContent: "Full details here..." },
                 fields: [
                     { key: "title", label: "Article Title", type: "text", width: "100%" },
                     { key: "date", label: "Date", type: "text", width: "50%" },
-                    { key: "desc", label: "Content", type: "textarea", width: "100%" }
+                    { key: "image", label: "Image URL", type: "text", width: "50%" },
+                    { key: "desc", label: "Short Summary", type: "textarea", width: "100%" },
+                    { key: "fullContent", label: "Full Article Content", type: "textarea", width: "100%" }
                 ]
             }
         ]
@@ -151,6 +204,7 @@ const TN_SCHEMA = {
                 title: "Leaderboard Header",
                 type: "fixed",
                 fields: [
+                    { key: "leaderboard-visible", label: "Show Leaderboard Ranking Table?", type: "text", width: "100%", placeholder: "Type 'yes' to show, 'no' to hide" },
                     { key: "leaderboard-title", label: "Title", type: "text", width: "100%" },
                     { key: "leaderboard-desc", label: "Description", type: "textarea", width: "100%" }
                 ]

@@ -62,7 +62,7 @@ async function applyCMS() {
         elements.forEach(el => {
             const key = el.getAttribute('data-cms');
             if (cmsData[key]) {
-                if (el.tagName === 'IMG') {
+                if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'SOURCE') {
                     el.src = cmsData[key];
                 } else if (el.tagName === 'A') {
                     // Quick check if it's a URL or text
@@ -78,21 +78,35 @@ async function applyCMS() {
             }
         });
 
+        // Apply dynamic visibility
+        const visibilityElements = document.querySelectorAll('[data-cms-visibility]');
+        visibilityElements.forEach(el => {
+            const key = el.getAttribute('data-cms-visibility');
+            if (cmsData[key]) {
+                const val = cmsData[key].toString().trim().toLowerCase();
+                if (val === 'no' || val === 'false' || val === '0') {
+                    el.style.display = 'none';
+                } else {
+                    el.style.display = '';
+                }
+            }
+        });
+
         // Apply dynamically to Array elements (TechNest style lists)
         const arrayElements = document.querySelectorAll('[data-cms-array]');
         let arrayCount = 0;
 
         arrayElements.forEach(el => {
+            // Ensure we cache the original template with ALL `{{}}` variables before doing anything
+            if (!el.hasAttribute('data-cms-template')) {
+                el.setAttribute('data-cms-template', el.innerHTML);
+            }
+
             const key = el.getAttribute('data-cms-array');
             if (cmsData[key]) {
                 try {
                     const items = JSON.parse(cmsData[key]);
                     if (Array.isArray(items)) {
-                        // Store original template in a data attribute if not already done
-                        if (!el.hasAttribute('data-cms-template')) {
-                            el.setAttribute('data-cms-template', el.innerHTML);
-                        }
-                        
                         const template = el.getAttribute('data-cms-template');
                         let finalHtml = '';
                         
@@ -101,13 +115,15 @@ async function applyCMS() {
                             // Replace all {{key}} with actual value
                             Object.keys(item).forEach(k => {
                                 let val = item[k] || '';
-                                // Special handling: If the key is "details" or contains "list", auto-wrap newlines in <li>
-                                if (k === 'details' && val.includes('\n')) {
+                                // Special handling: Auto-wrap newlines in <li>
+                                if ((k === 'details' || k === 'features' || k === 'fixes') && val.includes('\n')) {
                                     val = val.split('\n').filter(l => l.trim() !== '').map(l => `<li>${l}</li>`).join('');
                                 }
                                 const regex = new RegExp(`{{${k}}}`, 'g');
                                 itemStr = itemStr.replace(regex, val);
                             });
+                            // Clean up any remaining unmapped {{var}} tokens so they don't leak
+                            itemStr = itemStr.replace(/{{[^{}]+}}/g, '');
                             finalHtml += itemStr;
                         });
                         
@@ -116,7 +132,11 @@ async function applyCMS() {
                     }
                 } catch(e) {
                     console.error("CMS: Failed to parse array for " + key, e);
+                    el.innerHTML = ''; // Hide on corrupt JSON too
                 }
+            } else {
+                // If database has no array data injected for this key yet, hide the raw HTML template
+                el.innerHTML = ''; 
             }
         });
 

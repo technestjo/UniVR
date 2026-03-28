@@ -436,8 +436,20 @@ app.get('/api/admin/seed', verifyToken, async (req, res) => {
         // Leaderboard Page
         { page: 'leaderboard', key: 'leaderboard-title', content: 'Global Trainee Rankings' },
         { page: 'leaderboard', key: 'leaderboard-desc', content: 'Top performers across all operational parameters.' },
+        { page: 'leaderboard', key: 'leaderboard-visible', content: 'yes' },
+
+        // Updates Page
+        { page: 'updates', key: 'updates-title', content: 'Latest Platform Updates' },
+        { page: 'updates', key: 'updates-desc', content: 'Stay informed about new features, improvements, and bug fixes.' },
+        { page: 'updates', key: 'updates-array', content: JSON.stringify([
+            { version: "Version 2.5.0 - Major Release", date: "March 27, 2026", badgeClass: "badge-green", badgeText: "LATEST", intro: "Major improvements to rendering pipeline.", features: "F-35 Lightning II aircraft now available\nAdvanced weather simulation system", fixes: "Fixed controller calibration issues\nResolved data sync delays" },
+            { version: "Version 2.4.5 - Maintenance", date: "March 15, 2026", badgeClass: "badge-orange", badgeText: "STABLE", intro: "Performance optimization.", features: "Improved graphics rendering", fixes: "Network stability improvements" }
+        ])},
 
         // Global / Footer
+        { page: 'global', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
+        { page: 'global', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
+        { page: 'global', key: 'index-video-src', content: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
         { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
         { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
         { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' }
