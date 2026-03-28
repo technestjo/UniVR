@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About | AeroTwin XR</title>
+    <title data-cms="about-page-title">About | AeroTwin XR</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
@@ -12,23 +12,24 @@
 <body>
     <nav id="navbar" class="scrolled">
         <a href="index.html" class="nav-logo">
-            <img src="logo.png" alt="AeroTwin Logo">
-            AeroTwin XR
+            <img src="logo.png" alt="AeroTwin Logo" data-cms-src="nav-logo-img">
+            <span data-cms="nav-logo-text">AeroTwin XR</span>
         </a>
         <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="news.html">News</a></li>
-            <li><a href="about.html" class="active">About</a></li>
-            <li><a href="features.html">Features</a></li>
-            <li><a href="leaderboard.html">Trainee Leaderboard</a></li>
-            <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
+            <li><a href="index.html" data-cms="nav-home">Home</a></li>
+            <li><a href="news.html" data-cms="nav-news">News</a></li>
+            <li><a href="about.html" class="active" data-cms="nav-about">About</a></li>
+            <li><a href="features.html" data-cms="nav-features">Features</a></li>
+            <li><a href="leaderboard.html" data-cms="nav-leaderboard">Trainee Leaderboard</a></li>
+            <li><a href="pricing.html" class="btn-get-started" data-cms="nav-get-started">Get Started</a></li>
         </ul>
     </nav>
 
     <header class="page-header">
         <div class="container">
-            <h1 class="text-cyan">About AeroTwin XR</h1>
-            <p class="text-dim">Redefining the future of aviation training through immersive technology.</p>
+            <h1 class="text-cyan" data-cms="about-hero-title">About AeroTwin XR</h1>
+            <p class="text-dim" data-cms="about-hero-desc">Redefining the future of aviation training through immersive
+                technology.</p>
         </div>
     </header>
 
@@ -36,17 +37,18 @@
         <div class="container">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center;">
                 <div class="glass-panel" style="padding: 40px;">
-                    <h2 style="font-family: var(--font-heading); margin-bottom: 20px;">Our Mission</h2>
-                    <p class="text-dim" style="font-size: 18px; margin-bottom: 20px;">AeroTwin XR was founded with a
-                        single goal: to make world-class aviation training accessible, safe, and hyper-realistic. By
-                        leveraging the latest in VR and AI, we provide a platform where trainees can master complex
-                        procedures without the risks of real-world flight.</p>
-                    <p class="text-dim" style="font-size: 18px;">Our technology is used by top aviation academies and
-                        military organizations worldwide to ensure the next generation of pilots is ready for any
-                        challenge.</p>
+                    <h2 style="font-family: var(--font-heading); margin-bottom: 20px;" data-cms="about-mission-title">
+                        Our Mission</h2>
+                    <p class="text-dim" style="font-size: 18px; margin-bottom: 20px;" data-cms="about-mission-p1">
+                        AeroTwin XR was founded with a single goal: to make world-class aviation training accessible,
+                        safe, and hyper-realistic. By leveraging the latest in VR and AI, we provide a platform where
+                        trainees can master complex procedures without the risks of real-world flight.</p>
+                    <p class="text-dim" style="font-size: 18px;" data-cms="about-mission-p2">Our technology is used by
+                        top aviation academies and military organizations worldwide to ensure the next generation of
+                        pilots is ready for any challenge.</p>
                 </div>
                 <div style="position: relative;">
-                    <img src="assets/hero-bg-new.webp" alt="Aviation Training"
+                    <img src="assets/hero-bg-new.webp" alt="Aviation Training" data-cms-src="about-mission-img"
                         style="width: 100%; border-radius: 12px; border: 1px solid var(--border-cyan); filter: brightness(0.7);">
                     <div
                         style="position: absolute; inset: 0; background: radial-gradient(circle, transparent, var(--bg-dark));">
@@ -60,50 +62,19 @@
         <div class="footer-grid">
             <div class="footer-brand">
                 <div class="footer-logo-box">
-                    <img src="logo.png" alt="AeroTwin Logo">
-                    <span>AEROTWIN XR<br>MISSION SYSTEMS</span>
+                    <img src="logo.png" alt="AeroTwin Logo" data-cms-src="footer-logo-img">
+                    <span data-cms="footer-brand-text">AEROTWIN XR<br>MISSION SYSTEMS</span>
                 </div>
-            </div>
-            <div class="footer-col">
-                <h4>Navigation</h4>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="news.html">News</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="features.html">Features</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="support.html">Support</a></li>
-                    <li><a href="contact.html">Contact Us</a></li>
-                    <li><a href="faq.html">FAQs</a></li>
-                    <li><a href="updates.html">Updates</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="privacy.html">Privacy Policy</a></li>
-                    <li><a href="terms.html">Terms of Service</a></li>
-                    <li><a href="#">Cookie Policy</a></li>
-                    <li><a href="#">Licensing</a></li>
-                </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <div class="footer-bottom-logo">AEROTWIN</div>
-            <div class="footer-icons">
-                <span>📡</span> <span>⚙️</span> <span>☁️</span> <span>✈️</span>
-            </div>
             <div class="footer-copy">
-                <span>Copyright © 2026</span>
-                <a href="privacy.html">Privacy Policy</a>
-                <a href="terms.html">Terms of Service</a>
+                <span data-cms="footer-copyright">Copyright © 2026</span>
             </div>
         </div>
     </footer>
+
+    <script src="cms.js"></script>
 </body>
 
 </html>

@@ -159,21 +159,17 @@
             <section id="view-cms" class="admin-view admin-only" style="display: none;">
                 <div class="dashboard-header">
                     <div>
-                        <h2 class="text-gradient">Site Content Manager</h2>
-                        <p class="text-dim">Update website text dynamically across all pages.</p>
-                    </div>
-                    <div class="dashboard-controls">
-                        <button onclick="syncCmsDefaults()" class="btn-secondary" title="Import all default site text">🔄 Sync Site Content</button>
-                        <button onclick="addNewCmsRow()" class="btn-secondary">➕ Add Entry</button>
-                        <button onclick="saveCmsContent()" class="btn-primary">💾 Deploy Changes</button>
+                        <h2 class="text-gradient">AeroTwin CMS <span style="font-size: 14px; color: var(--text-dim); font-weight: 400; padding: 5px 15px; background: rgba(255,255,255,0.05); border-radius: 50px;">Live Editor</span></h2>
+                        <p class="text-dim">Update website content globally with real-time preview and synchronization.</p>
                     </div>
                 </div>
                 
                 <div class="cms-layout">
+                    <!-- Page Sidebar -->
                     <div class="cms-sidebar">
                         <div style="padding: 0 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 2px;">Content Categories</div>
                         <div id="cmsPageSidebar" style="display: flex; flex-direction: column; gap: 8px;">
-                            <button class="cms-sidebar-btn" data-page="home" onclick="switchCmsPage('home', this)"><span>🏠 Home Page</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn active" data-page="home" onclick="switchCmsPage('home', this)"><span>🏠 Home Page</span> <span class="badge">0</span></button>
                             <button class="cms-sidebar-btn" data-page="features" onclick="switchCmsPage('features', this)"><span>🚀 Features</span> <span class="badge">0</span></button>
                             <button class="cms-sidebar-btn" data-page="about" onclick="switchCmsPage('about', this)"><span>ℹ️ About Us</span> <span class="badge">0</span></button>
                             <button class="cms-sidebar-btn" data-page="pricing" onclick="switchCmsPage('pricing', this)"><span>💰 Pricing</span> <span class="badge">0</span></button>
@@ -181,17 +177,40 @@
                             <button class="cms-sidebar-btn" data-page="contact" onclick="switchCmsPage('contact', this)"><span>📧 Contact</span> <span class="badge">0</span></button>
                             <button class="cms-sidebar-btn" data-page="global" onclick="switchCmsPage('global', this)"><span>🌐 Global/Other</span> <span class="badge">0</span></button>
                         </div>
-                    </div>
-                    <div class="glass-panel" style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <input type="text" id="cmsSearch" placeholder="Search keys or content in this section..." class="admin-input" style="margin: 0; flex: 1;" oninput="renderCmsPage(activeCmsPage)">
-                            <div style="font-size: 12px; color: var(--text-dim); white-space: nowrap;">Showing <b id="cmsMatchCount" style="color: var(--accent-cyan);">0</b> entries</div>
+
+                        <div style="margin-top: auto; padding: 15px; background: rgba(0, 242, 255, 0.05); border-radius: 12px; border: 1px dashed rgba(0, 242, 255, 0.2);">
+                             <div style="font-size: 10px; color: var(--accent-cyan); font-weight: 800; text-transform: uppercase;">Sync Status</div>
+                             <div id="cmsSyncText" style="font-size: 13px; color: var(--text-main); margin-top: 5px;">Synchronized with MongoDB Atlas.</div>
+                             <button onclick="syncCmsDefaults()" class="btn-secondary" style="width: 100%; margin-top: 10px; font-size: 11px;">🔄 Reset Defaults</button>
+                             <a href="index.html" target="_blank" class="btn-primary" style="width: 100%; margin-top: 10px; font-size: 11px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px;">🌐 Live Site Preview</a>
                         </div>
-                        <div id="cmsEditor" class="cms-editor-container">
-                             <div class="loading-state">Loading CMS blocks...</div>
-                        </div>
-                        <div id="cmsStatus" style="text-align: right; font-weight: bold; font-size: 13px;"></div>
                     </div>
+
+                    <!-- Editor Main Area -->
+                    <div class="cms-panel">
+                        <div class="glass-panel" style="padding: 15px 25px; display: flex; gap: 20px; align-items: center; border-color: rgba(0, 242, 255, 0.2);">
+                            <div style="position: relative; flex: 1;">
+                                <span style="position: absolute; left: 15px; top: 50%; translate: 0 -50%; opacity: 0.5;">🔍</span>
+                                <input type="text" id="cmsSearch" placeholder="Search content keys or text..." class="admin-input" style="margin: 0; padding-left: 45px; border-radius: 12px;" oninput="renderCmsPage(activeCmsPage)">
+                            </div>
+                            <button onclick="addNewCmsRow()" class="btn-primary" style="padding: 12px 25px; font-size: 13px;">➕ New Entry</button>
+                        </div>
+
+                        <div id="cmsEditor" class="cms-grid">
+                             <div class="loading-state">Syncing content blocks...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Save Indicator -->
+                <div id="cmsFloatingActions" class="cms-status-indicator">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 800; text-transform: uppercase;">Unsaved Changes</span>
+                        <span id="cmsUnsavedCount" style="font-size: 14px; color: white;">0 items modified</span>
+                    </div>
+                    <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                    <button onclick="saveCmsContent()" class="btn-primary" style="padding: 10px 30px; border-radius: 50px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);">💾 Deploy to Site</button>
+                    <button onclick="loadCmsContent()" class="btn-secondary" style="padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);">Discard</button>
                 </div>
             </section>
 
@@ -210,6 +229,7 @@
     </div>
 
     <!-- ─── SCRIPTS ─── -->
+    <script src="cms-admin.js"></script>
     <script>
         let authToken = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole') || 'admin';
@@ -705,200 +725,24 @@
             document.getElementById('liveStreamModal').style.display = 'none';
         }
 
-        // ─── CMS LOGIC ───
-        let activeCmsPage = 'home';
-        let cmsFullData = []; 
-
-        async function loadCmsContent() {
-            try {
-                let rawData = [];
-                const adminRes = await fetch('/api/admin/raw-content', {
-                     headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if(adminRes.ok) {
-                    rawData = await adminRes.json();
-                } else {
-                    const res = await fetch('/api/content');
-                    const data = await res.json();
-                    rawData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
-                }
-
-                // IMPORTANT: Normalize data. If page is missing or invalid, move to global.
-                cmsFullData = rawData.map(item => ({
-                    ...item,
-                    page: (item.page && item.page !== 'undefined' && item.page !== 'null') ? item.page : 'global'
-                }));
-
-                // If currently selected page is empty, try to find one with data
-                const pageHasData = (p) => cmsFullData.some(i => i.page === p);
-                if (cmsFullData.length > 0 && !pageHasData(activeCmsPage)) {
-                    // Find the first page button that has a count > 0
-                    const pagesWithData = [...new Set(cmsFullData.map(i => i.page))];
-                    if (pagesWithData.length > 0) activeCmsPage = pagesWithData[0];
-                }
-
-                updateCmsSidebar();
-                renderCmsPage(activeCmsPage);
-                
-                document.getElementById('cmsStatus').innerText = 'CMS data synchronized. ✓';
-                document.getElementById('cmsStatus').style.color = '#00ff88';
-            } catch (err) {
-                console.error("CMS Load Error:", err);
-                document.getElementById('cmsStatus').innerText = 'Failed to sync CMS.';
-                document.getElementById('cmsStatus').style.color = '#ff3333';
-            }
-        }
-
-        function updateCmsSidebar() {
-            const btns = document.querySelectorAll('.cms-sidebar-btn');
-            btns.forEach(btn => {
-                const p = btn.getAttribute('data-page');
-                const count = cmsFullData.filter(item => item.page === p).length;
-                btn.querySelector('.badge').innerText = count;
-                btn.classList.toggle('active', p === activeCmsPage);
-            });
-        }
-
-        function switchCmsPage(page, btn) {
-            activeCmsPage = page;
-            updateCmsSidebar();
-            renderCmsPage(page);
-        }
-
-        function renderCmsPage(page) {
-            const container = document.getElementById('cmsEditor');
-            const search = document.getElementById('cmsSearch').value.toLowerCase();
-            container.innerHTML = '';
-            
-            let filtered = cmsFullData.filter(item => item.page === page);
-            
-            if (search) {
-                filtered = filtered.filter(i => 
-                    i.key.toLowerCase().includes(search) || 
-                    (i.content || '').toLowerCase().includes(search)
-                );
-            }
-
-            document.getElementById('cmsMatchCount').innerText = filtered.length;
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding: 60px; color: var(--text-dim);">
-                        <div style="font-size: 44px; margin-bottom: 20px; opacity: 0.3;">🔍</div>
-                        <h3 style="letter-spacing: 1px; color: rgba(255,255,255,0.3);">NO MATCHES FOUND</h3>
-                        <p style="font-size: 13px; opacity: 0.5;">Try a different search term or sync defaults.</p>
-                    </div>`;
-            } else {
-                filtered.forEach(item => {
-                    container.appendChild(createCmsRow(item.key, item.content));
-                });
-            }
-        }
-
-        function createCmsRow(key = '', val = '') {
-            const row = document.createElement('div');
-            row.className = 'cms-row';
-            row.innerHTML = `
-                <div class="cms-key-wrapper">
-                    <input type="text" placeholder="KEY_ID" class="admin-input cms-key-input" value="${key}" style="margin: 0;">
-                </div>
-                <div class="cms-val-wrapper">
-                    <textarea class="admin-input cms-val-input" placeholder="Type content here..." rows="1">${val}</textarea>
-                </div>
-                <div class="cms-row-actions">
-                    <button class="btn-icon text-danger" onclick="this.closest('.cms-row').remove()" style="background: rgba(255,51,51,0.05); border: 1px solid rgba(255,51,51,0.1); border-radius: 8px; width: 38px; height: 38px;">🗑</button>
-                </div>
-            `;
-
-            // Auto-height for textarea
-            const tx = row.querySelector('textarea');
-            tx.style.height = 'auto';
-            tx.style.height = (tx.scrollHeight) + 'px';
-            tx.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
-
-            return row;
-        }
-
-        function addNewCmsRow() {
-            const container = document.getElementById('cmsEditor');
-            const row = createCmsRow();
-            container.appendChild(row);
-            row.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function saveCmsContent() {
-            const statusEl = document.getElementById('cmsStatus');
-            statusEl.innerText = 'Deploying content...';
-            statusEl.style.color = 'var(--accent-cyan)';
-            
-            try {
-                const rows = document.querySelectorAll('.cms-row');
-                const newItemsForThisPage = [];
-                rows.forEach(r => {
-                    const k = r.querySelector('.cms-key-input').value.trim();
-                    const v = r.querySelector('.cms-val-input').value.trim();
-                    if(k) newItemsForThisPage.push({ page: activeCmsPage, key: k, content: v });
-                });
-
-                const otherPages = cmsFullData.filter(item => item.page !== activeCmsPage);
-                const allItems = [...otherPages, ...newItemsForThisPage];
-
-                const res = await fetch('/api/admin/content', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ items: allItems })
-                });
-                
-                const result = await res.json();
-                if (result.success) {
-                    cmsFullData = allItems;
-                    updateCmsSidebar(); // Update the badges
-                    statusEl.innerText = '✅ Deployed successfully! Refreshing website...';
-                    statusEl.style.color = '#00ff88';
-                    
-                    // Trigger CMS refresh on frontend
-                    if (window.CMS && window.CMS.refresh) {
-                        setTimeout(() => {
-                            window.CMS.refresh();
-                        }, 500);
-                    }
-                } else {
-                    throw new Error();
-                }
-            } catch (err) {
-                statusEl.innerText = '❌ Deployment failed.';
-                statusEl.style.color = '#ff3333';
-            }
-        }
-
         async function syncCmsDefaults() {
             if(!confirm("This will import all default website text into your CMS. Continue?")) return;
-            const statusEl = document.getElementById('cmsStatus');
-            statusEl.innerText = 'Syncing default site content...';
-            statusEl.style.color = 'var(--accent-cyan)';
-
             try {
                 const res = await fetch('/api/admin/seed', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const data = await res.json();
                 if(data.success) {
-                    statusEl.innerText = '✅ Site content synced successfully!';
-                    statusEl.style.color = '#00ff88';
-                    loadCmsContent(); // Reload everything
+                    await loadCmsContent();
                 }
-            } catch (err) {
-                statusEl.innerText = '❌ Sync failed.';
-                statusEl.style.color = '#ff3333';
+            } catch (e) {
+                alert("Seed failed");
             }
         }
+    </script>
+</body>
+</html>
+
     </script>
 </body>
 </html>
