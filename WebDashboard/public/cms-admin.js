@@ -1,240 +1,413 @@
 /**
- * AeroTwin XR - Luxury CMS Admin Engine (V4)
- * Handles section-based rendering, visual grouping, and premium data management.
+ * AeroTwin XR - TechNest Style CMS Engine
+ * Structured, form-based, array-supporting logic.
  */
 
-let activeCmsPage = 'home';
-let cmsFullData = [];
-let unsavedChanges = new Map();
+let activeTnPage = 'home';
+let tnFullData = {}; // Object matching key -> content for easy access
+let rawDataArray = [];
 
-// Configuration for section grouping
-const SECTION_MAP = {
-    'hero': { title: 'Hero & Introduction', icon: '🚀' },
-    'feat': { title: 'Product Features', icon: '💎' },
-    'about': { title: 'Mission & History', icon: 'ℹ️' },
-    'price': { title: 'Pricing & Licensing', icon: '💰' },
-    'news': { title: 'Latest Updates', icon: '📰' },
-    'stat': { title: 'System Growth & Stats', icon: '📊' },
-    'contact': { title: 'Contact & Support', icon: '📧' },
-    'foot': { title: 'Global Footer & Legal', icon: '⚖️' },
-    'index': { title: 'Homepage Highlights', icon: '🏠' }
+// ─── CMS SCHEMA DEFINITION ───
+// This schema drives the entire UI exactly like the TechNest layout.
+const TN_SCHEMA = {
+    home: {
+        title: "Home Page Content",
+        sections: [
+            {
+                id: "home-hero",
+                title: "Hero Section",
+                type: "fixed",
+                fields: [
+                    { key: "index-hero-title", label: "Title", type: "text", width: "100%" },
+                    { key: "index-hero-desc", label: "Subtitle", type: "textarea", width: "100%" },
+                    { key: "index-btn-primary", label: "CTA 1", type: "text", width: "50%" },
+                    { key: "index-btn-secondary", label: "CTA 2", type: "text", width: "50%" }
+                ]
+            },
+            {
+                id: "home-features",
+                title: "Platform Features",
+                type: "array",
+                arrayKey: "home-features-array",
+                defaultItem: { title: "New Feature", desc: "Description...", icon: "⚡" },
+                fields: [
+                    { key: "title", label: "Title", type: "text", width: "100%" },
+                    { key: "desc", label: "Description", type: "textarea", width: "100%" },
+                    { key: "icon", label: "Icon Name / Emoji", type: "text", width: "50%" }
+                ]
+            },
+            {
+                id: "home-stats",
+                title: "Impact Statistics",
+                type: "array",
+                arrayKey: "home-stats-array",
+                defaultItem: { val: "100+", label: "New Stat" },
+                fields: [
+                    { key: "val", label: "Statistic Value", type: "text", width: "50%" },
+                    { key: "label", label: "Label", type: "text", width: "50%" }
+                ]
+            }
+        ]
+    },
+    features: {
+        title: "Features Page Content",
+        sections: [
+            {
+                id: "feat-hero",
+                title: "Hero Section",
+                type: "fixed",
+                fields: [
+                    { key: "features-hero-title", label: "Title", type: "text", width: "100%" },
+                    { key: "features-hero-desc", label: "Subtitle", type: "textarea", width: "100%" }
+                ]
+            },
+            {
+                id: "feat-detailed",
+                title: "Detailed Capabilities",
+                type: "array",
+                arrayKey: "features-detailed-array",
+                defaultItem: { title: "System", desc: "Details", icon: "⚙️" },
+                fields: [
+                    { key: "title", label: "Title", type: "text", width: "100%" },
+                    { key: "desc", label: "Description", type: "textarea", width: "100%" },
+                    { key: "icon", label: "Icon Name", type: "text", width: "50%" }
+                ]
+            }
+        ]
+    },
+    about: {
+        title: "About Us Content",
+        sections: [
+            {
+                id: "about-hero",
+                title: "Mission Statement",
+                type: "fixed",
+                fields: [
+                    { key: "about-hero-title", label: "Headline", type: "text", width: "100%" },
+                    { key: "about-mission-text", label: "Mission Text", type: "textarea", width: "100%" }
+                ]
+            },
+            {
+                id: "about-team",
+                title: "Our Team",
+                type: "array",
+                arrayKey: "about-team-array",
+                defaultItem: { name: "Name", role: "Role", bio: "Bio..." },
+                fields: [
+                    { key: "name", label: "Name", type: "text", width: "50%" },
+                    { key: "role", label: "Role", type: "text", width: "50%" },
+                    { key: "bio", label: "Bio", type: "textarea", width: "100%" }
+                ]
+            }
+        ]
+    },
+    pricing: {
+        title: "Pricing Plans Content",
+        sections: [
+            {
+                id: "price-hero",
+                title: "Pricing Header",
+                type: "fixed",
+                fields: [
+                    { key: "pricing-title", label: "Title", type: "text", width: "100%" }
+                ]
+            },
+            {
+                id: "price-tiers",
+                title: "Subscription Tiers",
+                type: "array",
+                arrayKey: "pricing-tiers-array",
+                defaultItem: { name: "New Plan", price: "$99", details: "Feature 1\nFeature 2" },
+                fields: [
+                    { key: "name", label: "Plan Name", type: "text", width: "50%" },
+                    { key: "price", label: "Price", type: "text", width: "50%" },
+                    { key: "details", label: "Features (One per line)", type: "textarea", width: "100%" }
+                ]
+            }
+        ]
+    },
+    news: {
+        title: "News & Blog Content",
+        sections: [
+            {
+                id: "news-articles",
+                title: "Latest Announcements",
+                type: "array",
+                arrayKey: "news-articles-array",
+                defaultItem: { title: "New Update", date: "Jan 1, 2026", desc: "Details here" },
+                fields: [
+                    { key: "title", label: "Article Title", type: "text", width: "100%" },
+                    { key: "date", label: "Date", type: "text", width: "50%" },
+                    { key: "desc", label: "Content", type: "textarea", width: "100%" }
+                ]
+            }
+        ]
+    },
+    leaderboard: {
+        title: "Leaderboard Content",
+        sections: [
+            {
+                id: "lb-hero",
+                title: "Leaderboard Header",
+                type: "fixed",
+                fields: [
+                    { key: "leaderboard-title", label: "Title", type: "text", width: "100%" },
+                    { key: "leaderboard-desc", label: "Description", type: "textarea", width: "100%" }
+                ]
+            }
+        ]
+    },
+    global: {
+        title: "Global Website Settings",
+        sections: [
+            {
+                id: "global-footer",
+                title: "Footer Information",
+                type: "fixed",
+                fields: [
+                    { key: "footer-copyright", label: "Copyright Text", type: "text", width: "100%" },
+                    { key: "footer-status", label: "System Status Text", type: "text", width: "100%" }
+                ]
+            }
+        ]
+    }
 };
 
-const PAGE_LABELS = {
-    'home': '🏠 Homepage',
-    'features': '🚀 Features',
-    'about': 'ℹ️ About Us',
-    'pricing': '💰 Pricing',
-    'news': '📰 News Hub',
-    'contact': '📧 Contact',
-    'global': '🌐 Global / Footer'
-};
-
-// ─── CORE CMS LOGIC ───
+// ─── INITIALIZATION ───
 
 async function loadCmsContent() {
-    const editor = document.getElementById('cmsEditor');
     try {
         const res = await fetch('/api/admin/raw-content', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
-        if (!res.ok) throw new Error('API_UNAVAILABLE');
+        if (!res.ok) throw new Error('API Error');
         
-        cmsFullData = await res.json();
+        rawDataArray = await res.json();
         
-        updateCmsSidebar();
-        renderCmsPage(activeCmsPage);
-    } catch (err) {
-        console.error("CMS Load Error:", err);
-        editor.innerHTML = `<div class="loading-state text-danger">Lost connection to Mission Control. Please re-authenticate.</div>`;
-    }
-}
-
-function updateCmsSidebar() {
-    const sidebar = document.getElementById('cmsPageSidebar');
-    sidebar.innerHTML = '<div style="padding: 0 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 2px;">Core Divisions</div>';
-    
-    // Get unique pages from settings + data
-    const pages = Object.keys(PAGE_LABELS);
-    
-    pages.forEach(p => {
-        const count = cmsFullData.filter(item => item.page === p).length;
-        const btn = document.createElement('button');
-        btn.className = `cms-sidebar-btn ${p === activeCmsPage ? 'active' : ''}`;
-        btn.innerHTML = `<span>${PAGE_LABELS[p]}</span> <span class="badge">${count}</span>`;
-        btn.onclick = () => switchCmsPage(p);
-        sidebar.appendChild(btn);
-    });
-
-    // Add Action Buttons
-    const actionContainer = document.createElement('div');
-    actionContainer.style.marginTop = 'auto';
-    actionContainer.style.paddingTop = '20px';
-    actionContainer.style.display = 'flex';
-    actionContainer.style.flexDirection = 'column';
-    actionContainer.style.gap = '10px';
-
-    actionContainer.innerHTML = `
-        <div style="font-size: 10px; color: var(--accent-cyan); font-weight: 800; text-transform: uppercase; opacity: 0.6;">Sync Operations</div>
-        <button onclick="syncCmsDefaults()" class="btn-secondary" style="width: 100%; font-size: 11px; padding: 12px;">🔄 Re-Seed Defaults</button>
-        <a href="index.html" target="_blank" class="btn-primary" style="width: 100%; font-size: 11px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 12px; border-radius: 12px;">🌐 Live Preview</a>
-    `;
-    sidebar.appendChild(actionContainer);
-}
-
-function switchCmsPage(page) {
-    if (unsavedChanges.size > 0 && !confirm("Unsaved tactical data will be lost. Proceed?")) return;
-    activeCmsPage = page;
-    unsavedChanges.clear();
-    updateUnsavedIndicator();
-    updateCmsSidebar();
-    renderCmsPage(page);
-}
-
-function renderCmsPage(page) {
-    const container = document.getElementById('cmsEditor');
-    const search = document.getElementById('cmsSearch').value.toLowerCase();
-    container.innerHTML = '';
-    
-    let filtered = cmsFullData.filter(item => item.page === page);
-    if (search) {
-        filtered = filtered.filter(i => i.key.includes(search) || (i.content || '').toLowerCase().includes(search));
-    }
-
-    if (filtered.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding: 100px; color: var(--text-dim); font-family: var(--font-heading);">NO DATA IN THIS DIVISION</div>`;
-        return;
-    }
-
-    // Group items into sections
-    const groups = {};
-    filtered.forEach(item => {
-        const prefix = item.key.split('-')[0].substring(0, 4); // basic heuristic
-        const sectionKey = Object.keys(SECTION_MAP).find(k => item.key.startsWith(k)) || 'other';
-        if (!groups[sectionKey]) groups[sectionKey] = [];
-        groups[sectionKey].push(item);
-    });
-
-    // Render groups
-    Object.keys(groups).forEach(sKey => {
-        const config = SECTION_MAP[sKey] || { title: 'Other Content', icon: '📂' };
-        const section = document.createElement('div');
-        section.className = 'cms-section-group';
-        
-        section.innerHTML = `
-            <div class="cms-section-header">
-                <div class="cms-section-icon">${config.icon}</div>
-                <div class="cms-section-title">${config.title}</div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 15px;"></div>
-        `;
-        
-        const list = section.querySelector('div:last-child');
-        groups[sKey].forEach(item => list.appendChild(createPremiumCard(item)));
-        
-        container.appendChild(section);
-    });
-}
-
-function createPremiumCard(item) {
-    const card = document.createElement('div');
-    card.className = 'cms-premium-card';
-    
-    // Label normalization
-    let label = item.key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    const isLong = item.content && item.content.length > 50;
-
-    card.innerHTML = `
-        <div class="cms-meta">
-            <span class="cms-friendly-label">${label}</span>
-            <span class="cms-tech-key">${item.key}</span>
-        </div>
-        <div class="cms-input-wrapper">
-            ${isLong ? 
-                `<textarea class="cms-luxury-input cms-luxury-textarea" oninput="trackChange('${item.key}', this.value)">${item.content}</textarea>` :
-                `<input type="text" class="cms-luxury-input" value="${item.content}" oninput="trackChange('${item.key}', this.value)">`
-            }
-        </div>
-        <div class="cms-card-actions">
-            <button class="btn-icon" onclick="deleteEntry('${item.key}')" style="color: #ff3333; font-size: 11px; opacity: 0.5;">🗑 Delete Entry</button>
-        </div>
-    `;
-    return card;
-}
-
-function trackChange(key, val) {
-    const original = cmsFullData.find(i => i.key === key);
-    if (original.content === val) unsavedChanges.delete(key);
-    else unsavedChanges.set(key, { ...original, content: val });
-    updateUnsavedIndicator();
-}
-
-function updateUnsavedIndicator() {
-    const indicator = document.getElementById('cmsFloatingActions');
-    const count = document.getElementById('cmsUnsavedCount');
-    if (unsavedChanges.size > 0) {
-        indicator.classList.add('visible');
-        count.innerText = `${unsavedChanges.size} Updates Staged`;
-    } else {
-        indicator.classList.remove('visible');
-    }
-}
-
-async function saveCmsContent() {
-    const btn = document.querySelector('#cmsFloatingActions .btn-primary');
-    const originalText = btn.innerText;
-    try {
-        btn.innerText = 'Syncing...';
-        btn.disabled = true;
-
-        const updatedMap = new Map();
-        cmsFullData.forEach(i => updatedMap.set(i.key, i));
-        unsavedChanges.forEach((v, k) => updatedMap.set(k, v));
-
-        const res = await fetch('/api/admin/content', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ items: Array.from(updatedMap.values()) })
+        // Convert array to fast accessible dictionary
+        tnFullData = {};
+        rawDataArray.forEach(item => {
+            tnFullData[item.key] = item.content;
         });
 
-        if (res.ok) {
-            cmsFullData = Array.from(updatedMap.values());
-            unsavedChanges.clear();
-            updateUnsavedIndicator();
-            updateCmsSidebar();
-            btn.innerText = '✅ Synced';
-            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
-        }
+        tnRenderPage(activeTnPage);
     } catch (err) {
-        alert("Sync failed. Check connection.");
-        btn.innerText = originalText;
-        btn.disabled = false;
+        console.error("CMS Load Failed:", err);
+        document.getElementById('tnFormContainer').innerHTML = '<div style="color:red; padding:20px;">Failed to load. Check console.</div>';
     }
 }
 
-async function deleteEntry(key) {
-    if (!confirm(`Delete ${key} permanently from database?`)) return;
-    const res = await fetch(`/api/admin/content/${key}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${authToken}` }
+// ─── RENDERING ENGINE ───
+
+function tnSwitchPage(pageId) {
+    activeTnPage = pageId;
+
+    // Update Sidebar UI
+    document.querySelectorAll('.tn-nav-item').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.tn-nav-item[onclick="tnSwitchPage('${pageId}')"]`).classList.add('active');
+
+    tnRenderPage(pageId);
+}
+
+function tnRenderPage(pageId) {
+    const config = TN_SCHEMA[pageId];
+    if (!config) return;
+
+    // Set Page Title
+    document.getElementById('tnPageTitle').innerText = config.title;
+
+    const container = document.getElementById('tnFormContainer');
+    container.innerHTML = ''; // Clear
+
+    config.sections.forEach(section => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'tn-section';
+        
+        // Build Header
+        let headerHtml = `<div class="tn-section-header"><h2>${section.title}</h2>`;
+        if (section.type === 'array') {
+            headerHtml += `<button class="tn-btn-pill" onclick="tnAddArrayItem('${pageId}', '${section.id}')">+ Add Service</button>`;
+        }
+        headerHtml += `</div>`;
+        sectionDiv.innerHTML = headerHtml;
+
+        // Build Body
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'tn-section-body';
+        bodyDiv.id = `tn-sec-body-${section.id}`;
+        
+        if (section.type === 'fixed') {
+            bodyDiv.innerHTML = buildFieldsHtml(section.fields, tnFullData);
+            bodyDiv.innerHTML += `<button class="tn-btn-save" onclick="tnSaveSection('${section.id}')">💾 Save Changes</button>`;
+        } else if (section.type === 'array') {
+            bodyDiv.innerHTML = buildArrayHtml(section);
+            bodyDiv.innerHTML += `<div style="margin-top:20px;"><button class="tn-btn-save" onclick="tnSaveArraySection('${section.id}')">💾 Save Array Changes</button></div>`;
+        }
+
+        sectionDiv.appendChild(bodyDiv);
+        container.appendChild(sectionDiv);
     });
-    if (res.ok) loadCmsContent();
 }
 
-function addNewCmsRow() {
-    const key = prompt("Enter Unique Key (e.g., home-hero-title):");
-    if (!key || cmsFullData.some(i => i.key === key)) return alert("Invalid or duplicate key.");
-    const newItem = { page: activeCmsPage, key: key, content: "" };
-    cmsFullData.unshift(newItem);
-    renderCmsPage(activeCmsPage);
+// ─── FIELD BUILDERS ───
+
+function buildFieldsHtml(fields, sourceData, arrayIndex = null) {
+    let html = `<div class="tn-flex-row">`;
+    fields.forEach(field => {
+        const fieldId = arrayIndex !== null ? `field-${field.key}-${arrayIndex}` : field.key;
+        const val = sourceData ? (sourceData[field.key] || '') : '';
+        const width = field.width || "100%";
+        
+        html += `<div class="tn-form-group" style="width: calc(${width} - 10px);">`;
+        html += `<label>${field.label}</label>`;
+        if (field.type === 'textarea') {
+            html += `<textarea id="${fieldId}" data-key="${field.key}">${escapeHtml(val)}</textarea>`;
+        } else {
+            html += `<input type="text" id="${fieldId}" data-key="${field.key}" value="${escapeHtml(val)}">`;
+        }
+        html += `</div>`;
+    });
+    html += `</div>`;
+    return html;
 }
 
-async function syncCmsDefaults() {
-    if (!confirm("Re-seeding will wipe existing content and apply defaults. Continue?")) return;
-    await fetch('/api/admin/seed', { headers: { 'Authorization': `Bearer ${authToken}` } });
+function buildArrayHtml(section) {
+    const rawVal = tnFullData[section.arrayKey];
+    let items = [];
+    try { items = rawVal ? JSON.parse(rawVal) : []; } catch(e) {}
+
+    let html = '';
+    items.forEach((item, index) => {
+        html += `
+            <div class="tn-array-item" id="arr-item-${section.id}-${index}">
+                ${buildFieldsHtml(section.fields, item, `${section.id}-${index}`)}
+                <div style="margin-top: 15px;">
+                    <button class="tn-btn-delete" onclick="tnDeleteArrayItem('${section.id}', ${index})">🗑 Delete</button>
+                </div>
+            </div>
+        `;
+    });
+
+    if (items.length === 0) {
+        html += `<div class="tn-empty-state">No items created yet. Click "+ Add Service" above.</div>`;
+    }
+
+    return html;
+}
+
+// ─── ARRAY MANAGEMENT ───
+
+function tnAddArrayItem(pageId, sectionId) {
+    const config = TN_SCHEMA[pageId].sections.find(s => s.id === sectionId);
+    let items = [];
+    try { items = tnFullData[config.arrayKey] ? JSON.parse(tnFullData[config.arrayKey]) : []; } catch(e){}
+    
+    items.push({...config.defaultItem});
+    tnFullData[config.arrayKey] = JSON.stringify(items);
+    tnRenderPage(pageId); // Re-render to show new item
+}
+
+function tnDeleteArrayItem(sectionId, idx) {
+    // Find section config
+    let config = null;
+    Object.values(TN_SCHEMA).forEach(p => p.sections.forEach(s => { if(s.id === sectionId) config = s; }));
+    
+    let items = [];
+    try { items = tnFullData[config.arrayKey] ? JSON.parse(tnFullData[config.arrayKey]) : []; } catch(e){}
+    items.splice(idx, 1);
+    tnFullData[config.arrayKey] = JSON.stringify(items);
+    tnRenderPage(activeTnPage);
+}
+
+// ─── SAVE LOGIC ───
+
+async function tnSaveSection(sectionId) {
+    // Find schema
+    let config = null;
+    let pageKey = activeTnPage;
+    Object.keys(TN_SCHEMA).forEach(pK => TN_SCHEMA[pK].sections.forEach(s => { if(s.id === sectionId) { config = s; pageKey = pK; } }));
+
+    const bodyDiv = document.getElementById(`tn-sec-body-${sectionId}`);
+    const updates = [];
+
+    config.fields.forEach(f => {
+        const input = bodyDiv.querySelector(`[data-key="${f.key}"]`);
+        if (input) {
+            updates.push({ page: pageKey, key: f.key, content: input.value });
+            tnFullData[f.key] = input.value; // Update local cache
+        }
+    });
+
+    await executeSave(updates, sectionId);
+}
+
+async function tnSaveArraySection(sectionId) {
+    // Find schema
+    let config = null;
+    let pageKey = activeTnPage;
+    Object.keys(TN_SCHEMA).forEach(pK => TN_SCHEMA[pK].sections.forEach(s => { if(s.id === sectionId) { config = s; pageKey = pK; } }));
+    
+    const bodyDiv = document.getElementById(`tn-sec-body-${sectionId}`);
+    const itemDivs = bodyDiv.querySelectorAll('.tn-array-item');
+    
+    const newArray = [];
+    itemDivs.forEach((itemDiv) => {
+        let obj = {};
+        config.fields.forEach(f => {
+            const input = itemDiv.querySelector(`[data-key="${f.key}"]`);
+            if (input) obj[f.key] = input.value;
+        });
+        newArray.push(obj);
+    });
+
+    const jsonStr = JSON.stringify(newArray);
+    tnFullData[config.arrayKey] = jsonStr;
+
+    await executeSave([{ page: pageKey, key: config.arrayKey, content: jsonStr }], sectionId);
+}
+
+async function executeSave(updatesArray, sectionId) {
+    const btn = document.querySelector(`#tn-sec-body-${sectionId} .tn-btn-save`);
+    const origTxt = btn.innerText;
+    btn.innerText = 'Syncing...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/admin/content', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify({ items: updatesArray })
+        });
+        
+        if(res.ok) {
+            btn.style.background = '#10b981'; // Success Green
+            btn.innerText = '✅ Saved';
+        } else {
+            throw new Error('Save Failed');
+        }
+    } catch (err) {
+        btn.style.background = '#ef4444';
+        btn.innerText = '❌ Failed';
+    }
+
+    setTimeout(() => {
+        btn.style.background = '';
+        btn.innerText = origTxt;
+        btn.disabled = false;
+    }, 2000);
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe.toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
+// Hook into existing admin.html init if available
+if(typeof loadCmsContent !== 'undefined' && authToken) {
     loadCmsContent();
 }

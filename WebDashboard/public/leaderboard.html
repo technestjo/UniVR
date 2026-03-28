@@ -80,8 +80,8 @@
 
     <header class="page-header">
         <div class="container">
-            <h1 class="text-cyan">Trainee Leaderboard</h1>
-            <p class="text-dim">Live performance metrics of recent maintenance and flight sessions.</p>
+            <h1 class="text-cyan" data-cms="leaderboard-title">Trainee Leaderboard</h1>
+            <p class="text-dim" data-cms="leaderboard-desc">Live performance metrics of recent maintenance and flight sessions.</p>
         </div>
     </header>
 
@@ -326,6 +326,7 @@
         // Refresh every 30 seconds for live updates
         setInterval(fetchLeaderboard, 30000);
     </script>
+    <script src="cms.js"></script>
 </body>
 
 </html>

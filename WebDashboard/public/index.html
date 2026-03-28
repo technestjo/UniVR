@@ -69,26 +69,11 @@
             <div class="section-title text-center">
                 <h2 style="font-size: 36px; margin-bottom: 20px;" data-cms="home-features-title">Why Choose <span class="text-cyan">AeroTwin</span></h2>
             </div>
-            <div class="glass-grid">
+            <div class="glass-grid" data-cms-array="home-features-array">
                 <div class="glass-card">
-                    <div class="card-icon" data-cms="home-f1-icon">⚡</div>
-                    <h3 data-cms="home-f1-title">Real-Time Multiplayer</h3>
-                    <p class="text-dim" data-cms="home-f1-desc">Train simultaneously with co-pilots across the globe with zero latency networking.</p>
-                </div>
-                <div class="glass-card">
-                    <div class="card-icon" data-cms="home-f2-icon">🌐</div>
-                    <h3 data-cms="home-f2-title">True-to-Life Telemetry</h3>
-                    <p class="text-dim" data-cms="home-f2-desc">Every switch, gauge, and flight model matches real-world aerospace physics.</p>
-                </div>
-                <div class="glass-card">
-                    <div class="card-icon" data-cms="home-f3-icon">🌧️</div>
-                    <h3 data-cms="home-f3-title">Dynamic Weather</h3>
-                    <p class="text-dim" data-cms="home-f3-desc">Experience intense weather variations and severe turbulence precisely simulated.</p>
-                </div>
-                <div class="glass-card">
-                    <div class="card-icon" data-cms="home-f4-icon">🤖</div>
-                    <h3 data-cms="home-f4-title">AI-Powered Instructor</h3>
-                    <p class="text-dim" data-cms="home-f4-desc">Automated debriefs, voice recognition, and personalized skill tracking in real-time.</p>
+                    <div class="card-icon">{{icon}}</div>
+                    <h3>{{title}}</h3>
+                    <p class="text-dim">{{desc}}</p>
                 </div>
             </div>
         </div>
@@ -97,18 +82,10 @@
     <!-- ─── IMPACT STATISTICS ─── -->
     <section class="stats-section pb-50">
         <div class="container text-center">
-            <div class="stats-grid">
+            <div class="stats-grid" data-cms-array="home-stats-array">
                 <div class="stat-item">
-                    <h2 class="stat-number" data-cms="home-stat-1-val">500K+</h2>
-                    <p class="stat-label" data-cms="home-stat-1-label">Flight Hours Logged</p>
-                </div>
-                <div class="stat-item">
-                    <h2 class="stat-number" data-cms="home-stat-2-val">40+</h2>
-                    <p class="stat-label" data-cms="home-stat-2-label">Aircraft Models</p>
-                </div>
-                <div class="stat-item">
-                    <h2 class="stat-number" data-cms="home-stat-3-val">99.9%</h2>
-                    <p class="stat-label" data-cms="home-stat-3-label">Reality Match</p>
+                    <h2 class="stat-number">{{val}}</h2>
+                    <p class="stat-label">{{label}}</p>
                 </div>
             </div>
         </div>

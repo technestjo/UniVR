@@ -163,38 +163,44 @@
                         <p class="text-dim">Update website content globally with real-time preview and synchronization.</p>
                     </div>
                 </div>
-                
-                <div class="cms-layout">
-                    <!-- Page Sidebar -->
-                    <div class="cms-sidebar" id="cmsPageSidebar">
-                        <!-- Buttons injected by JS -->
-                    </div>
+                <!-- NEW TECHNEST-STYLE CMS LAYOUT -->
+                <div class="tn-layout">
+                    <!-- Left Sidebar (TechNest style) -->
+                    <aside class="tn-sidebar">
+                        <div class="tn-sidebar-header">
+                            <h2>AeroTwin CMS</h2>
+                            <p>Welcome, aerotwin_admin</p>
+                        </div>
+                        <nav class="tn-nav" id="tnCmsNav">
+                            <button class="tn-nav-item active" onclick="tnSwitchPage('home')"><span class="tn-icon">🏠</span> Home Content</button>
+                            <button class="tn-nav-item" onclick="tnSwitchPage('features')"><span class="tn-icon">🚀</span> Features</button>
+                            <button class="tn-nav-item" onclick="tnSwitchPage('about')"><span class="tn-icon">ℹ️</span> About Us</button>
+                            <button class="tn-nav-item" onclick="tnSwitchPage('pricing')"><span class="tn-icon">💰</span> Pricing Plans</button>
+                            <button class="tn-nav-item" onclick="tnSwitchPage('news')"><span class="tn-icon">📰</span> News & Blog</button>
+                            <button class="tn-nav-item" onclick="tnSwitchPage('leaderboard')"><span class="tn-icon">🏆</span> Leaderboard</button>
+                            
+                            <!-- Global section for header/footer logos etc -->
+                            <button class="tn-nav-item" onclick="tnSwitchPage('global')" style="margin-top: 20px;"><span class="tn-icon">🌐</span> Global Settings</button>
+                        </nav>
+                        
+                        <div class="tn-sidebar-footer">
+                            <a href="index.html" target="_blank" class="tn-btn-outline"><span class="tn-icon">👀</span> Live Preview</a>
+                        </div>
+                    </aside>
 
-                    <!-- Editor Main Area -->
-                    <div class="cms-editor-column">
-                        <div class="glass-panel" style="padding: 20px 30px; display: flex; gap: 20px; align-items: center; border-color: rgba(0, 242, 255, 0.2); border-radius: 20px;">
-                            <div style="position: relative; flex: 1;">
-                                <span style="position: absolute; left: 15px; top: 50%; translate: 0 -50%; opacity: 0.5;">🔍</span>
-                                <input type="text" id="cmsSearch" placeholder="Search keys or content..." class="admin-input" style="margin: 0; padding-left: 45px; border-radius: 12px; background: rgba(0,0,0,0.3);" oninput="renderCmsPage(activeCmsPage)">
+                    <!-- Main Content Area -->
+                    <main class="tn-main-area">
+                        <div class="tn-header-row">
+                            <h1 id="tnPageTitle">Home Page Content</h1>
+                            <div class="tn-header-actions" id="tnGlobalActions">
+                                <!-- Global save status injected here -->
                             </div>
-                            <button onclick="addNewCmsRow()" class="btn-primary" style="padding: 12px 25px; font-size: 13px; border-radius: 12px;">➕ New Content</button>
                         </div>
 
-                        <div id="cmsEditor" class="cms-section-group">
-                             <div class="loading-state">Initializing Luxury Engine...</div>
+                        <div id="tnFormContainer" class="tn-form-container">
+                            <div class="loading-state" style="padding: 100px; text-align: center; color: var(--accent-cyan);">Initializing System...</div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Floating Save Indicator -->
-                <div id="cmsFloatingActions" class="cms-status-indicator">
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 800; text-transform: uppercase;">Unsaved Changes</span>
-                        <span id="cmsUnsavedCount" style="font-size: 14px; color: white;">0 items modified</span>
-                    </div>
-                    <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
-                    <button onclick="saveCmsContent()" class="btn-primary" style="padding: 10px 30px; border-radius: 50px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);">💾 Deploy to Site</button>
-                    <button onclick="loadCmsContent()" class="btn-secondary" style="padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);">Discard</button>
+                    </main>
                 </div>
             </section>
 

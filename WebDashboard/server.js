@@ -387,36 +387,55 @@ app.get('/api/admin/seed', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
     const seedData = [
         // Home Page
-        { page: 'home', key: 'index-hero-tag', content: 'FLY BEYOND REALITY' },
         { page: 'home', key: 'index-hero-title', content: 'ULTIMATE VR FLIGHT SIMULATION' },
         { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
         { page: 'home', key: 'index-btn-primary', content: 'START MISSION' },
         { page: 'home', key: 'index-btn-secondary', content: 'EXPLORE HUB' },
+        { page: 'home', key: 'home-features-array', content: JSON.stringify([
+            { title: "Real-Time Multiplayer", desc: "Train simultaneously with co-pilots across the globe with zero latency networking.", icon: "⚡" },
+            { title: "True-to-Life Telemetry", desc: "Every switch, gauge, and flight model matches real-world aerospace physics.", icon: "🌐" },
+            { title: "Dynamic Weather", desc: "Experience intense weather variations and severe turbulence precisely simulated.", icon: "🌧️" },
+            { title: "AI-Powered Instructor", desc: "Automated debriefs, voice recognition, and personalized skill tracking in real-time.", icon: "🤖" }
+        ])},
+        { page: 'home', key: 'home-stats-array', content: JSON.stringify([
+            { val: "500K+", label: "Flight Hours Logged" },
+            { val: "40+", label: "Aircraft Models" },
+            { val: "99.9%", label: "Reality Match" }
+        ])},
         
         // Features Page
         { page: 'features', key: 'features-hero-title', content: 'NEXT-GEN VR CAPABILITIES' },
         { page: 'features', key: 'features-hero-desc', content: 'Dive deep into the technical excellence of AeroTwin XR.' },
-        { page: 'features', key: 'feat-multiplayer-title', content: 'Tactical Multiplayer' },
-        { page: 'features', key: 'feat-multiplayer-desc', content: 'Global synchronization with ultra-low latency.' },
-        { page: 'features', key: 'feat-weather-title', content: 'Dynamic Systems' },
-        { page: 'features', key: 'feat-weather-desc', content: 'Real-time weather and physics simulation.' },
+        { page: 'features', key: 'features-detailed-array', content: JSON.stringify([
+            { title: "Tactical Multiplayer", desc: "Global synchronization with ultra-low latency.", icon: "🎮" },
+            { title: "Dynamic Systems", desc: "Real-time weather and physics simulation.", icon: "🌪" }
+        ])},
         
         // About Us Page
         { page: 'about', key: 'about-hero-title', content: 'OUR MISSION' },
         { page: 'about', key: 'about-mission-text', content: 'AeroTwin was founded to bridge the gap between simulation and reality. We believe that training should be safe, immersive, and accessible to everyone.' },
-        { page: 'about', key: 'about-stat-1-val', content: '2018' },
-        { page: 'about', key: 'about-stat-1-label', content: 'Founded' },
+        { page: 'about', key: 'about-team-array', content: JSON.stringify([
+            { name: "Sarah Jenkins", role: "Chief Flight Instructor", bio: "Former commercial pilot with 10k hours." },
+            { name: "David Chen", role: "VR Architect", bio: "Engineering reality since 2012." }
+        ])},
         
         // Pricing Page
         { page: 'pricing', key: 'pricing-title', content: 'AIRCRAFT LICENSING' },
-        { page: 'pricing', key: 'price-starter-val', content: '$49' },
-        { page: 'pricing', key: 'price-starter-name', content: 'Cadet License' },
-        { page: 'pricing', key: 'price-pro-val', content: '$199' },
-        { page: 'pricing', key: 'price-pro-name', content: 'Captain License' },
+        { page: 'pricing', key: 'pricing-tiers-array', content: JSON.stringify([
+            { name: "Cadet License", price: "$49", details: "Basic Aircraft\nSingle Player\nStandard Weather" },
+            { name: "Captain License", price: "$199", details: "All Aircraft\nMultiplayer\nDynamic Weather\nAI Coach" },
+            { name: "Enterprise", price: "Custom", details: "White-label\nLMS Integration\nDedicated Server" }
+        ])},
         
         // News Page
-        { page: 'news', key: 'news-announcement-title', content: 'PATCH v4.2 NOW LIVE' },
-        { page: 'news', key: 'news-announcement-desc', content: 'Added multiplayer support and new engine diagnostics tools.' },
+        { page: 'news', key: 'news-articles-array', content: JSON.stringify([
+            { title: "PATCH v4.2 NOW LIVE", date: "April 1, 2026", desc: "Added multiplayer support and new engine diagnostics tools." },
+            { title: "AeroTwin Partners with Boeing", date: "March 15, 2026", desc: "We are thrilled to announce a strategic partnership for next-gen 737MAX simulations." }
+        ])},
+
+        // Leaderboard Page
+        { page: 'leaderboard', key: 'leaderboard-title', content: 'Global Trainee Rankings' },
+        { page: 'leaderboard', key: 'leaderboard-desc', content: 'Top performers across all operational parameters.' },
 
         // Global / Footer
         { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },

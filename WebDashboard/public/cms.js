@@ -55,39 +55,73 @@ async function applyCMS() {
             return;
         }
 
-        // Apply dynamically to the DOM
+        // Apply dynamically to standard elements
         const elements = document.querySelectorAll('[data-cms]');
         let appliedCount = 0;
 
         elements.forEach(el => {
             const key = el.getAttribute('data-cms');
             if (cmsData[key]) {
-                // If it's an image, replace the source
                 if (el.tagName === 'IMG') {
                     el.src = cmsData[key];
-                    el.onerror = function() {
-                        console.warn('CMS: Image failed to load for key: ' + key);
-                    };
-                } 
-                // If it's a link, we check if the CMS value is JSON (text + href) or just text
-                else if (el.tagName === 'A') {
-                    try {
-                        const linkData = JSON.parse(cmsData[key]);
-                        if(linkData.text) el.innerHTML = linkData.text;
-                        if(linkData.href) el.href = linkData.href;
-                    } catch(e) {
-                        el.innerHTML = cmsData[key]; 
+                } else if (el.tagName === 'A') {
+                    // Quick check if it's a URL or text
+                    if(cmsData[key].startsWith('http') || cmsData[key].startsWith('/')) {
+                        el.href = cmsData[key];
+                    } else {
+                        el.innerHTML = cmsData[key];
                     }
-                } 
-                // Everything else (h1, p, span, div)
-                else {
+                } else {
                     el.innerHTML = cmsData[key];
                 }
                 appliedCount++;
             }
         });
 
-        console.log(`CMS: Successfully applied ${appliedCount} dynamic elements to the page.`);
+        // Apply dynamically to Array elements (TechNest style lists)
+        const arrayElements = document.querySelectorAll('[data-cms-array]');
+        let arrayCount = 0;
+
+        arrayElements.forEach(el => {
+            const key = el.getAttribute('data-cms-array');
+            if (cmsData[key]) {
+                try {
+                    const items = JSON.parse(cmsData[key]);
+                    if (Array.isArray(items)) {
+                        // Store original template in a data attribute if not already done
+                        if (!el.hasAttribute('data-cms-template')) {
+                            el.setAttribute('data-cms-template', el.innerHTML);
+                        }
+                        
+                        const template = el.getAttribute('data-cms-template');
+                        let finalHtml = '';
+                        
+                        items.forEach(item => {
+                            let itemStr = template;
+                            // Replace all {{key}} with actual value
+                            Object.keys(item).forEach(k => {
+                                let val = item[k] || '';
+                                // Special handling: If the key is "details" or contains "list", auto-wrap newlines in <li>
+                                if (k === 'details' && val.includes('\n')) {
+                                    val = val.split('\n').filter(l => l.trim() !== '').map(l => `<li>${l}</li>`).join('');
+                                }
+                                const regex = new RegExp(`{{${k}}}`, 'g');
+                                itemStr = itemStr.replace(regex, val);
+                            });
+                            finalHtml += itemStr;
+                        });
+                        
+                        el.innerHTML = finalHtml;
+                        arrayCount++;
+                    }
+                } catch(e) {
+                    console.error("CMS: Failed to parse array for " + key, e);
+                }
+            }
+        });
+
+        console.log(`CMS: Applied ${appliedCount} text elements and ${arrayCount} array elements.`);
+
 
     } catch(err) {
         console.error('CMS Error: Failed to apply content to DOM', err);
