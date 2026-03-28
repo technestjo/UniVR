@@ -170,20 +170,27 @@
                 </div>
                 
                 <div class="cms-layout">
-                    <div class="cms-sidebar" id="cmsPageSidebar">
-                        <button class="cms-sidebar-btn" data-page="home" onclick="switchCmsPage('home', this)">🏠 Home Page <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="features" onclick="switchCmsPage('features', this)">🚀 Features <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="about" onclick="switchCmsPage('about', this)">ℹ️ About Us <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="pricing" onclick="switchCmsPage('pricing', this)">💰 Pricing <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="news" onclick="switchCmsPage('news', this)">📰 News/Updates <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="contact" onclick="switchCmsPage('contact', this)">📧 Contact <span class="badge" style="float:right; opacity:0.6;">0</span></button>
-                        <button class="cms-sidebar-btn" data-page="global" onclick="switchCmsPage('global', this)">🌐 Global/Other <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                    <div class="cms-sidebar">
+                        <div style="padding: 0 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 2px;">Content Categories</div>
+                        <div id="cmsPageSidebar" style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="cms-sidebar-btn" data-page="home" onclick="switchCmsPage('home', this)"><span>🏠 Home Page</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="features" onclick="switchCmsPage('features', this)"><span>🚀 Features</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="about" onclick="switchCmsPage('about', this)"><span>ℹ️ About Us</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="pricing" onclick="switchCmsPage('pricing', this)"><span>💰 Pricing</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="news" onclick="switchCmsPage('news', this)"><span>📰 News/Updates</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="contact" onclick="switchCmsPage('contact', this)"><span>📧 Contact</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="global" onclick="switchCmsPage('global', this)"><span>🌐 Global/Other</span> <span class="badge">0</span></button>
+                        </div>
                     </div>
-                    <div class="glass-panel" style="padding: 25px;">
+                    <div class="glass-panel" style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <input type="text" id="cmsSearch" placeholder="Search keys or content in this section..." class="admin-input" style="margin: 0; flex: 1;" oninput="renderCmsPage(activeCmsPage)">
+                            <div style="font-size: 12px; color: var(--text-dim); white-space: nowrap;">Showing <b id="cmsMatchCount" style="color: var(--accent-cyan);">0</b> entries</div>
+                        </div>
                         <div id="cmsEditor" class="cms-editor-container">
                              <div class="loading-state">Loading CMS blocks...</div>
                         </div>
-                        <div id="cmsStatus" style="margin-top: 20px; text-align: right; font-weight: bold;"></div>
+                        <div id="cmsStatus" style="text-align: right; font-weight: bold; font-size: 13px;"></div>
                     </div>
                 </div>
             </section>
@@ -761,16 +768,26 @@
 
         function renderCmsPage(page) {
             const container = document.getElementById('cmsEditor');
+            const search = document.getElementById('cmsSearch').value.toLowerCase();
             container.innerHTML = '';
             
-            const filtered = cmsFullData.filter(item => item.page === page);
+            let filtered = cmsFullData.filter(item => item.page === page);
+            
+            if (search) {
+                filtered = filtered.filter(i => 
+                    i.key.toLowerCase().includes(search) || 
+                    (i.content || '').toLowerCase().includes(search)
+                );
+            }
+
+            document.getElementById('cmsMatchCount').innerText = filtered.length;
             
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding: 60px; color: var(--text-dim);">
-                        <div style="font-size: 40px; margin-bottom: 15px;">📂</div>
-                        <h3>No entries for "${page.toUpperCase()}"</h3>
-                        <p>All previous data was moved to the <b>Global/Other</b> section.<br>Use "Add Entry" to create content for this specific page.</p>
+                        <div style="font-size: 44px; margin-bottom: 20px; opacity: 0.3;">🔍</div>
+                        <h3 style="letter-spacing: 1px; color: rgba(255,255,255,0.3);">NO MATCHES FOUND</h3>
+                        <p style="font-size: 13px; opacity: 0.5;">Try a different search term or sync defaults.</p>
                     </div>`;
             } else {
                 filtered.forEach(item => {
@@ -783,10 +800,26 @@
             const row = document.createElement('div');
             row.className = 'cms-row';
             row.innerHTML = `
-                <input type="text" placeholder="Key (ID)" class="admin-input cms-key-input" value="${key}" style="margin-top: 0;">
-                <input type="text" placeholder="Content/Value" class="admin-input cms-val-input" value="${val}" style="margin-top: 0;">
-                <button class="btn-icon text-danger" onclick="this.parentElement.remove()" style="background: rgba(255,51,51,0.1); border-radius: 6px;">🗑</button>
+                <div class="cms-key-wrapper">
+                    <input type="text" placeholder="KEY_ID" class="admin-input cms-key-input" value="${key}" style="margin: 0;">
+                </div>
+                <div class="cms-val-wrapper">
+                    <textarea class="admin-input cms-val-input" placeholder="Type content here..." rows="1">${val}</textarea>
+                </div>
+                <div class="cms-row-actions">
+                    <button class="btn-icon text-danger" onclick="this.closest('.cms-row').remove()" style="background: rgba(255,51,51,0.05); border: 1px solid rgba(255,51,51,0.1); border-radius: 8px; width: 38px; height: 38px;">🗑</button>
+                </div>
             `;
+
+            // Auto-height for textarea
+            const tx = row.querySelector('textarea');
+            tx.style.height = 'auto';
+            tx.style.height = (tx.scrollHeight) + 'px';
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
             return row;
         }
 
