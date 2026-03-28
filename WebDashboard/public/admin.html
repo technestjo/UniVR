@@ -106,49 +106,23 @@
 
             <!-- DOCTORS VIEW -->
             <section id="view-doctors" class="admin-view" style="display: none;">
-                <div class="dashboard-header">
+                <div class="dashboard-header" style="flex-direction: column; align-items: stretch; gap: 20px;">
                     <div>
-                        <h2 class="text-gradient">Manage Doctors</h2>
-                        <p class="text-dim">Register instructors so trainees can link their sessions.</p>
+                        <h2 class="text-gradient">Instructor Management</h2>
+                        <p class="text-dim">Register and monitor medical instructors.</p>
+                    </div>
+                    
+                    <div class="cms-add-bar">
+                        <input type="text" id="newDocName" placeholder="Full Name (e.g. Dr. Sarah)" class="admin-input" style="flex: 2; margin-top: 0;">
+                        <input type="text" id="newDocCode" placeholder="Secure Code" class="admin-input" style="flex: 1; margin-top: 0;">
+                        <input type="text" id="newDocPass" placeholder="Password (Optional)" class="admin-input" style="flex: 1; margin-top: 0;">
+                        <button onclick="addDoctor()" class="btn-primary" style="padding: 0 30px;">Add Instructor</button>
                     </div>
                 </div>
 
-                <div class="doctor-management-layout">
-                    
-                    <div class="add-doctor-panel glass-panel">
-                        <h3>➕ Add New Doctor</h3>
-                        <div class="form-group">
-                            <label>Doctor Name</label>
-                            <input type="text" id="newDocName" placeholder="e.g. Dr. Ahmad" class="admin-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Unique Code</label>
-                            <input type="text" id="newDocCode" placeholder="e.g. DOC-999" class="admin-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="text" id="newDocPass" placeholder="Default: 123456" class="admin-input">
-                        </div>
-                        <button onclick="addDoctor()" class="btn-primary w-full">Register Doctor</button>
-                    </div>
-
-                    <div class="doctors-list-panel glass-panel">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Doctor Name</th>
-                                    <th>Code</th>
-                                <th>Trainees</th>
-                                <th>Registered Date</th>
-                                <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="doctorsTableBody">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-
+                <div id="doctorsGrid" class="doctors-grid">
+                    <!-- Cards populated dynamically -->
+                    <div class="loading-state">Syncing instructor database...</div>
                 </div>
             </section>
 
@@ -173,21 +147,22 @@
             <section id="view-cms" class="admin-view admin-only" style="display: none;">
                 <div class="dashboard-header">
                     <div>
-                        <h2 class="text-gradient">Website Content CMS</h2>
-                        <p class="text-dim">Update website text dynamically in JSON format.</p>
+                        <h2 class="text-gradient">Site Content Manager</h2>
+                        <p class="text-dim">Update website text dynamically without touching code.</p>
                     </div>
                     <div class="dashboard-controls">
-                        <button onclick="loadCmsContent()" class="btn-secondary">🔃 Load Data</button>
+                        <button onclick="addNewCmsRow()" class="btn-secondary">➕ Add Entry</button>
+                        <button onclick="saveCmsContent()" class="btn-primary">💾 Deploy Changes</button>
                     </div>
                 </div>
                 
                 <div class="glass-panel" style="padding: 30px;">
-                    <h3 style="margin-bottom: 10px;">Edit JSON Database</h3>
-                    <p class="text-dim" style="margin-bottom: 15px;">Modify the JSON values below to update text across all website pages. Keys should match HTML Component IDs.</p>
-                    <textarea id="cmsJsonEditor" style="width: 100%; height: 400px; font-family: monospace; background: rgba(0,0,0,0.5); color: #0f0; border: 1px solid var(--border-cyan); padding: 15px; border-radius: 8px;">{}</textarea>
+                    <div id="cmsEditor" class="cms-editor-container">
+                         <!-- Visual form blocks generated here -->
+                         <div class="loading-state">Loading CMS blocks...</div>
+                    </div>
                     
-                    <button onclick="saveCmsContent()" class="btn-primary" style="margin-top: 20px;">💾 Save & Deploy to Website</button>
-                    <div id="cmsStatus" style="margin-top: 15px; font-weight: bold; color: var(--success);"></div>
+                    <div id="cmsStatus" style="margin-top: 20px; text-align: right; font-weight: bold;"></div>
                 </div>
             </section>
 
@@ -239,11 +214,8 @@
             if (!logText || logText.trim() === '') {
                 container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);">No chat history available.</div>';
             } else {
-                let logStr = logText.replace(/\\n/g, '\n');
-                
-                // Allow "Tec", "You", "User", "AI" followed by space, colon, or newline
-                let hasPrefixes = /\b(Tec|You|User|AI)\b/i.test(logStr);
-                
+                let logStr = logText.replace(/\\n/g, '\n').replace(/\r/g, ''); // Normalize all newlines
+                let lines = logStr.split('\n');
                 let formattedHtml = '';
                 
                 const formatFallback = (text) => {
@@ -254,50 +226,52 @@
                     }).join('');
                 };
 
-                if (hasPrefixes) {
-                    // Refined Regex: Match speaker ONLY at the start of the string or after a newline
-                    // This prevents splitting when "Tec" or "You" is mentioned inside a sentence.
-                    const regex = /(?:^|\n)(You|Tec|User|AI)[\s:\n]+([\s\S]*?)(?=(?:\n)(?:You|Tec|User|AI)[\s:\n]+|$)/gi;
-                    let match;
+                let currentSpeaker = '';
+                let currentMsg = '';
+
+                const flushMessage = () => {
+                    if (currentMsg.trim() === '') return;
+                    let msg = currentMsg.trim();
+                    msg = msg.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
+                    msg = msg.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
+                    msg = msg.replace(/\n/g, '<br>');
                     
-                    while ((match = regex.exec(logStr)) !== null) {
-                        let speaker = match[1].toLowerCase();
-                        let msg = match[2].trim();
-                        
-                        if (msg === '') continue;
-                        
-                        // formatting asterisks
-                        msg = msg.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
-                        msg = msg.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
-                        msg = msg.replace(/\n/g, '<br>');
-                        
-                        let isUser = speaker === 'you' || speaker === 'user';
-                        let bubbleClass = isUser ? 'chat-bubble user' : 'chat-bubble ai';
-                        let speakerName = isUser ? '👤 You' : '🤖 Tec';
-                        
-                        formattedHtml += `
-                            <div class="${bubbleClass}">
-                                <div class="chat-speaker">${speakerName}</div>
-                                <div class="chat-text">${msg}</div>
-                            </div>
-                        `;
+                    let isUser = currentSpeaker === 'you' || currentSpeaker === 'user';
+                    let bubbleClass = isUser ? 'chat-bubble user' : 'chat-bubble ai';
+                    let speakerName = isUser ? '👤 You' : '🤖 Tec';
+                    
+                    if (currentSpeaker === '') {
+                        speakerName = '🤖 System';
+                        bubbleClass = 'chat-bubble ai';
                     }
                     
-                    if (formattedHtml === '') {
-                        // If the sophisticated regex failed to find structured blocks, 
-                        // fallback to a simpler word-boundary version but still try to catch the first block
-                        const simpleRegex = /\b(You|Tec|User|AI)\b[\s:\n]+([\s\S]*?)(?=\b(?:You|Tec|User|AI)\b|$)/gi;
-                        while ((match = simpleRegex.exec(logStr)) !== null) {
-                            let speaker = match[1].toLowerCase();
-                            let msg = match[2].trim();
-                            if (msg === '') continue;
-                            let isUser = speaker === 'you' || speaker === 'user';
-                            formattedHtml += `<div class="${isUser ? 'chat-bubble user' : 'chat-bubble ai'}"><div class="chat-speaker">${isUser ? '👤 You' : '🤖 Tec'}</div>${msg.replace(/\n/g, '<br>')}</div>`;
-                        }
-                    }
+                    formattedHtml += `<div class="${bubbleClass}"><div class="chat-speaker">${speakerName}</div><div class="chat-text">${msg}</div></div>`;
+                    currentMsg = '';
+                };
+
+                // Pattern to match "**You:**", "You:", "**Tec**:", "AI:", etc. at the start of a line
+                const speakerPattern = /^\*?\*?(You|User|Tec|AI)\*?\*?[\s:]+(.*)$/i;
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    let match = line.match(speakerPattern);
                     
-                    if (formattedHtml === '') formattedHtml = formatFallback(logStr);
-                } else {
+                    if (match) {
+                        flushMessage(); 
+                        currentSpeaker = match[1].toLowerCase();
+                        currentMsg = match[2] + '\n';
+                    } else if (line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i)) {
+                         flushMessage();
+                         let m = line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i);
+                         currentSpeaker = m[1].toLowerCase();
+                         currentMsg = '';
+                    } else {
+                        currentMsg += line + '\n';
+                    }
+                }
+                flushMessage(); 
+
+                if (formattedHtml === '') {
                     formattedHtml = formatFallback(logStr);
                 }
                 
@@ -518,27 +492,29 @@
         }
 
         function renderDoctors(docs) {
-            const tbody = document.getElementById('doctorsTableBody');
-            tbody.innerHTML = '';
+            const container = document.getElementById('doctorsGrid');
+            container.innerHTML = '';
             if(docs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-dim">No doctors registered yet.</td></tr>`;
+                container.innerHTML = `<div class="loading-state text-dim">No instructors found in database.</div>`;
                 return;
             }
             docs.forEach(doc => {
-                const tr = document.createElement('tr');
                 const dateStr = new Date(doc.createdAt).toLocaleDateString();
-                
-                // Compute trainee count from global allReports
                 const traineeCount = allReports ? allReports.filter(r => r.doctor_code === doc.code).length : 0;
                 
-                tr.innerHTML = `
-                    <td style="font-weight: 600; color: white;">${doc.name}</td>
-                    <td><span class="badge blue" style="background: rgba(56,189,248,0.1); padding: 5px 10px;">${doc.code}</span></td>
-                    <td style="font-weight: 600; color: var(--accent-purple);">${traineeCount}</td>
-                    <td>${dateStr}</td>
-                    <td><button class="btn-icon text-danger" onclick="deleteDoctor('${doc._id}')" title="Delete">Delete</button></td>
+                const card = document.createElement('div');
+                card.className = 'doctor-card glass-panel';
+                card.innerHTML = `
+                    <div class="doctor-avatar">${doc.name.charAt(0)}</div>
+                    <div class="doctor-name">${doc.name}</div>
+                    <div class="doctor-code-tag">${doc.code}</div>
+                    <div class="doctor-stats">
+                        <span>Sessions: <b>${traineeCount}</b></span>
+                        <span>Joined: <b>${dateStr}</b></span>
+                    </div>
+                    <button class="btn-logout" style="border-radius: 6px; padding: 8px;" onclick="deleteDoctor('${doc._id}')">Remove Access</button>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(card);
             });
         }
 
@@ -577,67 +553,60 @@
         }
 
         function renderDevices(devices) {
-            const devicesList = document.getElementById('devicesList');
-            devicesList.innerHTML = '';
+            const container = document.getElementById('devicesList');
+            container.innerHTML = '';
 
             devices.forEach(dev => {
                 const card = document.createElement('div');
-                card.className = 'device-card glass-panel';
-                if (dev.status === 'suspended') {
-                    card.style.borderTop = '3px solid var(--danger)';
-                    card.style.opacity = '0.86';
-                }
+                card.className = `device-card glass-panel ${dev.status === 'active' ? 'active' : 'suspended'}`;
                 
                 const dateStr = new Date(dev.lastSeen).toLocaleString();
-                const statusBadge = dev.status === 'active' 
-                    ? '<span class="badge" style="background: rgba(16,185,129,0.15); color: var(--success);">Online / Active</span>' 
-                    : '<span class="badge" style="background: rgba(239,68,68,0.15); color: var(--danger);">Suspended</span>';
+                const statusLabel = dev.status === 'active' ? 'Online / Active' : 'Suspended';
+                const statusClass = dev.status === 'active' ? 'status-active' : 'status-suspended';
 
                 card.innerHTML = `
-                    <div class="card-header">
+                    <div class="device-header">
                         <div>
-                            <div class="owner-name">${dev.ownerInfo || 'New VR Headset'}</div>
-                            <div class="device-id">${dev.deviceId}</div>
+                            <div class="device-title">${dev.ownerInfo || 'AeroTwin Unit'}</div>
+                            <div class="device-subtitle">${dev.deviceId}</div>
                         </div>
-                        ${statusBadge}
+                        <div class="device-status-tag ${statusClass}">${statusLabel}</div>
                     </div>
 
-                    <div style="font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-bottom: -5px; padding-left: 5px;">
-                        ${dev.deviceModel || 'General VR Model'}
+                    <div class="device-model-label">
+                        ${dev.deviceModel || 'VR System'}
                     </div>
 
-                    <div class="specs-grid">
-                        <div class="spec-item">
-                            <span class="spec-label">OS</span>
-                            <span class="spec-value">${dev.os || 'N/A'}</span>
+                    <div class="device-specs-container">
+                        <div class="spec-group">
+                            <span class="spec-label">Operating System</span>
+                            <span class="spec-val" title="${dev.os || 'N/A'}">${dev.os || 'N/A'}</span>
                         </div>
-                        <div class="spec-item">
-                            <span class="spec-label">RAM</span>
-                            <span class="spec-value">${dev.ram || 'N/A'}</span>
+                        <div class="spec-group">
+                            <span class="spec-label">System RAM</span>
+                            <span class="spec-val">${dev.ram || 'N/A'}</span>
                         </div>
-                        <div class="spec-item" style="grid-column: span 2;">
-                            <span class="spec-label">CPU / Processor</span>
-                            <span class="spec-value" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${dev.cpu || ''}">${dev.cpu || 'Unknown CPU'}</span>
+                        <div class="spec-group full">
+                            <span class="spec-label">Processor (CPU)</span>
+                            <span class="spec-val" title="${dev.cpu || 'N/A'}">${dev.cpu || 'N/A'}</span>
                         </div>
-                        <div class="spec-item" style="grid-column: span 2;">
-                            <span class="spec-label">GPU / Graphics</span>
-                            <span class="spec-value" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${dev.gpu || ''}">${dev.gpu || 'Unknown GPU'}</span>
+                        <div class="spec-group full">
+                            <span class="spec-label">Graphics Card (GPU)</span>
+                            <span class="spec-val" title="${dev.gpu || 'N/A'}">${dev.gpu || 'N/A'}</span>
                         </div>
                     </div>
 
-                    <div class="card-footer">
-                        <div class="last-seen">Last: ${dateStr}</div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn-secondary" style="padding: 8px 12px;" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">
-                                📡 View Live
-                            </button>
-                            <button class="btn-secondary" style="color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; border-color: ${dev.status === 'active' ? 'var(--danger)' : 'var(--success)'}; padding: 8px 18px; font-weight: 700;" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
-                                ${dev.status === 'active' ? 'Suspend Access' : 'Reactivate Device'}
-                            </button>
+                    <div class="device-footer">
+                        <div class="device-last-seen">Last Seen: ${dateStr}</div>
+                        <div style="display: flex; gap: 10px;">
+                             <button class="btn-secondary" style="background: rgba(0, 242, 255, 0.1); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 255, 0.2);" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">Live Feed</button>
+                             <button class="btn-logout" style="padding: 8px 15px; font-weight: 700; color: ${dev.status === 'active' ? '#ff3333' : '#00ff88'}; border-color: ${dev.status === 'active' ? '#ff3333' : '#00ff88'};" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                                ${dev.status === 'active' ? 'Suspend' : 'Activate'}
+                             </button>
                         </div>
                     </div>
                 `;
-                devicesList.appendChild(card);
+                container.appendChild(card);
             });
         }
 
@@ -715,31 +684,57 @@
             try {
                 const res = await fetch('/api/content');
                 const data = await res.json();
-                document.getElementById('cmsJsonEditor').value = JSON.stringify(data, null, 2);
-                document.getElementById('cmsStatus').innerText = 'Data loaded successfully.';
-                document.getElementById('cmsStatus').style.color = 'var(--accent-cyan)';
+                
+                const container = document.getElementById('cmsEditor');
+                container.innerHTML = '';
+                
+                Object.keys(data).forEach(key => {
+                    const row = createCmsRow(key, data[key]);
+                    container.appendChild(row);
+                });
+                
+                document.getElementById('cmsStatus').innerText = 'CMS database synchronized.';
+                document.getElementById('cmsStatus').style.color = '#00ff88';
             } catch (err) {
                 document.getElementById('cmsStatus').innerText = 'Failed to load CMS data.';
-                document.getElementById('cmsStatus').style.color = 'var(--danger)';
+                document.getElementById('cmsStatus').style.color = '#ff3333';
             }
-            setTimeout(() => { document.getElementById('cmsStatus').innerText = ''; }, 3000);
+        }
+
+        function createCmsRow(key = '', val = '') {
+            const row = document.createElement('div');
+            row.className = 'cms-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Key (e.g. hero-title)" class="admin-input cms-key-input" value="${key}" style="margin-top: 0;">
+                <input type="text" placeholder="Value (The text to show)" class="admin-input cms-val-input" value="${val}" style="margin-top: 0;">
+                <button class="btn-icon text-danger" onclick="this.parentElement.remove()" style="background: rgba(255,51,51,0.1);">🗑</button>
+            `;
+            return row;
+        }
+
+        function addNewCmsRow() {
+            const container = document.getElementById('cmsEditor');
+            const row = createCmsRow();
+            container.appendChild(row);
+            row.scrollIntoView({ behavior: 'smooth' });
         }
 
         async function saveCmsContent() {
             const statusEl = document.getElementById('cmsStatus');
-            statusEl.innerText = 'Saving...';
+            statusEl.innerText = 'Synchronizing changes...';
             statusEl.style.color = 'var(--accent-cyan)';
             
             try {
-                const jsonText = document.getElementById('cmsJsonEditor').value;
-                const parsed = JSON.parse(jsonText);
-                
-                // Convert JSON dict back into expected array format for the backend
+                const rows = document.querySelectorAll('.cms-row');
                 const items = [];
-                for (const [key, val] of Object.entries(parsed)) {
-                    // For simplicity, we assign everything to a 'global' page
-                    items.push({ page: 'global', key: key, content: val });
-                }
+                
+                rows.forEach(row => {
+                    const k = row.querySelector('.cms-key-input').value.trim();
+                    const v = row.querySelector('.cms-val-input').value.trim();
+                    if (k) {
+                        items.push({ page: 'global', key: k, content: v });
+                    }
+                });
 
                 const res = await fetch('/api/admin/content', {
                     method: 'POST',
@@ -752,17 +747,15 @@
                 
                 const result = await res.json();
                 if (result.success) {
-                    statusEl.innerText = '✅ Content saved and deployed globally!';
-                    statusEl.style.color = 'var(--success)';
+                    statusEl.innerText = '✅ Content deployed successfully!';
+                    statusEl.style.color = '#00ff88';
                 } else {
                     throw new Error(result.error);
                 }
             } catch (err) {
-                statusEl.innerText = '❌ Failed to save: Invalid JSON or Network Error.';
-                statusEl.style.color = 'var(--danger)';
-                console.error(err);
+                statusEl.innerText = '❌ Error: Network disruption or invalid data.';
+                statusEl.style.color = '#ff3333';
             }
-            setTimeout(() => { statusEl.innerText = ''; }, 4000);
         }
     </script>
 </body>

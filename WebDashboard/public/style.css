@@ -692,10 +692,88 @@ nav.scrolled {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
 
 /* Devices View Additional */
-.devices-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.device-card { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-.device-card h3 { font-family: var(--font-heading); font-size: 18px; color: white;}
-.device-card p { font-size: 14px; color: var(--text-dim); }
+.devices-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 25px; }
+
+.device-card { 
+    padding: 30px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    transition: all 0.3s;
+    border-top: 1px solid var(--border-cyan);
+}
+.device-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 242, 255, 0.1); border-color: var(--accent-cyan); }
+.device-card.suspended { border-top: 3px solid #ff3333; opacity: 0.85; }
+.device-card.active { border-top: 3px solid #00ff88; }
+
+.device-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+.device-title { font-family: var(--font-heading); font-size: 22px; color: white; line-height: 1; }
+.device-subtitle { font-size: 11px; color: var(--text-dim); margin-top: 5px; font-family: monospace; opacity: 0.7; }
+.device-status-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; }
+.status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+.status-suspended { background: rgba(255, 51, 51, 0.1); color: #ff3333; border: 1px solid rgba(255, 51, 51, 0.3); }
+
+.device-model-label { font-size: 14px; color: var(--accent-cyan); font-weight: 700; margin: 10px 0; display: block; }
+
+.device-specs-container { 
+    background: rgba(0,0,0,0.3); 
+    border-radius: 12px; 
+    padding: 15px; 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.spec-group { display: flex; flex-direction: column; gap: 4px; }
+.spec-group.full { grid-column: span 2; }
+.spec-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.spec-val { font-size: 14px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.device-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
+.device-last-seen { font-size: 11px; color: var(--text-dim); }
+
+/* Doctors View Redesign */
+.doctors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.doctor-card { 
+    padding: 25px; 
+    text-align: center; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 15px;
+    background: linear-gradient(135deg, rgba(10, 15, 20, 0.6), rgba(0, 114, 255, 0.05));
+}
+.doctor-avatar { width: 60px; height: 60px; background: var(--accent-cyan); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; margin-bottom: 5px; }
+.doctor-name { font-family: var(--font-heading); font-size: 20px; color: white; }
+.doctor-code-tag { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
+.doctor-stats { display: flex; gap: 20px; font-size: 13px; color: var(--text-dim); }
+.doctor-stats b { color: white; }
+
+/* CMS Visual Editor */
+.cms-editor-container { display: flex; flex-direction: column; gap: 15px; }
+.cms-row { 
+    display: grid; 
+    grid-template-columns: 250px 1fr 60px; 
+    gap: 15px; 
+    align-items: center; 
+    background: rgba(255,255,255,0.03); 
+    padding: 15px; 
+    border-radius: 10px;
+    border: 1px solid rgba(0,242,255,0.1);
+}
+.cms-key-input { font-family: monospace; font-weight: 700; color: var(--accent-cyan) !important; background: rgba(0,0,0,0.5) !important; }
+.cms-val-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.cms-val-input:focus { border-color: var(--accent-cyan) !important; }
+
+.cms-add-bar { 
+    display: flex; 
+    gap: 15px; 
+    margin-bottom: 30px; 
+    padding: 20px; 
+    background: rgba(0,242,255,0.05); 
+    border-radius: 12px; 
+    border: 1px dashed var(--accent-cyan);
+}
 
 /* Mobile Adjustments */
 @media (max-width: 1024px) {
