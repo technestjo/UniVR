@@ -76,7 +76,19 @@
                 <li><button onclick="switchTab('reports')" id="tab-reports" class="nav-btn active">📊 Reports</button></li>
                 <li class="admin-only"><button onclick="switchTab('doctors')" id="tab-doctors" class="nav-btn">🧑‍⚕️ Doctors</button></li>
                 <li><button onclick="switchTab('devices')" id="tab-devices" class="nav-btn">🖥️ Devices</button></li>
-                <li class="admin-only"><button onclick="switchTab('cms')" id="tab-cms" class="nav-btn">⚙️ Website CMS</button></li>
+                <li class="admin-only">
+                    <button onclick="switchTab('cms'); tnSwitchPage('home')" id="tab-cms" class="nav-btn">⚙️ Website CMS</button>
+                    <div id="cmsSubNav" class="cms-subnav" style="display: none; padding-left: 20px; display: flex; flex-direction: column; gap: 5px; margin-top: 5px;">
+                        <button class="cms-sub-btn active" onclick="tnSwitchPage('home')" id="subnav-home">🏠 Home Content</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('news')" id="subnav-news">📰 News & Blog</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('about')" id="subnav-about">ℹ️ About Us</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('features')" id="subnav-features">🚀 Features</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('leaderboard')" id="subnav-leaderboard">🏆 Leaderboard</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('pricing')" id="subnav-pricing">💰 Pricing Plans</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('updates')" id="subnav-updates">🔄 Updates</button>
+                        <button class="cms-sub-btn" onclick="tnSwitchPage('global')" id="subnav-global" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">🌐 Global</button>
+                    </div>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="logoutAdmin()" class="btn-logout">Logout 🚪</button>
@@ -165,25 +177,7 @@
                 </div>
                 <!-- NEW TECHNEST-STYLE CMS LAYOUT -->
                 <div class="tn-layout">
-                    <!-- Left Sidebar (TechNest style) -->
-                    <aside class="tn-sidebar">
-                        <div class="tn-sidebar-header">
-                            <h2>AeroTwin CMS</h2>
-                            <p>Welcome, aerotwin_admin</p>
-                        </div>
-                        <nav class="tn-nav" id="tnCmsNav">
-                            <button class="tn-nav-item active" onclick="tnSwitchPage('home')"><span class="tn-icon">🏠</span> Home Content</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('news')"><span class="tn-icon">📰</span> News & Blog</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('about')"><span class="tn-icon">ℹ️</span> About Us</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('features')"><span class="tn-icon">🚀</span> Features</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('leaderboard')"><span class="tn-icon">🏆</span> Leaderboard</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('pricing')"><span class="tn-icon">💰</span> Pricing Plans</button>
-                            <button class="tn-nav-item" onclick="tnSwitchPage('updates')"><span class="tn-icon">🔄</span> Updates</button>
-                            
-                            <!-- Global section for header/footer logos etc -->
-                            <button class="tn-nav-item" onclick="tnSwitchPage('global')" style="margin-top: 20px;"><span class="tn-icon">🌐</span> Global Settings</button>
-                        </nav>
-                    </aside>
+                    <!-- The Sidebar was moved to the Main Admin Sidebar for better UX -->
 
                     <!-- Main Content Area -->
                     <main class="tn-main-area">
@@ -366,6 +360,11 @@
             
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById(`view-${tab}`).style.display = 'block';
+            
+            let subNav = document.getElementById('cmsSubNav');
+            if (subNav) {
+                subNav.style.display = (tab === 'cms') ? 'flex' : 'none';
+            }
             
             if (tab === 'reports') fetchReports();
             if (tab === 'doctors' && userRole === 'admin') fetchDoctors();

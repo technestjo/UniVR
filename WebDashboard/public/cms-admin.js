@@ -257,8 +257,11 @@ function tnSwitchPage(pageId) {
     activeTnPage = pageId;
 
     // Update Sidebar UI
-    document.querySelectorAll('.tn-nav-item').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.tn-nav-item[onclick="tnSwitchPage('${pageId}')"]`).classList.add('active');
+    document.querySelectorAll('.cms-sub-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Safely add active class if button exists
+    const activeBtn = document.querySelector(`.cms-sub-btn[onclick="tnSwitchPage('${pageId}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
     tnRenderPage(pageId);
 }

@@ -1080,3 +1080,27 @@ nav.scrolled {
     .dashboard-controls { max-width: 100%; justify-content: flex-start;}
     .rc-telemetry { flex-direction: column; gap: 5px; }
 }
+
+/* CMS Sub Nav */
+.cms-sub-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    text-align: left;
+    padding: 8px 12px 8px 20px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s ease;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+}
+.cms-sub-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-light);
+}
+.cms-sub-btn.active {
+    background: rgba(0, 186, 242, 0.1);
+    color: var(--accent-cyan);
+    border-left: 3px solid var(--accent-cyan);
+}
