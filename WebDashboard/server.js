@@ -387,38 +387,41 @@ app.get('/api/admin/seed', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
     const seedData = [
         // Home Page
-        { page: 'home', key: 'index-hero-tag', content: 'Fly Beyond Reality' },
-        { page: 'home', key: 'index-hero-title', content: 'Ultimate VR Flight Simulation' },
+        { page: 'home', key: 'index-hero-tag', content: 'FLY BEYOND REALITY' },
+        { page: 'home', key: 'index-hero-title', content: 'ULTIMATE VR FLIGHT SIMULATION' },
         { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
-        { page: 'home', key: 'index-btn-primary', content: 'Start Your Adventure' },
-        { page: 'home', key: 'index-btn-secondary', content: 'Learn More' },
-        { page: 'home', key: 'home-features-title', content: 'Why Choose AeroTwin' },
-        { page: 'home', key: 'home-f1-icon', content: '⚡' },
-        { page: 'home', key: 'home-f1-title', content: 'Real-Time Multiplayer' },
-        { page: 'home', key: 'home-f1-desc', content: 'Train simultaneously with co-pilots across the globe with zero latency networking.' },
-        { page: 'home', key: 'home-f2-icon', content: '🌐' },
-        { page: 'home', key: 'home-f2-title', content: 'True-to-Life Telemetry' },
-        { page: 'home', key: 'home-f2-desc', content: 'Every switch, gauge, and flight model matches real-world aerospace physics.' },
-        { page: 'home', key: 'home-f3-icon', content: '🌧️' },
-        { page: 'home', key: 'home-f3-title', content: 'Dynamic Weather' },
-        { page: 'home', key: 'home-f3-desc', content: 'Experience intense weather variations and severe turbulence precisely simulated.' },
-        { page: 'home', key: 'home-f4-icon', content: '🤖' },
-        { page: 'home', key: 'home-f4-title', content: 'AI-Powered Instructor' },
-        { page: 'home', key: 'home-f4-desc', content: 'Automated debriefs, voice recognition, and personalized skill tracking in real-time.' },
-        { page: 'home', key: 'home-stat-1-val', content: '500K+' },
-        { page: 'home', key: 'home-stat-1-label', content: 'Flight Hours Logged' },
-        { page: 'home', key: 'home-stat-2-val', content: '40+' },
-        { page: 'home', key: 'home-stat-2-label', content: 'Aircraft Models' },
-        { page: 'home', key: 'home-stat-3-val', content: '99.9%' },
-        { page: 'home', key: 'home-stat-3-label', content: 'Reality Match' },
-        { page: 'home', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
-        { page: 'home', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
-        { page: 'home', key: 'home-icon-1', content: '📡' },
-        { page: 'home', key: 'home-icon-2', content: '⚙️' },
-        { page: 'home', key: 'home-icon-3', content: '☁️' },
-        { page: 'home', key: 'home-icon-4', content: '✈️' },
+        { page: 'home', key: 'index-btn-primary', content: 'START MISSION' },
+        { page: 'home', key: 'index-btn-secondary', content: 'EXPLORE HUB' },
+        
+        // Features Page
+        { page: 'features', key: 'features-hero-title', content: 'NEXT-GEN VR CAPABILITIES' },
+        { page: 'features', key: 'features-hero-desc', content: 'Dive deep into the technical excellence of AeroTwin XR.' },
+        { page: 'features', key: 'feat-multiplayer-title', content: 'Tactical Multiplayer' },
+        { page: 'features', key: 'feat-multiplayer-desc', content: 'Global synchronization with ultra-low latency.' },
+        { page: 'features', key: 'feat-weather-title', content: 'Dynamic Systems' },
+        { page: 'features', key: 'feat-weather-desc', content: 'Real-time weather and physics simulation.' },
+        
+        // About Us Page
+        { page: 'about', key: 'about-hero-title', content: 'OUR MISSION' },
+        { page: 'about', key: 'about-mission-text', content: 'AeroTwin was founded to bridge the gap between simulation and reality. We believe that training should be safe, immersive, and accessible to everyone.' },
+        { page: 'about', key: 'about-stat-1-val', content: '2018' },
+        { page: 'about', key: 'about-stat-1-label', content: 'Founded' },
+        
+        // Pricing Page
+        { page: 'pricing', key: 'pricing-title', content: 'AIRCRAFT LICENSING' },
+        { page: 'pricing', key: 'price-starter-val', content: '$49' },
+        { page: 'pricing', key: 'price-starter-name', content: 'Cadet License' },
+        { page: 'pricing', key: 'price-pro-val', content: '$199' },
+        { page: 'pricing', key: 'price-pro-name', content: 'Captain License' },
+        
+        // News Page
+        { page: 'news', key: 'news-announcement-title', content: 'PATCH v4.2 NOW LIVE' },
+        { page: 'news', key: 'news-announcement-desc', content: 'Added multiplayer support and new engine diagnostics tools.' },
+
         // Global / Footer
-        { page: 'global', key: 'footer-copyright', content: 'Copyright © 2026' }
+        { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
+        { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
+        { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' }
     ];
 
     try {

@@ -1,74 +1,90 @@
 /**
- * AeroTwin XR - Premium CMS Admin Engine
- * Handles real-time editing, change tracking, and MongoDB synchronization.
+ * AeroTwin XR - Luxury CMS Admin Engine (V4)
+ * Handles section-based rendering, visual grouping, and premium data management.
  */
 
 let activeCmsPage = 'home';
 let cmsFullData = [];
-let unsavedChanges = new Map(); // key -> { page, key, content }
+let unsavedChanges = new Map();
+
+// Configuration for section grouping
+const SECTION_MAP = {
+    'hero': { title: 'Hero & Introduction', icon: '🚀' },
+    'feat': { title: 'Product Features', icon: '💎' },
+    'about': { title: 'Mission & History', icon: 'ℹ️' },
+    'price': { title: 'Pricing & Licensing', icon: '💰' },
+    'news': { title: 'Latest Updates', icon: '📰' },
+    'stat': { title: 'System Growth & Stats', icon: '📊' },
+    'contact': { title: 'Contact & Support', icon: '📧' },
+    'foot': { title: 'Global Footer & Legal', icon: '⚖️' },
+    'index': { title: 'Homepage Highlights', icon: '🏠' }
+};
+
+const PAGE_LABELS = {
+    'home': '🏠 Homepage',
+    'features': '🚀 Features',
+    'about': 'ℹ️ About Us',
+    'pricing': '💰 Pricing',
+    'news': '📰 News Hub',
+    'contact': '📧 Contact',
+    'global': '🌐 Global / Footer'
+};
 
 // ─── CORE CMS LOGIC ───
 
-/**
- * Load all content from the primary source (Atlas MongoDB)
- */
 async function loadCmsContent() {
-    const syncText = document.getElementById('cmsSyncText');
     const editor = document.getElementById('cmsEditor');
-    
     try {
-        syncText.innerText = 'Synchronizing...';
-        unsavedChanges.clear();
-        updateUnsavedIndicator();
-
         const res = await fetch('/api/admin/raw-content', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
         if (!res.ok) throw new Error('API_UNAVAILABLE');
         
-        const rawData = await res.json();
+        cmsFullData = await res.json();
         
-        // Normalize and store
-        cmsFullData = rawData.map(item => ({
-            ...item,
-            page: (item.page && item.page !== 'undefined' && item.page !== 'null') ? item.page : 'global'
-        }));
-
         updateCmsSidebar();
         renderCmsPage(activeCmsPage);
-        
-        syncText.innerText = 'Synchronized with MongoDB Atlas. ✓';
-        syncText.style.color = '#00ff88';
     } catch (err) {
         console.error("CMS Load Error:", err);
-        syncText.innerText = 'Sync failed. Check connection.';
-        syncText.style.color = '#ff3333';
-        editor.innerHTML = `<div class="loading-state text-danger">Failed to connect to the CMS API. Ensure the server is running and you are logged in.</div>`;
+        editor.innerHTML = `<div class="loading-state text-danger">Lost connection to Mission Control. Please re-authenticate.</div>`;
     }
 }
 
-/**
- * Update Sidebar badges and active state
- */
 function updateCmsSidebar() {
-    const btns = document.querySelectorAll('.cms-sidebar-btn');
-    btns.forEach(btn => {
-        const p = btn.getAttribute('data-page');
+    const sidebar = document.getElementById('cmsPageSidebar');
+    sidebar.innerHTML = '<div style="padding: 0 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 2px;">Core Divisions</div>';
+    
+    // Get unique pages from settings + data
+    const pages = Object.keys(PAGE_LABELS);
+    
+    pages.forEach(p => {
         const count = cmsFullData.filter(item => item.page === p).length;
-        btn.querySelector('.badge').innerText = count;
-        btn.classList.toggle('active', p === activeCmsPage);
+        const btn = document.createElement('button');
+        btn.className = `cms-sidebar-btn ${p === activeCmsPage ? 'active' : ''}`;
+        btn.innerHTML = `<span>${PAGE_LABELS[p]}</span> <span class="badge">${count}</span>`;
+        btn.onclick = () => switchCmsPage(p);
+        sidebar.appendChild(btn);
     });
+
+    // Add Action Buttons
+    const actionContainer = document.createElement('div');
+    actionContainer.style.marginTop = 'auto';
+    actionContainer.style.paddingTop = '20px';
+    actionContainer.style.display = 'flex';
+    actionContainer.style.flexDirection = 'column';
+    actionContainer.style.gap = '10px';
+
+    actionContainer.innerHTML = `
+        <div style="font-size: 10px; color: var(--accent-cyan); font-weight: 800; text-transform: uppercase; opacity: 0.6;">Sync Operations</div>
+        <button onclick="syncCmsDefaults()" class="btn-secondary" style="width: 100%; font-size: 11px; padding: 12px;">🔄 Re-Seed Defaults</button>
+        <a href="index.html" target="_blank" class="btn-primary" style="width: 100%; font-size: 11px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 12px; border-radius: 12px;">🌐 Live Preview</a>
+    `;
+    sidebar.appendChild(actionContainer);
 }
 
-/**
- * Switch the active page being edited
- */
-function switchCmsPage(page, btn) {
-    if (unsavedChanges.size > 0) {
-        if (!confirm("You have unsaved changes on this page. Switch anyway?")) return;
-    }
-    
+function switchCmsPage(page) {
+    if (unsavedChanges.size > 0 && !confirm("Unsaved tactical data will be lost. Proceed?")) return;
     activeCmsPage = page;
     unsavedChanges.clear();
     updateUnsavedIndicator();
@@ -76,124 +92,105 @@ function switchCmsPage(page, btn) {
     renderCmsPage(page);
 }
 
-/**
- * Render the editor grid for the active page
- */
 function renderCmsPage(page) {
     const container = document.getElementById('cmsEditor');
     const search = document.getElementById('cmsSearch').value.toLowerCase();
     container.innerHTML = '';
     
     let filtered = cmsFullData.filter(item => item.page === page);
-    
     if (search) {
-        filtered = filtered.filter(i => 
-            i.key.toLowerCase().includes(search) || 
-            (i.content || '').toLowerCase().includes(search)
-        );
+        filtered = filtered.filter(i => i.key.includes(search) || (i.content || '').toLowerCase().includes(search));
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = `
-            <div style="grid-column: 1/-1; text-align:center; padding: 60px; color: var(--text-dim);">
-                <div style="font-size: 44px; margin-bottom: 20px; opacity: 0.3;">🔍</div>
-                <h3 style="letter-spacing: 1px; color: rgba(255,255,255,0.3);">NO CONTENT FOUND</h3>
-                <p style="font-size: 13px; opacity: 0.5;">Add a new entry or try a different search.</p>
-            </div>`;
+        container.innerHTML = `<div style="text-align:center; padding: 100px; color: var(--text-dim); font-family: var(--font-heading);">NO DATA IN THIS DIVISION</div>`;
         return;
     }
 
+    // Group items into sections
+    const groups = {};
     filtered.forEach(item => {
-        container.appendChild(createCmsCard(item));
+        const prefix = item.key.split('-')[0].substring(0, 4); // basic heuristic
+        const sectionKey = Object.keys(SECTION_MAP).find(k => item.key.startsWith(k)) || 'other';
+        if (!groups[sectionKey]) groups[sectionKey] = [];
+        groups[sectionKey].push(item);
+    });
+
+    // Render groups
+    Object.keys(groups).forEach(sKey => {
+        const config = SECTION_MAP[sKey] || { title: 'Other Content', icon: '📂' };
+        const section = document.createElement('div');
+        section.className = 'cms-section-group';
+        
+        section.innerHTML = `
+            <div class="cms-section-header">
+                <div class="cms-section-icon">${config.icon}</div>
+                <div class="cms-section-title">${config.title}</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;"></div>
+        `;
+        
+        const list = section.querySelector('div:last-child');
+        groups[sKey].forEach(item => list.appendChild(createPremiumCard(item)));
+        
+        container.appendChild(section);
     });
 }
 
-/**
- * Create a premium card for a CMS entry
- */
-function createCmsCard(item) {
+function createPremiumCard(item) {
     const card = document.createElement('div');
-    card.className = 'cms-card';
+    card.className = 'cms-premium-card';
     
-    // Friendly Label Logic
-    let friendlyLabel = item.key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    if (friendlyLabel.toLowerCase().includes('hero')) friendlyLabel = '🚀 ' + friendlyLabel;
-    if (friendlyLabel.toLowerCase().includes('desc')) friendlyLabel = '📝 ' + friendlyLabel;
-    if (friendlyLabel.toLowerCase().includes('btn')) friendlyLabel = '🖱️ ' + friendlyLabel;
-
-    const isLongText = item.content && item.content.length > 50;
+    // Label normalization
+    let label = item.key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const isLong = item.content && item.content.length > 50;
 
     card.innerHTML = `
-        <div class="cms-card-header">
-            <span class="cms-card-title">${friendlyLabel}</span>
-            <span class="cms-card-key">${item.key}</span>
+        <div class="cms-meta">
+            <span class="cms-friendly-label">${label}</span>
+            <span class="cms-tech-key">${item.key}</span>
         </div>
-        
-        <div class="cms-input-group">
-            <label class="cms-label">Current Content</label>
-            ${isLongText ? 
-                `<textarea class="cms-field textarea" oninput="trackCmsChange('${item.key}', this.value)">${item.content}</textarea>` :
-                `<input type="text" class="cms-field" value="${item.content}" oninput="trackCmsChange('${item.key}', this.value)">`
+        <div class="cms-input-wrapper">
+            ${isLong ? 
+                `<textarea class="cms-luxury-input cms-luxury-textarea" oninput="trackChange('${item.key}', this.value)">${item.content}</textarea>` :
+                `<input type="text" class="cms-luxury-input" value="${item.content}" oninput="trackChange('${item.key}', this.value)">`
             }
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
-            <div class="cms-page-badge">${item.page}</div>
-            <button class="btn-icon" onclick="deleteCmsEntry('${item.key}')" style="background: rgba(255,255,255,0.05); color: var(--text-dim); padding: 5px 10px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);">🗑 Delete</button>
+        <div class="cms-card-actions">
+            <button class="btn-icon" onclick="deleteEntry('${item.key}')" style="color: #ff3333; font-size: 11px; opacity: 0.5;">🗑 Delete Entry</button>
         </div>
     `;
-
     return card;
 }
 
-/**
- * Track changes in real-time
- */
-function trackCmsChange(key, newValue) {
-    const originalItem = cmsFullData.find(i => i.key === key);
-    if (!originalItem) return;
-
-    if (originalItem.content === newValue) {
-        unsavedChanges.delete(key);
-    } else {
-        unsavedChanges.set(key, { page: originalItem.page, key: key, content: newValue });
-    }
-
+function trackChange(key, val) {
+    const original = cmsFullData.find(i => i.key === key);
+    if (original.content === val) unsavedChanges.delete(key);
+    else unsavedChanges.set(key, { ...original, content: val });
     updateUnsavedIndicator();
 }
 
-/**
- * Update the floating save bar
- */
 function updateUnsavedIndicator() {
     const indicator = document.getElementById('cmsFloatingActions');
-    const countText = document.getElementById('cmsUnsavedCount');
-    
+    const count = document.getElementById('cmsUnsavedCount');
     if (unsavedChanges.size > 0) {
         indicator.classList.add('visible');
-        countText.innerText = `${unsavedChanges.size} items modified`;
+        count.innerText = `${unsavedChanges.size} Updates Staged`;
     } else {
         indicator.classList.remove('visible');
     }
 }
 
-/**
- * Save all changes to MongoDB
- */
 async function saveCmsContent() {
-    const saveBtn = document.querySelector('#cmsFloatingActions .btn-primary');
-    const originalText = saveBtn.innerText;
-    
+    const btn = document.querySelector('#cmsFloatingActions .btn-primary');
+    const originalText = btn.innerText;
     try {
-        saveBtn.innerText = 'Deploying...';
-        saveBtn.disabled = true;
+        btn.innerText = 'Syncing...';
+        btn.disabled = true;
 
-        // Prepare full dataset (Originals + Changes)
-        const updatedItemsMap = new Map();
-        cmsFullData.forEach(item => updatedItemsMap.set(item.key, item));
-        unsavedChanges.forEach((change, key) => updatedItemsMap.set(key, change));
-
-        const allItems = Array.from(updatedItemsMap.values());
+        const updatedMap = new Map();
+        cmsFullData.forEach(i => updatedMap.set(i.key, i));
+        unsavedChanges.forEach((v, k) => updatedMap.set(k, v));
 
         const res = await fetch('/api/admin/content', {
             method: 'POST',
@@ -201,87 +198,43 @@ async function saveCmsContent() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ items: allItems })
+            body: JSON.stringify({ items: Array.from(updatedMap.values()) })
         });
 
-        const result = await res.json();
-        if (result.success) {
-            cmsFullData = allItems;
+        if (res.ok) {
+            cmsFullData = Array.from(updatedMap.values());
             unsavedChanges.clear();
             updateUnsavedIndicator();
             updateCmsSidebar();
-            
-            // Show Success Notification
-            saveBtn.innerText = '✅ Deployed!';
-            setTimeout(() => {
-                saveBtn.innerText = originalText;
-                saveBtn.disabled = false;
-            }, 2000);
-
-            // Refresh public CMS cache if possible
-            if (window.CMS && window.CMS.refresh) window.CMS.refresh();
-        } else {
-            throw new Error('SAVE_FAILED');
+            btn.innerText = '✅ Synced';
+            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
         }
     } catch (err) {
-        console.error("CMS Save Error:", err);
-        alert("Failed to save changes. Check your internet connection or login status.");
-        saveBtn.innerText = originalText;
-        saveBtn.disabled = false;
+        alert("Sync failed. Check connection.");
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }
 
-/**
- * Delete an entry
- */
-async function deleteCmsEntry(key) {
-    if (!confirm(`Are you sure you want to delete "${key}"? This is permanent.`)) return;
-
-    try {
-        const res = await fetch(`/api/admin/content/${key}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-
-        const result = await res.json();
-        if (result.success) {
-            cmsFullData = cmsFullData.filter(i => i.key !== key);
-            unsavedChanges.delete(key);
-            updateUnsavedIndicator();
-            updateCmsSidebar();
-            renderCmsPage(activeCmsPage);
-        }
-    } catch (err) {
-        alert("Delete failed.");
-    }
+async function deleteEntry(key) {
+    if (!confirm(`Delete ${key} permanently from database?`)) return;
+    const res = await fetch(`/api/admin/content/${key}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) loadCmsContent();
 }
 
-/**
- * Add a new empty entry
- */
 function addNewCmsRow() {
-    const key = prompt("Enter a unique KEY_ID (e.g., home-new-title):");
-    if (!key) return;
-
-    if (cmsFullData.some(i => i.key === key)) {
-        return alert("Key already exists!");
-    }
-
+    const key = prompt("Enter Unique Key (e.g., home-hero-title):");
+    if (!key || cmsFullData.some(i => i.key === key)) return alert("Invalid or duplicate key.");
     const newItem = { page: activeCmsPage, key: key, content: "" };
-    cmsFullData.unshift(newItem); // Add to top
+    cmsFullData.unshift(newItem);
     renderCmsPage(activeCmsPage);
-    
-    // Focus the new input
-    setTimeout(() => {
-        const firstField = document.querySelector('.cms-field');
-        if (firstField) firstField.focus();
-    }, 100);
 }
 
-/**
- * Sync Defaults Shortcut
- */
 async function syncCmsDefaults() {
-    if (!confirm("Reset all content to database defaults? Unsaved changes will be lost.")) return;
+    if (!confirm("Re-seeding will wipe existing content and apply defaults. Continue?")) return;
+    await fetch('/api/admin/seed', { headers: { 'Authorization': `Bearer ${authToken}` } });
     loadCmsContent();
 }
