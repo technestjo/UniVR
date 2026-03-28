@@ -371,6 +371,17 @@ app.get('/api/content', async (req, res) => {
     }
 });
 
+// Get all content (Raw objects for Admin)
+app.get('/api/admin/raw-content', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
+    try {
+        const allContent = await Content.find().sort({ page: 1 });
+        res.json(allContent);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch raw content" });
+    }
+});
+
 // Admin mass updates content
 app.post('/api/admin/content', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });

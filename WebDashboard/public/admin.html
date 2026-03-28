@@ -90,12 +90,13 @@
             <section id="view-reports" class="admin-view active">
                 <div class="dashboard-header">
                     <div>
-                        <h2 class="text-gradient">Trainee Reports</h2>
-                        <p class="text-dim">Real-time evaluations from the VR simulation.</p>
+                        <h2 class="text-gradient">Trainee reports</h2>
+                        <p class="text-dim">Monitor and audit VR simulation performance data.</p>
                     </div>
-                    <div class="dashboard-controls">
-                        <input type="text" id="searchInput" placeholder="Search trainee or doctor code..." class="admin-input search" onkeyup="filterReports()">
-                        <button onclick="fetchReports()" class="btn-secondary">🔃 Refresh</button>
+                    <div class="dashboard-controls" style="max-width: 600px; gap: 10px;">
+                        <input type="text" id="searchTrainee" placeholder="Search Trainee Name..." class="admin-input search" oninput="filterReports()">
+                        <input type="text" id="filterDoctor" placeholder="Filter by Instructor Code/Name..." class="admin-input search" oninput="filterReports()">
+                        <button onclick="fetchReports()" class="btn-secondary" style="margin-top: 0;">🔃 Refresh</button>
                     </div>
                 </div>
 
@@ -113,10 +114,21 @@
                     </div>
                     
                     <div class="cms-add-bar">
-                        <input type="text" id="newDocName" placeholder="Full Name (e.g. Dr. Sarah)" class="admin-input" style="flex: 2; margin-top: 0;">
-                        <input type="text" id="newDocCode" placeholder="Secure Code" class="admin-input" style="flex: 1; margin-top: 0;">
-                        <input type="text" id="newDocPass" placeholder="Password (Optional)" class="admin-input" style="flex: 1; margin-top: 0;">
-                        <button onclick="addDoctor()" class="btn-primary" style="padding: 0 30px;">Add Instructor</button>
+                        <div class="cms-form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="newDocName" placeholder="e.g. Dr. Sarah" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group">
+                            <label>Instructor Code</label>
+                            <input type="text" id="newDocCode" placeholder="AL-123" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group">
+                            <label>Secure Password</label>
+                            <input type="text" id="newDocPass" placeholder="••••••••" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group" style="flex: 0; justify-content: flex-end;">
+                            <button onclick="addDoctor()" class="btn-primary" style="padding: 12px 30px; border-radius: 12px;">Add Instructor</button>
+                        </div>
                     </div>
                 </div>
 
@@ -148,7 +160,7 @@
                 <div class="dashboard-header">
                     <div>
                         <h2 class="text-gradient">Site Content Manager</h2>
-                        <p class="text-dim">Update website text dynamically without touching code.</p>
+                        <p class="text-dim">Update website text dynamically across all pages.</p>
                     </div>
                     <div class="dashboard-controls">
                         <button onclick="addNewCmsRow()" class="btn-secondary">➕ Add Entry</button>
@@ -156,13 +168,22 @@
                     </div>
                 </div>
                 
-                <div class="glass-panel" style="padding: 30px;">
-                    <div id="cmsEditor" class="cms-editor-container">
-                         <!-- Visual form blocks generated here -->
-                         <div class="loading-state">Loading CMS blocks...</div>
+                <div class="cms-layout">
+                    <div class="cms-sidebar">
+                        <button class="cms-sidebar-btn active" onclick="switchCmsPage('home', this)">🏠 Home Page</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('features', this)">🚀 Features</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('about', this)">ℹ️ About Us</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('pricing', this)">💰 Pricing</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('news', this)">📰 News/Updates</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('contact', this)">📧 Contact</button>
+                        <button class="cms-sidebar-btn" onclick="switchCmsPage('global', this)">🌐 Global/Other</button>
                     </div>
-                    
-                    <div id="cmsStatus" style="margin-top: 20px; text-align: right; font-weight: bold;"></div>
+                    <div class="glass-panel" style="padding: 25px;">
+                        <div id="cmsEditor" class="cms-editor-container">
+                             <div class="loading-state">Loading CMS blocks...</div>
+                        </div>
+                        <div id="cmsStatus" style="margin-top: 20px; text-align: right; font-weight: bold;"></div>
+                    </div>
                 </div>
             </section>
 
@@ -597,10 +618,10 @@
                     </div>
 
                     <div class="device-footer">
-                        <div class="device-last-seen">Last Seen: ${dateStr}</div>
-                        <div style="display: flex; gap: 10px;">
-                             <button class="btn-secondary" style="background: rgba(0, 242, 255, 0.1); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 255, 0.2);" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">Live Feed</button>
-                             <button class="btn-logout" style="padding: 8px 15px; font-weight: 700; color: ${dev.status === 'active' ? '#ff3333' : '#00ff88'}; border-color: ${dev.status === 'active' ? '#ff3333' : '#00ff88'};" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                        <div class="device-last-seen">Last: ${dateStr}</div>
+                        <div style="display: flex; gap: 8px;">
+                             <button class="btn-live" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">Live Feed</button>
+                             <button class="${dev.status === 'active' ? 'btn-suspend' : 'btn-activate'}" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
                                 ${dev.status === 'active' ? 'Suspend' : 'Activate'}
                              </button>
                         </div>
@@ -618,18 +639,15 @@
         }
 
         function filterReports() {
-            const t = document.getElementById('searchInput').value.toLowerCase();
-            const f = allReports.filter(r => 
-                (r.trainee_name || '').toLowerCase().includes(t) || 
-                (r.doctor_code || '').toLowerCase().includes(t)
-            );
-            renderReports(f);
-        }
-
-        function viewChat(logString) {
-            const modal = document.getElementById('chatModal');
-            document.getElementById('modalChatHistory').innerHTML = logString.replace(/\\n/g, '<br>');
-            modal.style.display = "flex";
+            const traineeSearch = document.getElementById('searchTrainee').value.toLowerCase();
+            const doctorSearch = document.getElementById('filterDoctor').value.toLowerCase();
+            
+            const filtered = allReports.filter(r => {
+                const traineeMatch = r.trainee_name.toLowerCase().includes(traineeSearch);
+                const doctorMatch = (r.doctor_code || '').toLowerCase().includes(doctorSearch) || false; 
+                return traineeSearch && doctorSearch ? (traineeMatch && doctorMatch) : (traineeMatch && (doctorSearch ? doctorMatch : true));
+            });
+            renderReports(filtered);
         }
 
         function closeModal() {
@@ -680,24 +698,52 @@
         }
 
         // ─── CMS LOGIC ───
+        let activeCmsPage = 'home';
+        let cmsFullData = []; 
+
         async function loadCmsContent() {
             try {
                 const res = await fetch('/api/content');
                 const data = await res.json();
                 
-                const container = document.getElementById('cmsEditor');
-                container.innerHTML = '';
-                
-                Object.keys(data).forEach(key => {
-                    const row = createCmsRow(key, data[key]);
-                    container.appendChild(row);
+                const adminRes = await fetch('/api/admin/raw-content', {
+                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
+                if(adminRes.ok) {
+                    cmsFullData = await adminRes.json();
+                } else {
+                    cmsFullData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
+                }
+
+                renderCmsPage(activeCmsPage);
                 
-                document.getElementById('cmsStatus').innerText = 'CMS database synchronized.';
+                document.getElementById('cmsStatus').innerText = 'CMS data synchronized.';
                 document.getElementById('cmsStatus').style.color = '#00ff88';
             } catch (err) {
-                document.getElementById('cmsStatus').innerText = 'Failed to load CMS data.';
+                document.getElementById('cmsStatus').innerText = 'Failed to sync CMS.';
                 document.getElementById('cmsStatus').style.color = '#ff3333';
+            }
+        }
+
+        function switchCmsPage(page, btn) {
+            activeCmsPage = page;
+            document.querySelectorAll('.cms-sidebar-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCmsPage(page);
+        }
+
+        function renderCmsPage(page) {
+            const container = document.getElementById('cmsEditor');
+            container.innerHTML = '';
+            
+            const filtered = cmsFullData.filter(item => item.page === page);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-dim);">No entries for this page yet. Click "Add Entry" to start.</div>`;
+            } else {
+                filtered.forEach(item => {
+                    container.appendChild(createCmsRow(item.key, item.content));
+                });
             }
         }
 
@@ -705,9 +751,9 @@
             const row = document.createElement('div');
             row.className = 'cms-row';
             row.innerHTML = `
-                <input type="text" placeholder="Key (e.g. hero-title)" class="admin-input cms-key-input" value="${key}" style="margin-top: 0;">
-                <input type="text" placeholder="Value (The text to show)" class="admin-input cms-val-input" value="${val}" style="margin-top: 0;">
-                <button class="btn-icon text-danger" onclick="this.parentElement.remove()" style="background: rgba(255,51,51,0.1);">🗑</button>
+                <input type="text" placeholder="Key (ID)" class="admin-input cms-key-input" value="${key}" style="margin-top: 0;">
+                <input type="text" placeholder="Content/Value" class="admin-input cms-val-input" value="${val}" style="margin-top: 0;">
+                <button class="btn-icon text-danger" onclick="this.parentElement.remove()" style="background: rgba(255,51,51,0.1); border-radius: 6px;">🗑</button>
             `;
             return row;
         }
@@ -721,20 +767,20 @@
 
         async function saveCmsContent() {
             const statusEl = document.getElementById('cmsStatus');
-            statusEl.innerText = 'Synchronizing changes...';
+            statusEl.innerText = 'Deploying content...';
             statusEl.style.color = 'var(--accent-cyan)';
             
             try {
                 const rows = document.querySelectorAll('.cms-row');
-                const items = [];
-                
-                rows.forEach(row => {
-                    const k = row.querySelector('.cms-key-input').value.trim();
-                    const v = row.querySelector('.cms-val-input').value.trim();
-                    if (k) {
-                        items.push({ page: 'global', key: k, content: v });
-                    }
+                const newItemsForThisPage = [];
+                rows.forEach(r => {
+                    const k = r.querySelector('.cms-key-input').value.trim();
+                    const v = r.querySelector('.cms-val-input').value.trim();
+                    if(k) newItemsForThisPage.push({ page: activeCmsPage, key: k, content: v });
                 });
+
+                const otherPages = cmsFullData.filter(item => item.page !== activeCmsPage);
+                const allItems = [...otherPages, ...newItemsForThisPage];
 
                 const res = await fetch('/api/admin/content', {
                     method: 'POST',
@@ -742,18 +788,18 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ items })
+                    body: JSON.stringify({ items: allItems })
                 });
                 
-                const result = await res.json();
-                if (result.success) {
-                    statusEl.innerText = '✅ Content deployed successfully!';
+                if ((await res.json()).success) {
+                    cmsFullData = allItems;
+                    statusEl.innerText = '✅ Deployed successfully!';
                     statusEl.style.color = '#00ff88';
                 } else {
-                    throw new Error(result.error);
+                    throw new Error();
                 }
             } catch (err) {
-                statusEl.innerText = '❌ Error: Network disruption or invalid data.';
+                statusEl.innerText = '❌ Deployment failed.';
                 statusEl.style.color = '#ff3333';
             }
         }
