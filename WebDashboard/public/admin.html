@@ -169,14 +169,14 @@
                 </div>
                 
                 <div class="cms-layout">
-                    <div class="cms-sidebar">
-                        <button class="cms-sidebar-btn active" onclick="switchCmsPage('home', this)">🏠 Home Page</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('features', this)">🚀 Features</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('about', this)">ℹ️ About Us</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('pricing', this)">💰 Pricing</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('news', this)">📰 News/Updates</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('contact', this)">📧 Contact</button>
-                        <button class="cms-sidebar-btn" onclick="switchCmsPage('global', this)">🌐 Global/Other</button>
+                    <div class="cms-sidebar" id="cmsPageSidebar">
+                        <button class="cms-sidebar-btn" data-page="home" onclick="switchCmsPage('home', this)">🏠 Home Page <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="features" onclick="switchCmsPage('features', this)">🚀 Features <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="about" onclick="switchCmsPage('about', this)">ℹ️ About Us <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="pricing" onclick="switchCmsPage('pricing', this)">💰 Pricing <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="news" onclick="switchCmsPage('news', this)">📰 News/Updates <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="contact" onclick="switchCmsPage('contact', this)">📧 Contact <span class="badge" style="float:right; opacity:0.6;">0</span></button>
+                        <button class="cms-sidebar-btn" data-page="global" onclick="switchCmsPage('global', this)">🌐 Global/Other <span class="badge" style="float:right; opacity:0.6;">0</span></button>
                     </div>
                     <div class="glass-panel" style="padding: 25px;">
                         <div id="cmsEditor" class="cms-editor-container">
@@ -703,18 +703,25 @@
 
         async function loadCmsContent() {
             try {
-                const res = await fetch('/api/content');
-                const data = await res.json();
-                
                 const adminRes = await fetch('/api/admin/raw-content', {
                      headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 if(adminRes.ok) {
                     cmsFullData = await adminRes.json();
                 } else {
+                    const res = await fetch('/api/content');
+                    const data = await res.json();
                     cmsFullData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
                 }
 
+                // If currently selected page is empty, try to find one with data
+                const pageHasData = (p) => cmsFullData.some(i => i.page === p);
+                if (!pageHasData(activeCmsPage)) {
+                    const firstNonEmpty = cmsFullData.find(i => i.page && i.page !== '')?.page || 'home';
+                    activeCmsPage = firstNonEmpty;
+                }
+
+                updateCmsSidebar();
                 renderCmsPage(activeCmsPage);
                 
                 document.getElementById('cmsStatus').innerText = 'CMS data synchronized.';
@@ -725,10 +732,19 @@
             }
         }
 
+        function updateCmsSidebar() {
+            const btns = document.querySelectorAll('.cms-sidebar-btn');
+            btns.forEach(btn => {
+                const p = btn.getAttribute('data-page');
+                const count = cmsFullData.filter(item => item.page === p).length;
+                btn.querySelector('.badge').innerText = count;
+                btn.classList.toggle('active', p === activeCmsPage);
+            });
+        }
+
         function switchCmsPage(page, btn) {
             activeCmsPage = page;
-            document.querySelectorAll('.cms-sidebar-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            updateCmsSidebar();
             renderCmsPage(page);
         }
 
@@ -739,7 +755,12 @@
             const filtered = cmsFullData.filter(item => item.page === page);
             
             if (filtered.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-dim);">No entries for this page yet. Click "Add Entry" to start.</div>`;
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 60px; color: var(--text-dim);">
+                        <div style="font-size: 40px; margin-bottom: 15px;">📂</div>
+                        <h3>No entries for "${page.toUpperCase()}"</h3>
+                        <p>All previous data was moved to the <b>Global/Other</b> section.<br>Use "Add Entry" to create content for this specific page.</p>
+                    </div>`;
             } else {
                 filtered.forEach(item => {
                     container.appendChild(createCmsRow(item.key, item.content));
@@ -793,6 +814,7 @@
                 
                 if ((await res.json()).success) {
                     cmsFullData = allItems;
+                    updateCmsSidebar(); // Update the badges
                     statusEl.innerText = '✅ Deployed successfully!';
                     statusEl.style.color = '#00ff88';
                 } else {
