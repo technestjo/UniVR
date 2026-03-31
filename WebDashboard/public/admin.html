@@ -215,8 +215,9 @@
     <script>
         let authToken = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole') || 'admin';
-        let allReports = []; // Added back to global scope
+        let allReports = []; 
         let filteredReports = []; 
+        let activeSessions = []; // Shared global for live signaling
 
         function openModalById(id) {
             const r = allReports.find(x => x._id === id);
@@ -378,13 +379,16 @@
                 });
                 if (res.status === 401 || res.status === 403) return logoutAdmin();
                 
-                allReports = await res.json();
+                const repResult = await res.json();
+                allReports = Array.isArray(repResult) ? repResult : [];
                 filteredReports = [...allReports]; 
                 
-                if (!Array.isArray(allReports)) {
-                    document.getElementById('reportsList').innerHTML = `<div class="loading-state text-danger">Database Error: Double check MongoDB Atlas Network IP Allowlist (Set to 0.0.0.0/0)</div>`;
-                    return;
-                }
+                // Also fetch active sessions for real-time signaling
+                const actRes = await fetch('/api/admin/active-sessions', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                activeSessions = await actRes.json();
+                
                 renderReports(allReports);
             } catch (err) {
                 console.error(err);
@@ -419,12 +423,18 @@
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
 
+                // Check if live
+                const isLive = Array.isArray(activeSessions) && activeSessions.find(s => 
+                    (s.deviceId === r.deviceId) || 
+                    (s.traineeName === r.trainee_name)
+                );
+
                 const card = document.createElement('div');
                 card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
                 card.innerHTML = `
                     <div class="rc-header">
                         <div>
-                            <div class="rc-title">${r.trainee_name}</div>
+                            <div class="rc-title">${r.trainee_name} ${isLive ? '<span class="pulse" style="color:#00ff88; font-size:10px;">● LIVE</span>' : ''}</div>
                             <div class="rc-meta">Doc: <span class="badge blue">${r.doctor_code || 'N/A'}</span> | ID: ${r.trainee_id || 'N/A'}</div>
                         </div>
                         <div class="rc-score ${scoreClass}">${Math.round(r.score)}%</div>
@@ -436,8 +446,9 @@
                     </div>
 
                     <div class="rc-actions" style="margin-top:15px;">
-                        <button onclick='openModalById("${r._id}")' class="btn-secondary" style="flex:1;">💬 Log</button>
-                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger">🗑</button>
+                        <button onclick='openModalById("${r._id}")' class="btn-secondary" style="flex: 1.5;">💬 Log</button>
+                        ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="btn-primary pulse" style="flex: 2; height: 38px; display:flex; align-items:center; justify-content:center; gap:5px; background:#00ff88; color:#000; font-size:12px; font-weight:800; border:none; box-shadow: 0 0 15px rgba(0,255,136,0.3);">📽️ WATCH LIVE</button>` : `<button disabled class="btn-secondary" style="flex: 2; opacity: 0.5; cursor: not-allowed; font-size: 11px;">📡 Standby</button>`}
+                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger" style="flex:0.5;">🗑</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -614,7 +625,8 @@
                     <div class="device-footer">
                         <div class="device-last-seen">Last: ${dateStr}</div>
                         <div style="display: flex; gap: 8px;">
-                             <button class="${dev.status === 'active' ? 'btn-suspend' : 'btn-activate'}" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                             <button class="btn-primary" style="padding: 8px 15px; font-size: 13px;" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'AeroTwin Unit'}')">📺 Watch Live</button>
+                             <button class="${dev.status === 'active' ? 'btn-suspend' : 'btn-activate'}" style="padding: 8px 15px; font-size: 13px;" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
                                 ${dev.status === 'active' ? 'Suspend' : 'Activate'}
                              </button>
                         </div>
