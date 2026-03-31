@@ -245,9 +245,30 @@ app.post('/api/admin/login', async (req, res) => {
         } 
         
         // 2. Check Doctor (via Hashed DB Password)
-        const doc = await Doctor.findOne({ code: username });
+        // Search by code OR name (case-insensitive)
+        const doc = await Doctor.findOne({ 
+            $or: [
+                { code: username },
+                { name: { $regex: new RegExp(`^${username}$`, 'i') } }
+            ]
+        });
+
         if (doc) {
-            const isMatch = await bcrypt.compare(password, doc.password);
+            let isMatch = false;
+            // Check if it's a hashed password
+            if (doc.password.startsWith('$2a$') || doc.password.startsWith('$2b$')) {
+                isMatch = await bcrypt.compare(password, doc.password);
+            } else {
+                // Legacy plain-text check
+                if (password === doc.password) {
+                    isMatch = true;
+                    // Automatically upgrade to hashed password for security
+                    doc.password = password; 
+                    await doc.save();
+                    console.log(`✅ Hashed legacy password for doctor: ${doc.name}`);
+                }
+            }
+
             if (isMatch) {
                 const token = jwt.sign({ role: 'doctor', code: doc.code }, JWT_SECRET, { expiresIn: '8h' });
                 return res.json({ success: true, token, role: 'doctor' });
