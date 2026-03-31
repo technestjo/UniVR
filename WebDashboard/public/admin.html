@@ -456,7 +456,7 @@
                     </div>
 
                     <div class="rc-actions">
-                        <button onclick='openModal(${JSON.stringify(r.chat_log || '').replace(/'/g, "&apos;")})' class="btn-secondary flex-1">💬 View Log</button>
+                        <button onclick="openModal('${(r.chat_log || "").replace(/'/g, "\\'")}')" class="btn-secondary flex-1">💬 View Log</button>
                         <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger">🗑</button>
                     </div>
                 `;
@@ -634,7 +634,6 @@
                     <div class="device-footer">
                         <div class="device-last-seen">Last: ${dateStr}</div>
                         <div style="display: flex; gap: 8px;">
-                             <button class="btn-live" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">Live Feed</button>
                              <button class="${dev.status === 'active' ? 'btn-suspend' : 'btn-activate'}" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
                                 ${dev.status === 'active' ? 'Suspend' : 'Activate'}
                              </button>
@@ -647,12 +646,10 @@
 
         // ─── UTILS ───
         function formatDuration(seconds) {
-            if (!seconds) return "0s";
-            const totalSeconds = Math.floor(seconds);
-            if (totalSeconds < 60) return totalSeconds + "s";
-            const mins = Math.floor(totalSeconds / 60);
-            const secs = totalSeconds % 60;
-            return `${mins}m ${secs}s`;
+            if (!seconds) return "00:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
         function filterReports() {
