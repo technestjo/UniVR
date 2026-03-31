@@ -214,6 +214,7 @@
     <script src="cms-admin.js"></script>
     <script>
         let authToken = localStorage.getItem('adminToken');
+        window.authToken = authToken; // Make global for external scripts
         let userRole = localStorage.getItem('userRole') || 'admin';
         let allReports = []; 
         let filteredReports = []; 
@@ -423,10 +424,10 @@
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
 
-                // Check if live
-                const isLive = Array.isArray(activeSessions) && activeSessions.find(s => 
+                // Check if this trainee's device is currently live (Match by ID OR Case-Insensitive Name)
+                const isLive = activeSessions.find(s => 
                     (s.deviceId === r.deviceId) || 
-                    (s.traineeName === r.trainee_name)
+                    (s.traineeName && r.trainee_name && s.traineeName.toLowerCase().trim() === r.trainee_name.toLowerCase().trim())
                 );
 
                 const card = document.createElement('div');

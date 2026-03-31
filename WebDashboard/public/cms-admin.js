@@ -465,6 +465,7 @@ function escapeHtml(unsafe) {
 }
 
 // Hook into existing admin.html init if available
-if(typeof loadCmsContent !== 'undefined' && authToken) {
+const activeToken = window.authToken || localStorage.getItem('adminToken');
+if(typeof loadCmsContent !== 'undefined' && activeToken) {
     loadCmsContent();
 }

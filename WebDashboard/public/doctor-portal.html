@@ -477,10 +477,9 @@
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
                 
-                // Check if this trainee's device is currently live (Match by ID OR Name OR Trainee ID)
+                // Check if this trainee's device is currently live (Match by ID OR Case-Insensitive Name)
                 const isLive = activeSessions.find(s => 
                     (s.deviceId === r.deviceId) || 
-                    (s.traineeName === r.trainee_name) ||
                     (s.traineeName && r.trainee_name && s.traineeName.toLowerCase().trim() === r.trainee_name.toLowerCase().trim())
                 );
 
