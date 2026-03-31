@@ -398,10 +398,10 @@
                 card.innerHTML = `
                     <div class="rc-header">
                         <div>
-                            <div class="rc-title" style="color: #00ff88;">LIVE: ${s.traineeName}</div>
+                            <div class="rc-title" style="color: #00ff88;">[${s.atCode}] ${s.traineeName}</div>
                             <div class="rc-meta">Current Active Session</div>
                         </div>
-                        <div class="pulse" style="color: #00ff88; font-weight: 900; font-size: 12px;">● LIVE</div>
+                        <div class="pulse" style="color: #00ff88; font-weight: 900; font-size: 12px;">● ${s.hasFeed ? 'LIVE FEED' : 'JOINED'}</div>
                     </div>
                     <div style="padding: 15px; background: rgba(0,255,136,0.05); border-radius: 12px; font-size: 13px; color: #94a3b8; margin: 10px 0;">
                         Student is currently performing mission tasks in VR.

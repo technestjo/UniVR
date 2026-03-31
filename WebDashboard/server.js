@@ -118,6 +118,7 @@ const DeviceSchema = new mongoose.Schema({
     cpu: { type: String, default: "" },
     ram: { type: String, default: "" },
     gpu: { type: String, default: "" },
+    atCode: { type: String, unique: true }, // Human-readable e.g. AT-1122
     lastSeen: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now }
 });
@@ -374,6 +375,18 @@ app.post('/api/admin/devices/:id/status', verifyToken, async (req, res) => {
     }
 });
 
+// Helper to generate unique AT-XXXX code
+async function generateAtCode() {
+    let code = '';
+    let exists = true;
+    while(exists) {
+        code = 'AT-' + Math.floor(1000 + Math.random() * 9000);
+        const check = await Device.findOne({ atCode: code });
+        if(!check) exists = false;
+    }
+    return code;
+}
+
 // Unity endpoint to check hardware licensing (Public)
 app.post('/api/device/check', async (req, res) => {
     try {
@@ -383,6 +396,7 @@ app.post('/api/device/check', async (req, res) => {
         let device = await Device.findOne({ deviceId });
         
         if (!device) {
+            const newAtCode = await generateAtCode();
             device = new Device({ 
                 deviceId, 
                 ownerInfo: deviceName || "Unknown VR Headset",
@@ -392,6 +406,7 @@ app.post('/api/device/check', async (req, res) => {
                 cpu: cpu || "Unknown",
                 ram: ram || "Unknown",
                 gpu: gpu || "Unknown",
+                atCode: newAtCode,
                 lastSeen: new Date()
             });
             await device.save();
@@ -402,6 +417,11 @@ app.post('/api/device/check', async (req, res) => {
             }
             if(deviceModel) device.deviceModel = deviceModel;
 
+            // Generate atCode if missing (for existing devices)
+            if(!device.atCode) {
+                device.atCode = await generateAtCode();
+            }
+
             // Update hardware info if provided
             if (os) device.os = os;
             if (cpu) device.cpu = cpu;
@@ -411,7 +431,7 @@ app.post('/api/device/check', async (req, res) => {
             await device.save();
         }
 
-        res.json({ status: device.status });
+        res.json({ status: device.status, atCode: device.atCode });
     } catch (err) {
         console.error("Device Check Error:", err);
         res.status(500).json({ error: "Failed to verify device" });
@@ -602,7 +622,32 @@ app.listen(PORT, () => {
     console.log(`🚀 AeroTwin XR Dashboard running on port ${PORT}`);
 });
 
-// === Live Stream Endpoints ===
+// === Live Stream & Session Endpoints ===
+
+// Unity signals "Session Started" (Trainee Join)
+app.post('/api/device/session/join', async (req, res) => {
+    const { deviceId, traineeName, doctorCode } = req.body;
+    if (!deviceId) return res.status(400).json({ error: "Missing deviceId" });
+
+    try {
+        const device = await Device.findOne({ deviceId });
+        const atCode = device ? device.atCode : "AT-????";
+
+        // Pre-initialize or update high-level metadata in memory
+        if (!deviceFrames[deviceId]) deviceFrames[deviceId] = { data: null };
+        
+        deviceFrames[deviceId].traineeName = traineeName || "Active Trainee";
+        deviceFrames[deviceId].doctorCode = doctorCode || null;
+        deviceFrames[deviceId].atCode = atCode;
+        deviceFrames[deviceId].timestamp = Date.now();
+        deviceFrames[deviceId].status = 'joined'; // Status for doctor to see
+
+        console.log(`📡 Session Joined: [${atCode}] ${traineeName} (Doc: ${doctorCode})`);
+        res.json({ success: true, atCode });
+    } catch (err) {
+        res.status(500).json({ error: "Join failed" });
+    }
+});
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
@@ -649,7 +694,9 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
                 active.push({
                     deviceId: id,
                     traineeName: frame.traineeName,
-                    timestamp: frame.timestamp
+                    atCode: frame.atCode || "AT-????",
+                    timestamp: frame.timestamp,
+                    hasFeed: !!frame.data // Indicator if video frames are arriving
                 });
             }
         }
