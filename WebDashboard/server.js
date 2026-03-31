@@ -277,6 +277,7 @@ app.post('/api/admin/login', async (req, res) => {
             }
         }
     } catch (err) {
+        console.error("Critical Login Error:", err);
         return res.status(500).json({ success: false, message: "Internal server error during login" });
     }
 
@@ -625,19 +626,32 @@ app.post('/api/device/stream', (req, res) => {
 });
 
 // Get all active sessions for a specific doctor
-app.get('/api/admin/active-sessions', verifyToken, (req, res) => {
+app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
     const now = Date.now();
     const active = [];
 
     for (const [id, frame] of Object.entries(deviceFrames)) {
-        // Only show frames from the last 10 seconds (Active)
-        // And only sessions matching this doctor's code
-        if ((now - frame.timestamp < 10000) && (frame.doctorCode === req.user.code || req.user.role === 'admin')) {
-            active.push({
-                deviceId: id,
-                traineeName: frame.traineeName,
-                timestamp: frame.timestamp
-            });
+        // Only show frames from the last 15 seconds (slightly more lenient)
+        if (now - frame.timestamp < 15000) {
+            // Check matching: Case 1: Exact Doctor Code, Case 2: Admin bypass, 
+            // Case 3: Trainee Name match in reports (Fallback if doctorCode is missing in frame)
+            let isAllowed = (req.user.role === 'admin') || (frame.doctorCode === req.user.code);
+
+            if (!isAllowed && req.user.role === 'doctor' && frame.traineeName) {
+                try {
+                    // Quick check if this trainee ever reported under this doctor
+                    const lastReport = await Report.findOne({ trainee_name: frame.traineeName, doctor_code: req.user.code });
+                    if (lastReport) isAllowed = true;
+                } catch(e) {}
+            }
+
+            if (isAllowed) {
+                active.push({
+                    deviceId: id,
+                    traineeName: frame.traineeName,
+                    timestamp: frame.timestamp
+                });
+            }
         }
     }
     res.json(active);
