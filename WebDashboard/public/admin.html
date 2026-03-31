@@ -214,7 +214,12 @@
     <script>
         let authToken = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole') || 'admin';
-        let allReports = [];
+        let filteredReports = []; // Added to handle filtered list log buttons
+
+        function openModalById(id) {
+            const r = allReports.find(x => x._id === id);
+            if (r) openModal(r.chat_log);
+        }
 
         function applyRolePermissions() {
             if (userRole === 'doctor') {
@@ -375,12 +380,15 @@
         // ─── REPORTS API ───
         async function fetchReports() {
             try {
+                document.getElementById('reportsList').innerHTML = `<div class="loading-state">Syncing data...</div>`;
                 const res = await fetch('/api/admin/reports', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 if (res.status === 401 || res.status === 403) return logoutAdmin();
                 
                 allReports = await res.json();
+                filteredReports = [...allReports]; 
+                
                 if (!Array.isArray(allReports)) {
                     document.getElementById('reportsList').innerHTML = `<div class="loading-state text-danger">Database Error: Double check MongoDB Atlas Network IP Allowlist (Set to 0.0.0.0/0)</div>`;
                     return;
@@ -425,38 +433,18 @@
                     <div class="rc-header">
                         <div>
                             <div class="rc-title">${r.trainee_name}</div>
-                            <div class="rc-meta">Doctor Code: <span class="badge blue">${r.doctor_code || 'N/A'}</span></div>
+                            <div class="rc-meta">Doc: <span class="badge blue">${r.doctor_code || 'N/A'}</span> | ID: ${r.trainee_id || 'N/A'}</div>
                         </div>
-                        <div class="rc-score ${scoreClass}">${r.score}%</div>
+                        <div class="rc-score ${scoreClass}">${Math.round(r.score)}%</div>
                     </div>
 
-                    <div class="rc-stats-grid">
-                        <div class="stat-box">
-                            <span class="label">Time</span>
-                            <span class="val">${sessionTime}</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="label">Safety</span>
-                            <span class="val">${Math.round(r.safety_score || 0)}%</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="label">Tasks</span>
-                            <span class="val">${r.tasks_completed || 0}/${r.total_tasks || 7}</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="label">Parts</span>
-                            <span class="val">${r.parts_inspected_count || 0}</span>
-                        </div>
+                    <div class="rc-telemetry" style="margin-top:10px;">
+                        <div>Time: <span>${sessionTime}</span></div>
+                        <div>Safety: <span class="${r.safety_score < 70 ? 'text-danger' : ''}">${Math.round(r.safety_score || 0)}%</span></div>
                     </div>
 
-                    <div class="rc-telemetry">
-                        <div>🚩 Fault: <span>${r.fault_type || 'N/A'}</span></div>
-                        <div>🔥 Temp: <span class="${r.temp > 800 ? 'text-danger' : ''}">${r.temp?.toFixed(1) || 0}°C</span></div>
-                        <div>🗜 Vib: <span class="${r.vibration > 5 ? 'text-danger' : ''}">${r.vibration?.toFixed(2) || 0} ips</span></div>
-                    </div>
-
-                    <div class="rc-actions">
-                        <button onclick="openModal('${(r.chat_log || "").replace(/'/g, "\\'")}')" class="btn-secondary flex-1">💬 View Log</button>
+                    <div class="rc-actions" style="margin-top:15px;">
+                        <button onclick='openModalById("${r._id}")' class="btn-secondary" style="flex:1;">💬 Log</button>
                         <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger">🗑</button>
                     </div>
                 `;
@@ -656,12 +644,12 @@
             const traineeSearch = document.getElementById('searchTrainee').value.toLowerCase();
             const doctorSearch = document.getElementById('filterDoctor').value.toLowerCase();
             
-            const filtered = allReports.filter(r => {
+            filteredReports = allReports.filter(r => {
                 const traineeMatch = r.trainee_name.toLowerCase().includes(traineeSearch);
                 const doctorMatch = (r.doctor_code || '').toLowerCase().includes(doctorSearch) || false; 
                 return traineeSearch && doctorSearch ? (traineeMatch && doctorMatch) : (traineeMatch && (doctorSearch ? doctorMatch : true));
             });
-            renderReports(filtered);
+            renderReports(filteredReports);
         }
 
         function closeModal() {
