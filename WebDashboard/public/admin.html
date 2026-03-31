@@ -646,10 +646,13 @@
         }
 
         // ─── UTILS ───
-        function formatDuration(sec) {
-            if(!sec) return '00:00';
-            const m = Math.floor(sec/60); const s = Math.floor(sec%60);
-            return `${m}m ${s}s`;
+        function formatDuration(seconds) {
+            if (!seconds) return "0s";
+            const totalSeconds = Math.floor(seconds);
+            if (totalSeconds < 60) return totalSeconds + "s";
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${mins}m ${secs}s`;
         }
 
         function filterReports() {
@@ -725,10 +728,6 @@
                 alert("Seed failed");
             }
         }
-    </script>
-</body>
-</html>
-
     </script>
 </body>
 </html>

@@ -104,6 +104,7 @@ const ReportSchema = new mongoose.Schema({
     exported_reports_count: Number,
     chat_log: String,
     score: Number,
+    deviceId: String, // Link to the VR headset used
     createdAt: { type: Date, default: Date.now }
 });
 const Report = mongoose.model('Report', ReportSchema);
@@ -191,7 +192,8 @@ app.post('/api/submit-report', async (req, res) => {
             inspected_parts: payload.inspected_parts || [],
             exported_reports_count: payload.exported_reports_count || 0,
             chat_log: payload.chat_log || "No chat history.",
-            score: calculateScore(payload)
+            score: calculateScore(payload),
+            deviceId: payload.deviceId || "Unknown"
         });
 
         await newReport.save();
@@ -603,7 +605,7 @@ app.listen(PORT, () => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const { deviceId, frameBase64 } = req.body;
+    const { deviceId, frameBase64, doctorCode, traineeName } = req.body;
     const deviceSecret = req.headers['x-device-secret'];
 
     // Security Check: Ensure only authenticated devices can stream
@@ -615,9 +617,30 @@ app.post('/api/device/stream', (req, res) => {
 
     deviceFrames[deviceId] = {
         data: frameBase64,
+        doctorCode: doctorCode || null,
+        traineeName: traineeName || "Active Trainee",
         timestamp: Date.now()
     };
     res.json({ success: true });
+});
+
+// Get all active sessions for a specific doctor
+app.get('/api/admin/active-sessions', verifyToken, (req, res) => {
+    const now = Date.now();
+    const active = [];
+
+    for (const [id, frame] of Object.entries(deviceFrames)) {
+        // Only show frames from the last 10 seconds (Active)
+        // And only sessions matching this doctor's code
+        if ((now - frame.timestamp < 10000) && (frame.doctorCode === req.user.code || req.user.role === 'admin')) {
+            active.push({
+                deviceId: id,
+                traineeName: frame.traineeName,
+                timestamp: frame.timestamp
+            });
+        }
+    }
+    res.json(active);
 });
 
 // Retrieve latest frame for Admin Dashboard (ADMIN PROTECTED)
