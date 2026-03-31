@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const mongoSanitize = require('express-mongo-sanitize');
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -10,8 +13,10 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'AeroTwinXR_SuperSecretKey_2026';
-const DEVICE_STREAM_SECRET = 'AeroTwin_Device_Stream_Secure_Key_9988';
+const DEVICE_STREAM_SECRET = process.env.DEVICE_STREAM_SECRET || 'AeroTwin_Device_Stream_Secure_Key_9988';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://technestjo_db_user:QqaoVP8GaFQiCWID@cluster0.2evazsh.mongodb.net/univr?retryWrites=true&w=majority';
+const ADMIN_USER = process.env.ADMIN_USER || 'AeroTwin_SuperAdmin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'XR_Secure_Admin_Access_Pass_2026!!';
 
 // ─── SECURITY MIDDLEWARE ───
 app.use(helmet({
@@ -33,6 +38,7 @@ const deviceFrames = {};
 // ─── MIDDLEWARE ───
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use(mongoSanitize()); // Prevent NoSQL Injection
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── MONGODB CONNECTION ───
@@ -44,9 +50,22 @@ mongoose.connect(MONGO_URI)
 const DoctorSchema = new mongoose.Schema({
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
-    password: { type: String, required: true, default: '123456' },
+    password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
+
+// Hash password before saving
+DoctorSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
 const Doctor = mongoose.model('Doctor', DoctorSchema);
 
 const ContentSchema = new mongoose.Schema({
@@ -210,26 +229,35 @@ function calculateScore(data) {
 
 // ─── ADMIN API ROUTES ───
 
-// Admin & Doctor Login (Unified)
+// Admin & Doctor Login (Unified with Enhanced Security)
 app.post('/api/admin/login', async (req, res) => {
     const { username, password } = req.body;
     
-    // High-security credentials for Admin
-    if (username === 'AeroTwin_SuperAdmin' && password === 'XR_Secure_Admin_Access_Pass_2026!!') {
-        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
-        return res.json({ success: true, token, role: 'admin' });
-    } 
-    
-    // Check Doctor credentials
-    try {
-        const doc = await Doctor.findOne({ code: username });
-        if (doc && doc.password === password) {
-            const token = jwt.sign({ role: 'doctor', code: doc.code }, JWT_SECRET, { expiresIn: '12h' });
-            return res.json({ success: true, token, role: 'doctor' });
-        }
-    } catch (err) {}
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: "Missing credentials" });
+    }
 
-    res.status(401).json({ success: false, message: "Invalid username or password" });
+    try {
+        // 1. Check Admin (via Environment Variables)
+        if (username === ADMIN_USER && password === ADMIN_PASS) {
+            const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '8h' });
+            return res.json({ success: true, token, role: 'admin' });
+        } 
+        
+        // 2. Check Doctor (via Hashed DB Password)
+        const doc = await Doctor.findOne({ code: username });
+        if (doc) {
+            const isMatch = await bcrypt.compare(password, doc.password);
+            if (isMatch) {
+                const token = jwt.sign({ role: 'doctor', code: doc.code }, JWT_SECRET, { expiresIn: '8h' });
+                return res.json({ success: true, token, role: 'doctor' });
+            }
+        }
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Internal server error during login" });
+    }
+
+    res.status(401).json({ success: false, message: "Invalid credentials" });
 });
 
 // Get all reports (Protected & Multi-Tenant)

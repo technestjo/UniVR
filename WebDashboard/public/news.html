@@ -21,6 +21,7 @@
             <li><a href="about.html">About</a></li>
             <li><a href="features.html">Features</a></li>
             <li><a href="leaderboard.html">Trainee Leaderboard</a></li>
+            <li><a href="doctor-portal.html" class="nav-join-link" style="color: var(--accent-cyan); font-weight: 800; border: 1px solid var(--accent-cyan); padding: 5px 15px; border-radius: 5px; margin-right: 10px;">JOIN</a></li>
             <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
         </ul>
     </nav>
@@ -122,7 +123,6 @@
             document.getElementById('nm-date').innerText = el.querySelector('.n-full-date').innerText;
             document.getElementById('nm-img').src = el.querySelector('.n-full-img').innerText;
             
-            // Format content to maintain paragraphs
             const rawContent = el.querySelector('.n-full-desc').innerText;
             const formattedContent = rawContent.split('\n').filter(p => p.trim() !== '').map(p => `<p style="margin-bottom: 15px;">${p}</p>`).join('');
             document.getElementById('nm-content').innerHTML = formattedContent;
