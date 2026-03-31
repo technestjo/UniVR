@@ -36,6 +36,7 @@
             padding: 10px 20px;
             border-radius: 50px;
         }
+        .admin-only.hidden-role { display: none !important; }
     </style>
 </head>
 <body class="admin-body">
@@ -214,7 +215,8 @@
     <script>
         let authToken = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole') || 'admin';
-        let filteredReports = []; // Added to handle filtered list log buttons
+        let allReports = []; // Added back to global scope
+        let filteredReports = []; 
 
         function openModalById(id) {
             const r = allReports.find(x => x._id === id);
@@ -222,10 +224,12 @@
         }
 
         function applyRolePermissions() {
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            // If logged in as 'admin', show everything. If 'doctor', hide admin-only.
             if (userRole === 'doctor') {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                adminOnlyElements.forEach(el => el.classList.add('hidden-role'));
             } else {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+                adminOnlyElements.forEach(el => el.classList.remove('hidden-role'));
             }
         }
 
@@ -242,77 +246,65 @@
             }
         };
 
-        // Modal Logic
+        // Robust Chat Modal Parser
         function openModal(logText) {
             let container = document.getElementById('modalChatHistory');
-            
             if (!logText || logText.trim() === '') {
                 container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);">No chat history available.</div>';
             } else {
-                let logStr = logText.replace(/\\n/g, '\n').replace(/\r/g, ''); // Normalize all newlines
+                let logStr = logText.trim();
                 let lines = logStr.split('\n');
                 let formattedHtml = '';
                 
-                const formatFallback = (text) => {
-                    return text.split('\n').filter(l => l.trim() !== '').map(line => {
-                        line = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
-                        line = line.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
-                        return `<div class="chat-bubble ai">${line}</div>`;
-                    }).join('');
-                };
-
                 let currentSpeaker = '';
-                let currentMsg = '';
+                let currentMsgLines = [];
 
                 const flushMessage = () => {
-                    if (currentMsg.trim() === '') return;
-                    let msg = currentMsg.trim();
+                    if (currentMsgLines.length === 0 && currentSpeaker === '') return;
+                    let msg = currentMsgLines.join('\n').trim();
+                    if (msg === '' && currentSpeaker === '') return;
+
+                    // Clean markdown styles
                     msg = msg.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
                     msg = msg.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
                     msg = msg.replace(/\n/g, '<br>');
                     
-                    let isUser = currentSpeaker === 'you' || currentSpeaker === 'user';
+                    const isUser = ['you', 'user', 'trainee'].includes(currentSpeaker);
+                    const isAi = ['tec', 'ai'].includes(currentSpeaker);
+                    
                     let bubbleClass = isUser ? 'chat-bubble user' : 'chat-bubble ai';
-                    let speakerName = isUser ? '👤 You' : '🤖 Tec';
+                    let speakerName = isUser ? '👤 Trainee' : (isAi ? '🤖 Tec' : 'ℹ️ System');
                     
-                    if (currentSpeaker === '') {
-                        speakerName = '🤖 System';
-                        bubbleClass = 'chat-bubble ai';
-                    }
-                    
+                    if (currentSpeaker === '') bubbleClass = 'chat-bubble ai';
+
                     formattedHtml += `<div class="${bubbleClass}"><div class="chat-speaker">${speakerName}</div><div class="chat-text">${msg}</div></div>`;
-                    currentMsg = '';
+                    currentMsgLines = [];
                 };
 
-                // Pattern to match "**You:**", "You:", "**Tec**:", "AI:", etc. at the start of a line
-                const speakerPattern = /^\*?\*?(You|User|Tec|AI)\*?\*?[\s:]+(.*)$/i;
+                // Pattern to match speakers at start of line
+                const speakerPattern = /^\*?\*?(You|User|Trainee|Tec|AI|System)\*?\*?[:\s]+(.*)$/i;
 
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
+                lines.forEach(line => {
                     let match = line.match(speakerPattern);
-                    
                     if (match) {
-                        flushMessage(); 
+                        flushMessage();
                         currentSpeaker = match[1].toLowerCase();
-                        currentMsg = match[2] + '\n';
-                    } else if (line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i)) {
-                         flushMessage();
-                         let m = line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i);
-                         currentSpeaker = m[1].toLowerCase();
-                         currentMsg = '';
+                        let rest = match[2].trim();
+                        if (rest) currentMsgLines.push(rest);
                     } else {
-                        currentMsg += line + '\n';
+                        // Preserve spacing within the message
+                        currentMsgLines.push(line);
                     }
-                }
-                flushMessage(); 
+                });
+                flushMessage();
 
+                // If nothing was formatted (no speaker patterns), show raw lines
                 if (formattedHtml === '') {
-                    formattedHtml = formatFallback(logStr);
+                    formattedHtml = `<div class="chat-bubble ai"><div class="chat-text">${logStr.replace(/\n/g, '<br>')}</div></div>`;
                 }
-                
+
                 container.innerHTML = `<div class="chat-container-layout">${formattedHtml}</div>`;
             }
-            
             document.getElementById('chatModal').style.display = 'flex';
         }
 
@@ -372,9 +364,9 @@
             }
             
             if (tab === 'reports') fetchReports();
-            if (tab === 'doctors' && userRole === 'admin') fetchDoctors();
+            if (tab === 'doctors' && userRole !== 'doctor') fetchDoctors();
             if (tab === 'devices') fetchDevices();
-            if (tab === 'cms' && userRole === 'admin') loadCmsContent();
+            if (tab === 'cms' && userRole !== 'doctor') loadCmsContent();
         }
 
         // ─── REPORTS API ───
