@@ -287,6 +287,7 @@
         let token = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole');
         let reports = [];
+        let activeSessions = []; // Store globally to persist during search
 
         window.onload = () => {
             if (token && userRole === 'doctor') {
@@ -368,7 +369,7 @@
                 if (repRes.status === 401) return logoutPortal();
                 
                 reports = await repRes.json();
-                const activeSessions = await actRes.json();
+                activeSessions = await actRes.json();
                 
                 renderActiveSessions(activeSessions);
                 renderReports(reports, activeSessions);
@@ -456,7 +457,7 @@
                 r.trainee_name.toLowerCase().includes(query) || 
                 (r.trainee_id && r.trainee_id.toLowerCase().includes(query))
             );
-            renderReports(filtered, []); // Simplified
+            renderReports(filtered, activeSessions);
         }
 
         function renderReports(data, activeSessions = []) {
@@ -476,8 +477,8 @@
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
                 
-                // Check if this trainee's device is currently live
-                const isLive = activeSessions.find(s => s.deviceId === r.deviceId);
+                // Check if this trainee's device is currently live (Match by ID OR Name as fallback)
+                const isLive = activeSessions.find(s => (s.deviceId === r.deviceId) || (s.traineeName === r.trainee_name));
 
                 const card = document.createElement('div');
                 card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
@@ -517,8 +518,8 @@
 
                     <div class="rc-actions">
                         <button onclick='openChat("${r._id}")' class="btn-secondary" style="flex: 1.5;">💬 Log</button>
-                        ${isLive ? `<button onclick="openLiveStream('${r.deviceId}', '${r.trainee_name}')" class="btn-primary" style="flex: 2; height: 38px; display:flex; align-items:center; justify-content:center; gap:5px; background:#00ff88; color:#000; font-size:12px;">📽️ WATCH LIVE</button>` : ''}
-                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger" style="flex: 0.5;">🗑</button>
+                        ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="btn-primary" style="flex: 2; height: 38px; display:flex; align-items:center; justify-content:center; gap:5px; background:#00ff88; color:#000; font-size:12px;">📽️ WATCH LIVE</button>` : ''}
+                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger" style="flex:0.5;">🗑</button>
                     </div>
                 `;
                 list.appendChild(card);
