@@ -295,10 +295,19 @@ app.get('/api/admin/reports', verifyToken, async (req, res) => {
     }
 });
 
-// Delete a report (Protected)
+// Delete a report (Protected & Multi-Tenant)
 app.delete('/api/admin/reports/:id', verifyToken, async (req, res) => {
     try {
-        await Report.findByIdAndDelete(req.params.id);
+        let query = { _id: req.params.id };
+        // If doctor, only allow deleting their own reports
+        if (req.user.role === 'doctor') {
+            query.doctor_code = req.user.code;
+        }
+        
+        const deletedReport = await Report.findOneAndDelete(query);
+        if (!deletedReport) {
+            return res.status(403).json({ error: "Access Denied or Report not found" });
+        }
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: "Failed to delete report" });
