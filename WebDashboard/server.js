@@ -672,7 +672,7 @@ app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
             return res.status(403).json({ error: "You can only analyze your own students." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `أنت خبير في تقييم متدربي صيانة محركات الطيران. قم بتحليل تقرير المتدرب التالي في لعبة VR وقدم تحليلاً باللغة العربية يشمل:
 1. نقاط القوة.
 2. نقاط الضعف والمشاكل (إن وجدت).
@@ -710,7 +710,7 @@ app.post('/api/ai/analyze-class', verifyToken, async (req, res) => {
 
         if (!reports || reports.length === 0) return res.status(404).json({ error: "لا يوجد تقارير لتحليلها." });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         let summaryContext = reports.map(r => `- الطالب ${r.trainee_name}: الأمان ${Math.round(r.safety_score)}%, الدقة ${Math.round(r.accuracy_score)}%, المهام المكتملة ${r.tasks_completed}/${r.total_tasks}, أخطاء الآدوات ${r.tool_actions}, الوقت ${Math.round(r.session_duration)}ث.`).join('\n');
 
         const prompt = `أنت رئيس قسم صيانة محركات الطيران المتقدم في أكاديمية عالمية. لديك هذا الملخص لعمل طلاب في جلسات تدريب افتراضية (VR).
