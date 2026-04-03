@@ -424,11 +424,16 @@
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
 
-                // Check if this trainee's device is currently live (Match by ID OR Case-Insensitive Name)
-                const isLive = activeSessions.find(s => 
-                    (s.deviceId === r.deviceId) || 
-                    (s.traineeName && r.trainee_name && s.traineeName.toLowerCase().trim() === r.trainee_name.toLowerCase().trim())
-                );
+                // Intensive logging and robust live check
+                const isLive = activeSessions.find(s => {
+                    const saneDeviceId = r.deviceId && r.deviceId !== "Unknown" ? r.deviceId : null;
+                    const idMatch = saneDeviceId && s.deviceId === saneDeviceId;
+                    const nameMatch = s.traineeName && r.trainee_name && s.traineeName.toLowerCase().trim() === r.trainee_name.toLowerCase().trim();
+                    if(idMatch || nameMatch) {
+                        console.log(`[LIVE MATCH Admin] Report '${r.trainee_name}' bound to Stream '${s.traineeName}'. ID_Match:${!!idMatch} Name_Match:${!!nameMatch}`);
+                    }
+                    return idMatch || nameMatch;
+                });
 
                 const card = document.createElement('div');
                 card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;

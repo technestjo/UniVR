@@ -190,7 +190,7 @@ app.get('/api/doctors/:code', async (req, res) => {
 app.post('/api/submit-report', async (req, res) => {
     try {
         const payload = req.body;
-        console.log("Received new report from Unity:", payload.trainee_name);
+        console.log("==> UNITY /submit-report payload:", payload);
 
         const newReport = new Report({
             timestamp: new Date().toLocaleString(),
@@ -650,6 +650,7 @@ app.get('/admin', (req, res) => {
 
 // Unity signals "Session Started" (Trainee Join)
 app.post('/api/device/session/join', async (req, res) => {
+    console.log("==> UNITY /join payload:", req.body);
     const deviceId = req.body.deviceId || req.body.device_id;
     const traineeName = req.body.traineeName || req.body.trainee_name;
     const doctorCode = req.body.doctorCode || req.body.doctor_code;
@@ -690,6 +691,11 @@ app.post('/api/device/stream', (req, res) => {
     const frameBase64 = req.body.frameBase64 || req.body.frame_base64;
     const doctorCode = req.body.doctorCode || req.body.doctor_code;
     const traineeName = req.body.traineeName || req.body.trainee_name;
+    
+    // Periodically log stream payload keys to avoid spamming the console 10 times a sec
+    if (Math.random() < 0.05) {
+        console.log(`==> UNITY /stream sample payload keys from ${traineeName}:`, Object.keys(req.body));
+    }
     
     const deviceSecret = req.headers['x-device-secret'];
 
