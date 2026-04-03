@@ -648,7 +648,7 @@ app.get('/admin', (req, res) => {
 });
 
 // === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=`;
 
 async function callGemini(prompt) {
     const response = await fetch(`${GEMINI_API_URL}${GEMINI_API_KEY}`, {
@@ -660,6 +660,7 @@ async function callGemini(prompt) {
     });
     const data = await response.json();
     if (!response.ok) {
+        console.error("[Gemini API Internal Error]:", JSON.stringify(data, null, 2));
         const errMsg = data?.error?.message || 'Gemini API error';
         throw new Error(errMsg);
     }
@@ -748,7 +749,7 @@ app.post('/api/ai/proxy', async (req, res) => {
 
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY missing on server." });
 
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         const response = await fetch(googleUrl, {
             method: 'POST',
@@ -757,6 +758,9 @@ app.post('/api/ai/proxy', async (req, res) => {
         });
 
         const data = await response.json();
+        if (!response.ok) {
+            console.error("[AI Proxy Internal Error]:", JSON.stringify(data, null, 2));
+        }
         res.status(response.status).json(data);
     } catch (err) {
         console.error("[AI Proxy Error]:", err.message);
