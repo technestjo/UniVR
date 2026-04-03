@@ -713,7 +713,7 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
         // Only show frames from the last 15 seconds (slightly more lenient)
         if (now - frame.timestamp < 15000) {
             // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame
-            let isAllowed = (req.user.role === 'admin') || (frame.doctorCode === req.user.code);
+            let isAllowed = (req.user.role === 'admin') || (String(frame.doctorCode) === String(req.user.code));
 
             if (isAllowed) {
                 active.push({

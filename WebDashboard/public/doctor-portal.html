@@ -489,37 +489,42 @@
                     <div class="rc-header">
                         <div>
                             <div class="rc-title">${r.trainee_name} ${isLive ? '<span class="pulse" style="color:#00ff88; font-size:10px;">● LIVE</span>' : ''}</div>
-                            <div class="rc-meta">${new Date(r.createdAt).toLocaleString()}</div>
+                            <div class="rc-meta">Doc: ${r.doctor_code || 'N/A'} | ID: ${r.trainee_id || 'N/A'}</div>
                         </div>
-                        <div class="rc-score ${scoreClass}">${r.score}%</div>
+                        <div class="rc-score ${scoreClass}">${Math.round(r.score)}%</div>
                     </div>
 
-                    <div class="rc-stats-grid">
-                        <div class="stat-box">
-                            <span class="label">Time</span>
-                            <span class="val">${sessionTime}</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <div style="color: var(--portal-accent); font-weight: 700; margin-bottom: 5px;">TIME TAKEN</div>
+                            <div style="font-size: 14px; color: #fff;">${sessionTime}</div>
                         </div>
-                        <div class="stat-box">
-                            <span class="label">Safety</span>
-                            <span class="val">${Math.round(r.safety_score || 0)}%</span>
+                        <div>
+                            <div style="color: #ff9900; font-weight: 700; margin-bottom: 5px;">TASKS</div>
+                            <div>Comp: <b>${r.tasks_completed || 0}</b><br>Pend: <b style="color: #ff9900;">${r.pending_tasks || 0}</b></div>
                         </div>
-                        <div class="stat-box">
-                            <span class="label">Tasks</span>
-                            <span class="val">${r.tasks_completed || 0}/${r.total_tasks || 7}</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="label">Parts</span>
-                            <span class="val">${r.parts_inspected_count || 0}</span>
+                        <div>
+                            <div style="color: #00ff88; font-weight: 700; margin-bottom: 5px;">PARTS</div>
+                            <div>Insp: <b style="color:#fff;">${r.parts_inspected_count || 0} / 15</b></div>
                         </div>
                     </div>
 
-                    <div class="rc-telemetry">
-                        <div>🚩 Fault: <span>${r.fault_type || 'N/A'}</span></div>
-                        <div>🔥 Temp: <span class="${r.temp > 800 ? 'text-danger' : ''}">${r.temp?.toFixed(1) || 0}°C</span></div>
-                        <div>🗜 Vib: <span class="${r.vibration > 5 ? 'text-danger' : ''}">${r.vibration?.toFixed(2) || 0} ips</span></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="color: var(--portal-accent); font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">PERFORMANCE</div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Speed Base</span> <b style="color:#ff9900;">${Math.round(r.speed_score || 0)}%</b></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Accuracy</span> <b style="color:#00ff88;">${Math.round(r.accuracy_score || 0)}%</b></div>
+                            <div style="display:flex; justify-content:space-between; font-size: 12px; color: #94a3b8;"><span>Safety</span> <b style="color:#00f2ff;">${Math.round(r.safety_score || 0)}%</b></div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="color: #fc5c65; font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">ERRORS OVERVIEW</div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>UI Errors</span> <b style="color:#fff;">${r.interface_actions || 0}</b></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Tool Fails</span> <b style="color:#fff;">${r.tool_actions || 0}</b></div>
+                            <div style="display:flex; justify-content:space-between; font-size: 12px; color: #94a3b8;"><span>AI Queries</span> <b style="color:#fff;">${r.ai_inquiries || 0}</b></div>
+                        </div>
                     </div>
 
-                    <div class="rc-actions">
+                    <div class="rc-actions" style="margin-top:15px;">
                         <button onclick='openChat("${r._id}")' class="btn-secondary" style="flex: 1.5;">💬 Log</button>
                         ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="btn-primary pulse" style="flex: 2; height: 38px; display:flex; align-items:center; justify-content:center; gap:5px; background:#00ff88; color:#000; font-size:12px; font-weight:800; border:none; box-shadow: 0 0 15px rgba(0,255,136,0.3);">📽️ WATCH LIVE</button>` : `<button disabled class="btn-secondary" style="flex: 2; opacity: 0.5; cursor: not-allowed; font-size: 11px;">📡 Standby</button>`}
                         <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger" style="flex:0.5;">🗑</button>
@@ -604,8 +609,8 @@
             document.getElementById('chatModal').style.display = 'none';
         }
 
-        // Live Stream Polling Logic
-        let streamInterval = null;
+        // Live Stream Recursive Polling Logic (High Performance)
+        let streamActive = false;
         function openLiveStream(deviceId, traineeName) {
             document.getElementById('liveStreamModal').style.display = 'flex';
             document.getElementById('streamTitle').innerText = `LIVE MISSION: ${traineeName.toUpperCase()}`;
@@ -617,11 +622,14 @@
             statusText.innerText = "SYNCING...";
             statusText.style.color = "#94a3b8";
 
-            if (streamInterval) clearInterval(streamInterval);
-            streamInterval = setInterval(async () => {
+            streamActive = true;
+            
+            const fetchFrame = async () => {
+                if (!streamActive) return;
                 try {
                     const res = await fetch(`/api/device/stream/${deviceId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        cache: 'no-store'
                     });
                     const data = await res.json();
                     
@@ -641,11 +649,17 @@
                     statusText.innerText = '● CONNECTION LOST';
                     statusText.style.color = '#ff3333';
                 }
-            }, 100); 
+                
+                if (streamActive) {
+                    requestAnimationFrame(() => setTimeout(fetchFrame, 100));
+                }
+            };
+            
+            fetchFrame();
         }
 
         function closeLiveStream() {
-            if (streamInterval) clearInterval(streamInterval);
+            streamActive = false;
             document.getElementById('liveStreamModal').style.display = 'none';
         }
 
