@@ -231,8 +231,9 @@ const TN_SCHEMA = {
 
 async function loadCmsContent() {
     try {
+        const token = localStorage.getItem('adminToken') || window.authToken;
         const res = await fetch('/api/admin/raw-content', {
-            headers: { 'Authorization': `Bearer ${authToken}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('API Error');
         
@@ -430,9 +431,10 @@ async function executeSave(updatesArray, sectionId) {
     btn.disabled = true;
 
     try {
+        const token = localStorage.getItem('adminToken') || window.authToken;
         const res = await fetch('/api/admin/content', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ items: updatesArray })
         });
         

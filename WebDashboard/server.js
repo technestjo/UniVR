@@ -655,7 +655,15 @@ app.post('/api/device/session/join', async (req, res) => {
 
     try {
         const device = await Device.findOne({ deviceId });
-        const atCode = device ? device.atCode : "AT-????";
+        if (!device) return res.status(403).json({ error: "Device not registered in system" });
+        if (device.status !== 'active') return res.status(403).json({ error: "Device is currently suspended by Admin" });
+
+        if (doctorCode) {
+            const doctor = await Doctor.findOne({ code: doctorCode });
+            if (!doctor) return res.status(404).json({ error: "Doctor code not found" });
+        }
+
+        const atCode = device.atCode || "AT-????";
 
         // Pre-initialize or update high-level metadata in memory
         if (!deviceFrames[deviceId]) deviceFrames[deviceId] = { data: null };
@@ -685,10 +693,12 @@ app.post('/api/device/stream', (req, res) => {
 
     if (!deviceId || !frameBase64) return res.status(400).send('Missing data');
 
+    const existing = deviceFrames[deviceId] || {};
     deviceFrames[deviceId] = {
         data: frameBase64,
-        doctorCode: doctorCode || null,
-        traineeName: traineeName || "Active Trainee",
+        doctorCode: doctorCode || existing.doctorCode || null,
+        traineeName: traineeName || existing.traineeName || "Active Trainee",
+        atCode: existing.atCode || "AT-????",
         timestamp: Date.now()
     };
     res.json({ success: true });
@@ -702,17 +712,8 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
     for (const [id, frame] of Object.entries(deviceFrames)) {
         // Only show frames from the last 15 seconds (slightly more lenient)
         if (now - frame.timestamp < 15000) {
-            // Check matching: Case 1: Exact Doctor Code, Case 2: Admin bypass, 
-            // Case 3: Trainee Name match in reports (Fallback if doctorCode is missing in frame)
+            // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame
             let isAllowed = (req.user.role === 'admin') || (frame.doctorCode === req.user.code);
-
-            if (!isAllowed && req.user.role === 'doctor' && frame.traineeName) {
-                try {
-                    // Quick check if this trainee ever reported under this doctor
-                    const lastReport = await Report.findOne({ trainee_name: frame.traineeName, doctor_code: req.user.code });
-                    if (lastReport) isAllowed = true;
-                } catch(e) {}
-            }
 
             if (isAllowed) {
                 active.push({
