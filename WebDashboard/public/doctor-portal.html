@@ -166,6 +166,56 @@
             100% { transform: scale(1); opacity: 0.8; }
         }
         .pulse { animation: pulse 2s infinite; }
+
+        /* AI Analysis Markdown Styling */
+        #aiModalContent table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        #aiModalContent th {
+            background: rgba(123, 44, 191, 0.2);
+            color: #eebbff;
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #aiModalContent td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        #aiModalContent h1, #aiModalContent h2 {
+            color: #eebbff;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(123, 44, 191, 0.3);
+            padding-bottom: 10px;
+        }
+        #aiModalContent blockquote {
+            border-left: 4px solid #7b2cbf;
+            background: rgba(123, 44, 191, 0.05);
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-style: italic;
+            border-radius: 0 12px 12px 0;
+        }
+        #aiModalContent ul, #aiModalContent ol {
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+        #aiModalContent li {
+            margin-bottom: 8px;
+        }
+        #aiModalContent strong {
+            color: #fff;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="doctor-portal-body doctor-body">
@@ -216,8 +266,15 @@
                         Live Active Missions
                     </h3>
                 </div>
-                <div class="reports-grid" id="activeSessionsList">
-                    <!-- Live sessions populate here -->
+                <div id="activeSessionsContainer" style="display: none;">
+                    <div class="reports-grid" id="activeSessionsList">
+                        <!-- Live sessions populate here -->
+                    </div>
+                </div>
+                <div id="noActiveMissions" style="padding: 40px; text-align: center; background: rgba(0,255,136,0.02); border: 1px dashed rgba(0,255,136,0.1); border-radius: 20px; color: #94a3b8;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🛡️</div>
+                    <div style="font-weight: 700; color: #00ff88; letter-spacing: 1px;">SQUADRON STANDBY</div>
+                    <div style="font-size: 12px; margin-top: 5px;">Currently no active VR training sessions detected for your code.</div>
                 </div>
             </section>
 
@@ -445,13 +502,19 @@
         function renderActiveSessions(sessions) {
             const panel = document.getElementById('activeMissionsPanel');
             const list = document.getElementById('activeSessionsList');
+            const container = document.getElementById('activeSessionsContainer');
+            const noMissions = document.getElementById('noActiveMissions');
             
+            panel.style.display = 'block'; // Always show panel to the doctor
+
             if (sessions.length === 0) {
-                panel.style.display = 'none';
+                container.style.display = 'none';
+                noMissions.style.display = 'block';
                 return;
             }
 
-            panel.style.display = 'block';
+            container.style.display = 'block';
+            noMissions.style.display = 'none';
             list.innerHTML = '';
 
             sessions.forEach(s => {
