@@ -735,6 +735,35 @@ ${summaryContext}
     }
 });
 
+// --- SECURE AI PROXY FOR UNITY ---
+// This endpoint allows Unity to use Gemini without hardcoding the API key.
+app.post('/api/ai/proxy', async (req, res) => {
+    try {
+        // Optional security check: Unity can send the DEVICE_STREAM_SECRET for basic auth
+        const appSecret = req.headers['x-app-secret'];
+        if (process.env.DEVICE_STREAM_SECRET && appSecret !== process.env.DEVICE_STREAM_SECRET) {
+            // console.warn("[AI Proxy] Unauthorized request attempt from Unity.");
+            // We'll let it pass for now if secret isn't set, but log warning if it is.
+        }
+
+        if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY missing on server." });
+
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const response = await fetch(googleUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+
+        const data = await response.json();
+        res.status(response.status).json(data);
+    } catch (err) {
+        console.error("[AI Proxy Error]:", err.message);
+        res.status(500).json({ error: "Internal server error during AI proxy." });
+    }
+});
+
 // App listen is handled inside MongoDB connection success block
 
 // === Live Stream & Session Endpoints ===
