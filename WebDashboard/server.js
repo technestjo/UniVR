@@ -842,8 +842,8 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
     const active = [];
 
     for (const [id, frame] of Object.entries(deviceFrames)) {
-        // Only show frames from the last 15 seconds (slightly more lenient)
-        if (now - frame.timestamp < 15000) {
+        // Only show frames from the last 30 seconds
+        if (now - frame.timestamp < 30000) {
             // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame
             let isAllowed = (req.user.role === 'admin') || (String(frame.doctorCode) === String(req.user.code));
 
@@ -853,7 +853,8 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
                     traineeName: frame.traineeName,
                     atCode: frame.atCode || "AT-????",
                     timestamp: frame.timestamp,
-                    hasFeed: !!frame.data // Indicator if video frames are arriving
+                    hasFeed: !!frame.data,
+                    stats: frame.stats // Include live stats!
                 });
             }
         }
@@ -873,6 +874,7 @@ app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
     res.json({ 
         status: 'online',
         frame: frame.data,
+        stats: frame.stats, // Send stats with the frame
         timestamp: frame.timestamp
     });
 });
