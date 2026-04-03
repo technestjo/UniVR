@@ -811,7 +811,11 @@ app.post('/api/device/session/join', async (req, res) => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const { deviceId, frame_base64, trainee_name, doctor_code, stats } = req.body;
+    const deviceId = req.body.deviceId || req.body.device_id;
+    const frame_base64 = req.body.frame_base64 || req.body.frameBase64;
+    const trainee_name = req.body.trainee_name || req.body.traineeName;
+    const doctor_code = req.body.doctor_code || req.body.doctorCode;
+    const stats = req.body.stats;
     
     // Periodically log stream payload keys to avoid spamming the console 10 times a sec
     if (Math.random() < 0.05) {
