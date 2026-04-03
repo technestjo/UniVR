@@ -697,6 +697,56 @@
         
         // Auto-refresh reports and active missions every 5 seconds (Faster for live tracking)
         setInterval(fetchDoctorReports, 5000);
+
+        async function analyzeStudent(reportId) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="pulse">⏳ جاري التحليل...</span>`;
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/ai/analyze-student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ reportId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'فشل التحليل');
+                document.getElementById('aiModalTitle').innerHTML = `<span class="pulse">🤖</span> تحليل: ${data.traineeName}`;
+                document.getElementById('aiModalContent').innerHTML = marked.parse(data.analysis);
+                document.getElementById('aiModal').style.display = 'flex';
+            } catch(e) {
+                alert('خطأ في الذكاء الاصطناعي: ' + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function analyzeClass(evt) {
+            const btn = evt.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="pulse">⏳ جاري التحليل الشامل...</span>`;
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/ai/analyze-class', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'فشل التحليل');
+                document.getElementById('aiModalTitle').innerHTML = `<span class="pulse">🤖</span> تحليل الصف الكامل`;
+                document.getElementById('aiModalContent').innerHTML = marked.parse(data.analysis);
+                document.getElementById('aiModal').style.display = 'flex';
+            } catch(e) {
+                alert('خطأ في الذكاء الاصطناعي: ' + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
