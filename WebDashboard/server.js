@@ -45,9 +45,23 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' })); // Ca
 
 // ─── MONGODB CONNECTION ───
 mongoose.connect(MONGO_URI)
-    .then(() => {
+    .then(async () => {
         console.log('✅ Connected to MongoDB Atlas');
         
+        // Auto-seed CMS if empty
+        try {
+            const count = await Content.countDocuments();
+            if (count === 0) {
+                console.log("🌱 Database is empty! Auto-seeding CMS content...");
+                for (const item of seedData) {
+                    await Content.findOneAndUpdate({ key: item.key }, item, { upsert: true });
+                }
+                console.log("🌱 CMS Seeding Complete!");
+            }
+        } catch (seedErr) {
+            console.error("❌ Failed to auto-seed CMS:", seedErr);
+        }
+
         // ─── START SERVER ONLY AFTER DB CONNECTS ───
         app.listen(PORT, () => {
             console.log(`🚀 AeroTwin XR Dashboard running on port ${PORT}`);
@@ -476,10 +490,8 @@ app.get('/api/admin/raw-content', verifyToken, async (req, res) => {
 });
 
 // Seed CMS Data (One-time use / Admin only)
-app.get('/api/admin/seed', verifyToken, async (req, res) => {
-    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
-    const seedData = [
-        // Home Page
+const seedData = [
+    // Home Page
         { page: 'home', key: 'index-hero-title', content: 'ULTIMATE VR FLIGHT SIMULATION' },
         { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
         { page: 'home', key: 'index-btn-primary', content: 'START MISSION' },
@@ -542,12 +554,14 @@ app.get('/api/admin/seed', verifyToken, async (req, res) => {
         // Global / Footer
         { page: 'global', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
         { page: 'global', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
-        { page: 'global', key: 'index-video-src', content: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
+        { page: 'global', key: 'index-video-src', content: 'https://media.w3.org/2010/05/sintel/trailer.mp4' },
         { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
         { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
         { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' }
     ];
 
+app.get('/api/admin/seed', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
     try {
         for (const item of seedData) {
             await Content.findOneAndUpdate({ key: item.key }, item, { upsert: true });
