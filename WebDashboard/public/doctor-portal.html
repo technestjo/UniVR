@@ -332,6 +332,11 @@
             } catch(e) {}
 
             fetchDoctorReports();
+            
+            // Start auto-refresh only when logged in
+            if (!window.reportInterval) {
+                window.reportInterval = setInterval(fetchDoctorReports, 5000);
+            }
         }
 
         async function loginPortal() {
@@ -366,12 +371,17 @@
         }
 
         function logoutPortal() {
+            if (window.reportInterval) {
+                clearInterval(window.reportInterval);
+                window.reportInterval = null;
+            }
             localStorage.removeItem('adminToken');
             localStorage.removeItem('userRole');
             location.reload();
         }
 
         async function fetchDoctorReports() {
+            if (!token) return;
             const list = document.getElementById('reportsList');
             try {
                 // Fetch reports and active sessions in parallel
@@ -694,9 +704,6 @@
                 closeLiveStream();
             }
         }
-        
-        // Auto-refresh reports and active missions every 5 seconds (Faster for live tracking)
-        setInterval(fetchDoctorReports, 5000);
 
         async function analyzeStudent(reportId) {
             const btn = event.currentTarget;
