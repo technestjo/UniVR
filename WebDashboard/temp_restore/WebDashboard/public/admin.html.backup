@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroTwin XR | Admin Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        /* Live Stream Modal */
+        #liveStreamModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        #liveStreamModal img {
+            max-width: 95%;
+            max-height: 90%;
+            border: 2px solid var(--accent-blue);
+            box-shadow: 0 0 40px rgba(0,186,242,0.5);
+            border-radius: 12px;
+            background: #000;
+        }
+        .stream-controls {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <!-- Live Stream Modal -->
+    <div id="liveStreamModal">
+        <h2 id="streamTitle" style="color: var(--accent-blue); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;">LIVE VR FEED</h2>
+        <img id="liveFrame" src="" alt="Waiting for stream...">
+        <div class="stream-controls">
+            <span id="streamStatus" style="color: var(--text-dim); font-size: 14px; font-weight: 600;">Connecting...</span>
+            <button class="btn-secondary" onclick="closeLiveStream()" style="border-color: var(--danger); color: var(--danger); padding: 8px 25px; border-radius: 20px;">Close Feed</button>
+        </div>
+    </div>
+
+    <!-- ─── LOGIN OVERLAY ─── -->
+    <div id="loginOverlay" class="admin-login-overlay">
+        <div class="login-box glass-panel">
+            <img src="logo.png" alt="Logo" class="login-logo">
+            <h2>Admin Login</h2>
+            <p>Enter Admin or Doctor credentials.</p>
+            <input type="text" id="adminUsername" placeholder="Username or Doctor Code" class="admin-input">
+            <input type="password" id="adminPassword" placeholder="Password" class="admin-input">
+            <button onclick="loginAdmin()" class="btn-primary w-full mt-4">Login</button>
+            <div id="loginError" class="text-danger mt-3" style="display: none; font-size: 14px;">Invalid credentials</div>
+        </div>
+    </div>
+
+    <!-- ─── ADMIN DASHBOARD ─── -->
+    <div id="adminDashboard" style="display: none;">
+        
+        <!-- Sidebar -->
+        <aside class="admin-sidebar glass-panel">
+            <div class="sidebar-header">
+                <img src="logo.png" alt="AeroTwin">
+                <span>Admin</span>
+            </div>
+            <ul class="sidebar-nav">
+                <li><button onclick="switchTab('reports')" id="tab-reports" class="nav-btn active">📊 Reports</button></li>
+                <li class="admin-only"><button onclick="switchTab('doctors')" id="tab-doctors" class="nav-btn">🧑‍⚕️ Doctors</button></li>
+                <li><button onclick="switchTab('devices')" id="tab-devices" class="nav-btn">🖥️ Devices</button></li>
+                <li class="admin-only"><button onclick="switchTab('cms')" id="tab-cms" class="nav-btn">⚙️ Website CMS</button></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="logoutAdmin()" class="btn-logout">Logout 🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            
+            <!-- REPORTS VIEW -->
+            <section id="view-reports" class="admin-view active">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 class="text-gradient">Trainee reports</h2>
+                        <p class="text-dim">Monitor and audit VR simulation performance data.</p>
+                    </div>
+                    <div class="dashboard-controls" style="max-width: 600px; gap: 10px;">
+                        <input type="text" id="searchTrainee" placeholder="Search Trainee Name..." class="admin-input search" oninput="filterReports()">
+                        <input type="text" id="filterDoctor" placeholder="Filter by Instructor Code/Name..." class="admin-input search" oninput="filterReports()">
+                        <button onclick="fetchReports()" class="btn-secondary" style="margin-top: 0;">🔃 Refresh</button>
+                    </div>
+                </div>
+
+                <div class="reports-grid" id="reportsList">
+                    <div class="loading-state">Loading reports securely...</div>
+                </div>
+            </section>
+
+            <!-- DOCTORS VIEW -->
+            <section id="view-doctors" class="admin-view" style="display: none;">
+                <div class="dashboard-header" style="flex-direction: column; align-items: stretch; gap: 20px;">
+                    <div>
+                        <h2 class="text-gradient">Instructor Management</h2>
+                        <p class="text-dim">Register and monitor medical instructors.</p>
+                    </div>
+                    
+                    <div class="cms-add-bar">
+                        <div class="cms-form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="newDocName" placeholder="e.g. Dr. Sarah" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group">
+                            <label>Instructor Code</label>
+                            <input type="text" id="newDocCode" placeholder="AL-123" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group">
+                            <label>Secure Password</label>
+                            <input type="text" id="newDocPass" placeholder="••••••••" class="admin-input" style="margin-top: 0;">
+                        </div>
+                        <div class="cms-form-group" style="flex: 0; justify-content: flex-end;">
+                            <button onclick="addDoctor()" class="btn-primary" style="padding: 12px 30px; border-radius: 12px;">Add Instructor</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="doctorsGrid" class="doctors-grid">
+                    <!-- Cards populated dynamically -->
+                    <div class="loading-state">Syncing instructor database...</div>
+                </div>
+            </section>
+
+            <!-- DEVICES VIEW -->
+            <section id="view-devices" class="admin-view" style="display: none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 class="text-gradient">Device Management</h2>
+                        <p class="text-dim">Monitor and control VR hardware access.</p>
+                    </div>
+                    <div class="dashboard-controls">
+                        <button onclick="fetchDevices()" class="btn-secondary">🔃 Refresh</button>
+                    </div>
+                </div>
+
+                <div id="devicesList" class="devices-grid">
+                    <!-- Cards populated dynamically -->
+                </div>
+            </section>
+
+            <!-- CMS VIEW -->
+            <section id="view-cms" class="admin-view admin-only" style="display: none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 class="text-gradient">Site Content Manager</h2>
+                        <p class="text-dim">Update website text dynamically across all pages.</p>
+                    </div>
+                    <div class="dashboard-controls">
+                        <button onclick="syncCmsDefaults()" class="btn-secondary" title="Import all default site text">🔄 Sync Site Content</button>
+                        <button onclick="addNewCmsRow()" class="btn-secondary">➕ Add Entry</button>
+                        <button onclick="saveCmsContent()" class="btn-primary">💾 Deploy Changes</button>
+                    </div>
+                </div>
+                
+                <div class="cms-layout">
+                    <div class="cms-sidebar">
+                        <div style="padding: 0 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; letter-spacing: 2px;">Content Categories</div>
+                        <div id="cmsPageSidebar" style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="cms-sidebar-btn" data-page="home" onclick="switchCmsPage('home', this)"><span>🏠 Home Page</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="features" onclick="switchCmsPage('features', this)"><span>🚀 Features</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="about" onclick="switchCmsPage('about', this)"><span>ℹ️ About Us</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="pricing" onclick="switchCmsPage('pricing', this)"><span>💰 Pricing</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="news" onclick="switchCmsPage('news', this)"><span>📰 News/Updates</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="contact" onclick="switchCmsPage('contact', this)"><span>📧 Contact</span> <span class="badge">0</span></button>
+                            <button class="cms-sidebar-btn" data-page="global" onclick="switchCmsPage('global', this)"><span>🌐 Global/Other</span> <span class="badge">0</span></button>
+                        </div>
+                    </div>
+                    <div class="glass-panel" style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <input type="text" id="cmsSearch" placeholder="Search keys or content in this section..." class="admin-input" style="margin: 0; flex: 1;" oninput="renderCmsPage(activeCmsPage)">
+                            <div style="font-size: 12px; color: var(--text-dim); white-space: nowrap;">Showing <b id="cmsMatchCount" style="color: var(--accent-cyan);">0</b> entries</div>
+                        </div>
+                        <div id="cmsEditor" class="cms-editor-container">
+                             <div class="loading-state">Loading CMS blocks...</div>
+                        </div>
+                        <div id="cmsStatus" style="text-align: right; font-weight: bold; font-size: 13px;"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ─── CHAT MODAL ─── -->
+    <div id="chatModal" class="modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>💬 Full Consultation Log</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalChatHistory" class="chat-history-box" dir="auto"></div>
+        </div>
+    </div>
+
+    <!-- ─── SCRIPTS ─── -->
+    <script>
+        let authToken = localStorage.getItem('adminToken');
+        let userRole = localStorage.getItem('userRole') || 'admin';
+        let allReports = [];
+
+        function applyRolePermissions() {
+            if (userRole === 'doctor') {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            }
+        }
+
+        // ─── INIT ───
+        window.onload = () => {
+            applyRolePermissions();
+            if (authToken) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'flex';
+                fetchReports();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('adminDashboard').style.display = 'none';
+            }
+        };
+
+        // Modal Logic
+        function openModal(logText) {
+            let container = document.getElementById('modalChatHistory');
+            
+            if (!logText || logText.trim() === '') {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);">No chat history available.</div>';
+            } else {
+                let logStr = logText.replace(/\\n/g, '\n').replace(/\r/g, ''); // Normalize all newlines
+                let lines = logStr.split('\n');
+                let formattedHtml = '';
+                
+                const formatFallback = (text) => {
+                    return text.split('\n').filter(l => l.trim() !== '').map(line => {
+                        line = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
+                        line = line.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
+                        return `<div class="chat-bubble ai">${line}</div>`;
+                    }).join('');
+                };
+
+                let currentSpeaker = '';
+                let currentMsg = '';
+
+                const flushMessage = () => {
+                    if (currentMsg.trim() === '') return;
+                    let msg = currentMsg.trim();
+                    msg = msg.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
+                    msg = msg.replace(/\*(.*?)\*/g, '<em style="color:var(--text-dim);">$1</em>');
+                    msg = msg.replace(/\n/g, '<br>');
+                    
+                    let isUser = currentSpeaker === 'you' || currentSpeaker === 'user';
+                    let bubbleClass = isUser ? 'chat-bubble user' : 'chat-bubble ai';
+                    let speakerName = isUser ? '👤 You' : '🤖 Tec';
+                    
+                    if (currentSpeaker === '') {
+                        speakerName = '🤖 System';
+                        bubbleClass = 'chat-bubble ai';
+                    }
+                    
+                    formattedHtml += `<div class="${bubbleClass}"><div class="chat-speaker">${speakerName}</div><div class="chat-text">${msg}</div></div>`;
+                    currentMsg = '';
+                };
+
+                // Pattern to match "**You:**", "You:", "**Tec**:", "AI:", etc. at the start of a line
+                const speakerPattern = /^\*?\*?(You|User|Tec|AI)\*?\*?[\s:]+(.*)$/i;
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    let match = line.match(speakerPattern);
+                    
+                    if (match) {
+                        flushMessage(); 
+                        currentSpeaker = match[1].toLowerCase();
+                        currentMsg = match[2] + '\n';
+                    } else if (line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i)) {
+                         flushMessage();
+                         let m = line.trim().match(/^\*?\*?(You|User|Tec|AI)\*?\*?:?$/i);
+                         currentSpeaker = m[1].toLowerCase();
+                         currentMsg = '';
+                    } else {
+                        currentMsg += line + '\n';
+                    }
+                }
+                flushMessage(); 
+
+                if (formattedHtml === '') {
+                    formattedHtml = formatFallback(logStr);
+                }
+                
+                container.innerHTML = `<div class="chat-container-layout">${formattedHtml}</div>`;
+            }
+            
+            document.getElementById('chatModal').style.display = 'flex';
+        }
+
+        // ─── AUTH ───
+        async function loginAdmin() {
+            const u = document.getElementById('adminUsername').value;
+            const p = document.getElementById('adminPassword').value;
+            const err = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    userRole = data.role || 'admin';
+                    localStorage.setItem('adminToken', authToken);
+                    localStorage.setItem('userRole', userRole);
+                    applyRolePermissions();
+                    err.style.display = 'none';
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('adminDashboard').style.display = 'flex';
+                    fetchReports();
+                } else {
+                    err.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+                err.innerText = "Server connection error.";
+                err.style.display = 'block';
+            }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('userRole');
+            authToken = null;
+            userRole = null;
+            location.reload();
+        }
+
+        // ─── TABS ───
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-view').forEach(v => v.style.display = 'none');
+            
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`view-${tab}`).style.display = 'block';
+            
+            if (tab === 'reports') fetchReports();
+            if (tab === 'doctors' && userRole === 'admin') fetchDoctors();
+            if (tab === 'devices') fetchDevices();
+            if (tab === 'cms' && userRole === 'admin') loadCmsContent();
+        }
+
+        // ─── REPORTS API ───
+        async function fetchReports() {
+            try {
+                const res = await fetch('/api/admin/reports', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.status === 401 || res.status === 403) return logoutAdmin();
+                
+                allReports = await res.json();
+                if (!Array.isArray(allReports)) {
+                    document.getElementById('reportsList').innerHTML = `<div class="loading-state text-danger">Database Error: Double check MongoDB Atlas Network IP Allowlist (Set to 0.0.0.0/0)</div>`;
+                    return;
+                }
+                renderReports(allReports);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('reportsList').innerHTML = `<div class="loading-state text-danger">Failed to connect to backend server.</div>`;
+            }
+        }
+
+        async function deleteReport(id) {
+            if(!confirm('Are you sure you want to delete this report?')) return;
+            try {
+                await fetch(`/api/admin/reports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                fetchReports();
+            } catch (e) {
+                alert('Deletion failed');
+            }
+        }
+
+        function renderReports(reports) {
+            const container = document.getElementById('reportsList');
+            container.innerHTML = '';
+
+            if (reports.length === 0) {
+                container.innerHTML = `<div class="loading-state">No reports found in dynamic database.</div>`;
+                return;
+            }
+
+            reports.forEach(r => {
+                const scoreClass = r.score >= 80 ? 'green' : (r.score >= 50 ? 'orange' : 'red');
+                const sessionTime = formatDuration(r.session_duration);
+                const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
+
+                const card = document.createElement('div');
+                card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
+                card.innerHTML = `
+                    <div class="rc-header">
+                        <div>
+                            <div class="rc-title">${r.trainee_name}</div>
+                            <div class="rc-meta">Doctor Code: <span class="badge blue">${r.doctor_code || 'N/A'}</span></div>
+                        </div>
+                        <div class="rc-score ${scoreClass}">${r.score}%</div>
+                    </div>
+
+                    <div class="rc-stats-grid">
+                        <div class="stat-box">
+                            <span class="label">Time</span>
+                            <span class="val">${sessionTime}</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="label">Safety</span>
+                            <span class="val">${Math.round(r.safety_score || 0)}%</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="label">Tasks</span>
+                            <span class="val">${r.tasks_completed || 0}/${r.total_tasks || 7}</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="label">Parts</span>
+                            <span class="val">${r.parts_inspected_count || 0}</span>
+                        </div>
+                    </div>
+
+                    <div class="rc-telemetry">
+                        <div>🚩 Fault: <span>${r.fault_type || 'N/A'}</span></div>
+                        <div>🔥 Temp: <span class="${r.temp > 800 ? 'text-danger' : ''}">${r.temp?.toFixed(1) || 0}°C</span></div>
+                        <div>🗜 Vib: <span class="${r.vibration > 5 ? 'text-danger' : ''}">${r.vibration?.toFixed(2) || 0} ips</span></div>
+                    </div>
+
+                    <div class="rc-actions">
+                        <button onclick='openModal(${JSON.stringify(r.chat_log || '').replace(/'/g, "&apos;")})' class="btn-secondary flex-1">💬 View Log</button>
+                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger">🗑</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ─── DOCTORS API ───
+        async function fetchDoctors() {
+            try {
+                const res = await fetch('/api/admin/doctors', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.status === 401 || res.status === 403) return logoutAdmin();
+                
+                const docs = await res.json();
+                if (!Array.isArray(docs)) {
+                    document.getElementById('doctorsTableBody').innerHTML = `<tr><td colspan="5" class="text-danger">Failed: Ensure MongoDB Atlas IP is 0.0.0.0/0</td></tr>`;
+                    return;
+                }
+                renderDoctors(docs);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('doctorsTableBody').innerHTML = `<tr><td colspan="5" class="text-danger">Failed to connect to backend server.</td></tr>`;
+            }
+        }
+
+        async function addDoctor() {
+            const name = document.getElementById('newDocName').value;
+            const code = document.getElementById('newDocCode').value;
+            const password = document.getElementById('newDocPass').value || '123456';
+            if(!name || !code) return alert("Fill all required fields");
+
+            try {
+                const res = await fetch('/api/admin/doctors', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, code, password })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('newDocName').value = '';
+                    document.getElementById('newDocCode').value = '';
+                    document.getElementById('newDocPass').value = '';
+                    fetchDoctors();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert("Error adding doctor");
+            }
+        }
+
+        async function deleteDoctor(id) {
+            if(!confirm("Remove this doctor?")) return;
+            try {
+                await fetch(`/api/admin/doctors/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                fetchDoctors();
+            } catch (e) {
+                alert("Error removing doctor");
+            }
+        }
+
+        function renderDoctors(docs) {
+            const container = document.getElementById('doctorsGrid');
+            container.innerHTML = '';
+            if(docs.length === 0) {
+                container.innerHTML = `<div class="loading-state text-dim">No instructors found in database.</div>`;
+                return;
+            }
+            docs.forEach(doc => {
+                const dateStr = new Date(doc.createdAt).toLocaleDateString();
+                const traineeCount = allReports ? allReports.filter(r => r.doctor_code === doc.code).length : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'doctor-card glass-panel';
+                card.innerHTML = `
+                    <div class="doctor-avatar">${doc.name.charAt(0)}</div>
+                    <div class="doctor-name">${doc.name}</div>
+                    <div class="doctor-code-tag">${doc.code}</div>
+                    <div class="doctor-stats">
+                        <span>Sessions: <b>${traineeCount}</b></span>
+                        <span>Joined: <b>${dateStr}</b></span>
+                    </div>
+                    <button class="btn-logout" style="border-radius: 6px; padding: 8px;" onclick="deleteDoctor('${doc._id}')">Remove Access</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ─── DEVICES API ───
+        async function fetchDevices() {
+            try {
+                const res = await fetch('/api/admin/devices', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.status === 401 || res.status === 403) return logoutAdmin();
+                
+                const devices = await res.json();
+                renderDevices(devices);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('devicesList').innerHTML = `<div class="loading-state text-danger">Failed to connect to backend server.</div>`;
+            }
+        }
+
+        async function toggleDeviceStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+            if(!confirm(`Are you sure you want to ${newStatus === 'suspended' ? 'suspend' : 'activate'} this device?`)) return;
+            try {
+                await fetch(`/api/admin/devices/${id}/status`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                fetchDevices();
+            } catch (e) {
+                alert("Error updating device status");
+            }
+        }
+
+        function renderDevices(devices) {
+            const container = document.getElementById('devicesList');
+            container.innerHTML = '';
+
+            devices.forEach(dev => {
+                const card = document.createElement('div');
+                card.className = `device-card glass-panel ${dev.status === 'active' ? 'active' : 'suspended'}`;
+                
+                const dateStr = new Date(dev.lastSeen).toLocaleString();
+                const statusLabel = dev.status === 'active' ? 'Online / Active' : 'Suspended';
+                const statusClass = dev.status === 'active' ? 'status-active' : 'status-suspended';
+
+                card.innerHTML = `
+                    <div class="device-header">
+                        <div>
+                            <div class="device-title">${dev.ownerInfo || 'AeroTwin Unit'}</div>
+                            <div class="device-subtitle">${dev.deviceId}</div>
+                        </div>
+                        <div class="device-status-tag ${statusClass}">${statusLabel}</div>
+                    </div>
+
+                    <div class="device-model-label">
+                        ${dev.deviceModel || 'VR System'}
+                    </div>
+
+                    <div class="device-specs-container">
+                        <div class="spec-group">
+                            <span class="spec-label">Operating System</span>
+                            <span class="spec-val" title="${dev.os || 'N/A'}">${dev.os || 'N/A'}</span>
+                        </div>
+                        <div class="spec-group">
+                            <span class="spec-label">System RAM</span>
+                            <span class="spec-val">${dev.ram || 'N/A'}</span>
+                        </div>
+                        <div class="spec-group full">
+                            <span class="spec-label">Processor (CPU)</span>
+                            <span class="spec-val" title="${dev.cpu || 'N/A'}">${dev.cpu || 'N/A'}</span>
+                        </div>
+                        <div class="spec-group full">
+                            <span class="spec-label">Graphics Card (GPU)</span>
+                            <span class="spec-val" title="${dev.gpu || 'N/A'}">${dev.gpu || 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <div class="device-footer">
+                        <div class="device-last-seen">Last: ${dateStr}</div>
+                        <div style="display: flex; gap: 8px;">
+                             <button class="btn-live" onclick="openLiveStream('${dev.deviceId}', '${dev.ownerInfo || 'Device'}')">Live Feed</button>
+                             <button class="${dev.status === 'active' ? 'btn-suspend' : 'btn-activate'}" onclick="toggleDeviceStatus('${dev._id}', '${dev.status}')">
+                                ${dev.status === 'active' ? 'Suspend' : 'Activate'}
+                             </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ─── UTILS ───
+        function formatDuration(sec) {
+            if(!sec) return '00:00';
+            const m = Math.floor(sec/60); const s = Math.floor(sec%60);
+            return `${m}m ${s}s`;
+        }
+
+        function filterReports() {
+            const traineeSearch = document.getElementById('searchTrainee').value.toLowerCase();
+            const doctorSearch = document.getElementById('filterDoctor').value.toLowerCase();
+            
+            const filtered = allReports.filter(r => {
+                const traineeMatch = r.trainee_name.toLowerCase().includes(traineeSearch);
+                const doctorMatch = (r.doctor_code || '').toLowerCase().includes(doctorSearch) || false; 
+                return traineeSearch && doctorSearch ? (traineeMatch && doctorMatch) : (traineeMatch && (doctorSearch ? doctorMatch : true));
+            });
+            renderReports(filtered);
+        }
+
+        function closeModal() {
+            document.getElementById('chatModal').style.display = "none";
+        }
+        window.onclick = function(e){ if(e.target == document.getElementById('chatModal')) closeModal(); }
+
+        /* Live Stream Logic */
+        let streamInterval = null;
+        async function openLiveStream(deviceId, name) {
+            document.getElementById('liveStreamModal').style.display = 'flex';
+            document.getElementById('streamTitle').innerText = `LIVE FEED: ${name.toUpperCase()}`;
+            
+            const frameImg = document.getElementById('liveFrame');
+            const statusText = document.getElementById('streamStatus');
+            
+            statusText.innerText = "Connecting to device...";
+            statusText.style.color = "var(--text-dim)";
+
+            // Poll for new frames
+            if(streamInterval) clearInterval(streamInterval);
+            streamInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/device/stream/${deviceId}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    if (!res.ok) throw new Error('Network Error');
+                    const data = await res.json();
+                    
+                    if (data.status === 'online') {
+                        frameImg.src = `data:image/jpeg;base64,${data.frame}`;
+                        statusText.innerText = `● LIVE (Last: ${new Date(data.timestamp).toLocaleTimeString()})`;
+                        statusText.style.color = 'var(--success)';
+                    } else {
+                        statusText.innerText = '● STREAM OFFLINE / WAITING';
+                        statusText.style.color = 'var(--danger)';
+                    }
+                } catch (err) {
+                    statusText.innerText = '● STREAM OFFLINE / WAITING';
+                    statusText.style.color = 'var(--danger)';
+                }
+            }, 100); // 10 FPS (High-speed sync)
+        }
+
+        function closeLiveStream() {
+            clearInterval(streamInterval);
+            document.getElementById('liveStreamModal').style.display = 'none';
+        }
+
+        // ─── CMS LOGIC ───
+        let activeCmsPage = 'home';
+        let cmsFullData = []; 
+
+        async function loadCmsContent() {
+            try {
+                let rawData = [];
+                const adminRes = await fetch('/api/admin/raw-content', {
+                     headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if(adminRes.ok) {
+                    rawData = await adminRes.json();
+                } else {
+                    const res = await fetch('/api/content');
+                    const data = await res.json();
+                    rawData = Object.keys(data).map(k => ({ key: k, content: data[k], page: 'global' }));
+                }
+
+                // IMPORTANT: Normalize data. If page is missing or invalid, move to global.
+                cmsFullData = rawData.map(item => ({
+                    ...item,
+                    page: (item.page && item.page !== 'undefined' && item.page !== 'null') ? item.page : 'global'
+                }));
+
+                // If currently selected page is empty, try to find one with data
+                const pageHasData = (p) => cmsFullData.some(i => i.page === p);
+                if (cmsFullData.length > 0 && !pageHasData(activeCmsPage)) {
+                    // Find the first page button that has a count > 0
+                    const pagesWithData = [...new Set(cmsFullData.map(i => i.page))];
+                    if (pagesWithData.length > 0) activeCmsPage = pagesWithData[0];
+                }
+
+                updateCmsSidebar();
+                renderCmsPage(activeCmsPage);
+                
+                document.getElementById('cmsStatus').innerText = 'CMS data synchronized. ✓';
+                document.getElementById('cmsStatus').style.color = '#00ff88';
+            } catch (err) {
+                console.error("CMS Load Error:", err);
+                document.getElementById('cmsStatus').innerText = 'Failed to sync CMS.';
+                document.getElementById('cmsStatus').style.color = '#ff3333';
+            }
+        }
+
+        function updateCmsSidebar() {
+            const btns = document.querySelectorAll('.cms-sidebar-btn');
+            btns.forEach(btn => {
+                const p = btn.getAttribute('data-page');
+                const count = cmsFullData.filter(item => item.page === p).length;
+                btn.querySelector('.badge').innerText = count;
+                btn.classList.toggle('active', p === activeCmsPage);
+            });
+        }
+
+        function switchCmsPage(page, btn) {
+            activeCmsPage = page;
+            updateCmsSidebar();
+            renderCmsPage(page);
+        }
+
+        function renderCmsPage(page) {
+            const container = document.getElementById('cmsEditor');
+            const search = document.getElementById('cmsSearch').value.toLowerCase();
+            container.innerHTML = '';
+            
+            let filtered = cmsFullData.filter(item => item.page === page);
+            
+            if (search) {
+                filtered = filtered.filter(i => 
+                    i.key.toLowerCase().includes(search) || 
+                    (i.content || '').toLowerCase().includes(search)
+                );
+            }
+
+            document.getElementById('cmsMatchCount').innerText = filtered.length;
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 60px; color: var(--text-dim);">
+                        <div style="font-size: 44px; margin-bottom: 20px; opacity: 0.3;">🔍</div>
+                        <h3 style="letter-spacing: 1px; color: rgba(255,255,255,0.3);">NO MATCHES FOUND</h3>
+                        <p style="font-size: 13px; opacity: 0.5;">Try a different search term or sync defaults.</p>
+                    </div>`;
+            } else {
+                filtered.forEach(item => {
+                    container.appendChild(createCmsRow(item.key, item.content));
+                });
+            }
+        }
+
+        function createCmsRow(key = '', val = '') {
+            const row = document.createElement('div');
+            row.className = 'cms-row';
+            row.innerHTML = `
+                <div class="cms-key-wrapper">
+                    <input type="text" placeholder="KEY_ID" class="admin-input cms-key-input" value="${key}" style="margin: 0;">
+                </div>
+                <div class="cms-val-wrapper">
+                    <textarea class="admin-input cms-val-input" placeholder="Type content here..." rows="1">${val}</textarea>
+                </div>
+                <div class="cms-row-actions">
+                    <button class="btn-icon text-danger" onclick="this.closest('.cms-row').remove()" style="background: rgba(255,51,51,0.05); border: 1px solid rgba(255,51,51,0.1); border-radius: 8px; width: 38px; height: 38px;">🗑</button>
+                </div>
+            `;
+
+            // Auto-height for textarea
+            const tx = row.querySelector('textarea');
+            tx.style.height = 'auto';
+            tx.style.height = (tx.scrollHeight) + 'px';
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            return row;
+        }
+
+        function addNewCmsRow() {
+            const container = document.getElementById('cmsEditor');
+            const row = createCmsRow();
+            container.appendChild(row);
+            row.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function saveCmsContent() {
+            const statusEl = document.getElementById('cmsStatus');
+            statusEl.innerText = 'Deploying content...';
+            statusEl.style.color = 'var(--accent-cyan)';
+            
+            try {
+                const rows = document.querySelectorAll('.cms-row');
+                const newItemsForThisPage = [];
+                rows.forEach(r => {
+                    const k = r.querySelector('.cms-key-input').value.trim();
+                    const v = r.querySelector('.cms-val-input').value.trim();
+                    if(k) newItemsForThisPage.push({ page: activeCmsPage, key: k, content: v });
+                });
+
+                const otherPages = cmsFullData.filter(item => item.page !== activeCmsPage);
+                const allItems = [...otherPages, ...newItemsForThisPage];
+
+                const res = await fetch('/api/admin/content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ items: allItems })
+                });
+                
+                const result = await res.json();
+                if (result.success) {
+                    cmsFullData = allItems;
+                    updateCmsSidebar(); // Update the badges
+                    statusEl.innerText = '✅ Deployed successfully! Refreshing website...';
+                    statusEl.style.color = '#00ff88';
+                    
+                    // Trigger CMS refresh on frontend
+                    if (window.CMS && window.CMS.refresh) {
+                        setTimeout(() => {
+                            window.CMS.refresh();
+                        }, 500);
+                    }
+                } else {
+                    throw new Error();
+                }
+            } catch (err) {
+                statusEl.innerText = '❌ Deployment failed.';
+                statusEl.style.color = '#ff3333';
+            }
+        }
+
+        async function syncCmsDefaults() {
+            if(!confirm("This will import all default website text into your CMS. Continue?")) return;
+            const statusEl = document.getElementById('cmsStatus');
+            statusEl.innerText = 'Syncing default site content...';
+            statusEl.style.color = 'var(--accent-cyan)';
+
+            try {
+                const res = await fetch('/api/admin/seed', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if(data.success) {
+                    statusEl.innerText = '✅ Site content synced successfully!';
+                    statusEl.style.color = '#00ff88';
+                    loadCmsContent(); // Reload everything
+                }
+            } catch (err) {
+                statusEl.innerText = '❌ Sync failed.';
+                statusEl.style.color = '#ff3333';
+            }
+        }
+    </script>
+</body>
+</html>

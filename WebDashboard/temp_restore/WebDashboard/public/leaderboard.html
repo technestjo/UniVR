@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard | AeroTwin XR</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .leaderboard-table th {
+            text-align: left;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-cyan);
+            font-family: var(--font-heading);
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .leaderboard-table td {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 16px;
+        }
+
+        .leaderboard-table tr:hover {
+            background: rgba(0, 242, 255, 0.05);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-green {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .badge-orange {
+            background: rgba(255, 165, 0, 0.1);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .badge-red {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff0000;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <nav id="navbar" class="scrolled">
+        <a href="index.html" class="nav-logo">
+            <img src="logo.png" alt="AeroTwin Logo">
+            AeroTwin XR
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="leaderboard.html" class="active">Trainee Leaderboard</a></li>
+            <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
+        </ul>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1 class="text-cyan">Trainee Leaderboard</h1>
+            <p class="text-dim">Live performance metrics of recent maintenance and flight sessions.</p>
+        </div>
+    </header>
+
+    <section class="section-padding">
+        <div class="container">
+            <div class="glass-panel" style="padding: 40px; overflow-x: auto;">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Trainee Name</th>
+                            <th>Score</th>
+                            <th>Safety</th>
+                            <th>Speed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-dim">Loading live data from Unity Server...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── TRAINEE DOSSIER MODAL ─── -->
+    <div id="dossierModal">
+        <div class="dossier-content">
+            <button class="dossier-close" onclick="closeDossier()">&times;</button>
+            <div class="dossier-header">
+                <div>
+                    <h2 class="dossier-title" id="dName">TRAINEE NAME</h2>
+                    <div class="dossier-subtitle" id="dId">ID: AR-000 | DOCTOR: DOC-999 | DATE: ...</div>
+                </div>
+                <div class="dossier-score-main text-cyan" id="dScore">100%</div>
+            </div>
+
+            <div class="dossier-grid">
+                <div class="dossier-box">
+                    <span class="dossier-box-label">Safety Score</span>
+                    <span class="dossier-box-val" id="dSafety">0%</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="dossier-box-label">Accuracy Score</span>
+                    <span class="dossier-box-val" id="dAccuracy">0%</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="dossier-box-label">Speed Score</span>
+                    <span class="dossier-box-val" id="dSpeed">0%</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="dossier-box-label">Tasks Completed</span>
+                    <span class="dossier-box-val" id="dTasks">0/7</span>
+                </div>
+            </div>
+
+            <div class="dossier-telemetry">
+                <div class="telemetry-title">Engine Telemetry & Analytics</div>
+                <div class="telemetry-grid">
+                    <div class="telemetry-item">Fault Detected: <span id="dFault">N/A</span></div>
+                    <div class="telemetry-item">Max Temp: <span id="dTemp">0°C</span></div>
+                    <div class="telemetry-item">Max Vibration: <span id="dVib">0 ips</span></div>
+                    <div class="telemetry-item">Leak Active: <span id="dLeak">False</span></div>
+                    <div class="telemetry-item">Pressure: <span id="dPress">0 MPa</span></div>
+                    <div class="telemetry-item">Session Time: <span id="dTime">0m 0s</span></div>
+                    <div class="telemetry-item">AI Inquiries: <span id="dAI">0</span></div>
+                    <div class="telemetry-item">Tool Actions: <span id="dTools">0</span></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="telemetry-title" style="color: var(--text-dim); font-size: 14px;">Inspected Components (<span id="dPartCount">0</span>)</div>
+                <ul class="ul-inspected" id="dPartsList">
+                    <!-- Parts go here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo-box">
+                    <img src="logo.png" alt="AeroTwin Logo">
+                    <span>AEROTWIN XR<br>MISSION SYSTEMS</span>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Navigation</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="news.html">News</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="features.html">Features</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="support.html">Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="updates.html">Updates</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">Licensing</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-bottom-logo">AEROTWIN</div>
+            <div class="footer-icons">
+                <span>📡</span> <span>⚙️</span> <span>☁️</span> <span>✈️</span>
+            </div>
+            <div class="footer-copy">
+                <span>Copyright © 2026</span>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentReports = []; // Store globally for dossier
+
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch('/api/reports');
+                const reports = await res.json();
+                const body = document.getElementById('leaderboardBody');
+                body.innerHTML = '';
+
+                if (!Array.isArray(reports) || reports.length === 0) {
+                    body.innerHTML = '<tr><td colspan="6" class="text-center text-dim">No records available yet.</td></tr>';
+                    return;
+                }
+
+                // Sort by score descending and keep top 50, save to global
+                currentReports = reports.sort((a, b) => b.score - a.score).slice(0, 50);
+
+                // Display real data from Unity
+                currentReports.forEach((r, index) => {
+                    const scoreClass = r.score >= 80 ? 'badge-green' : (r.score >= 50 ? 'badge-orange' : 'badge-red');
+                    const row = document.createElement('tr');
+                    row.className = 'tr-clickable'; // Make row hoverable
+                    row.onclick = () => openDossier(index); // Bind click event
+                    
+                    row.innerHTML = `
+                        <td style="font-weight: 700; color: var(--accent-cyan);">#${index + 1}</td>
+                        <td style="font-weight: 600;">${r.trainee_name || 'Unknown Trainee'}</td>
+                        <td style="font-weight: 700;">${Math.round(r.score || 0)}%</td>
+                        <td>${Math.round(r.safety_score || 0)}%</td>
+                        <td>${Math.round(r.speed_score || 0)}%</td>
+                        <td><span class="badge ${scoreClass}">${r.score >= 80 ? 'EXCELLENT' : (r.score >= 50 ? 'GOOD' : 'POOR')}</span></td>
+                    `;
+                    body.appendChild(row);
+                });
+            } catch (err) {
+                document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Could not fetch live data from Unity Server.</td></tr>';
+            }
+        }
+
+        // ─── DOSSIER LOGIC ───
+        function formatDuration(sec) {
+            if(!sec) return '00:00';
+            const m = Math.floor(sec/60); const s = Math.floor(sec%60);
+            return `${m}m ${s}s`;
+        }
+
+        function openDossier(index) {
+            const r = currentReports[index];
+            if (!r) return;
+
+            // Header
+            document.getElementById('dName').innerText = r.trainee_name || 'UNKNOWN TRAINEE';
+            const dateStr = new Date(r.createdAt).toLocaleString();
+            document.getElementById('dId').innerText = `ID: ${r.trainee_id || 'N/A'} | DOCTOR: ${r.doctor_code || 'N/A'} | DATE: ${dateStr}`;
+            
+            // Score Main
+            const scoreEl = document.getElementById('dScore');
+            scoreEl.innerText = `${Math.round(r.score || 0)}%`;
+            scoreEl.style.color = r.score >= 80 ? 'var(--accent-cyan)' : (r.score >= 50 ? 'var(--accent-orange)' : '#ff3333');
+
+            // Top Boxes
+            document.getElementById('dSafety').innerText = `${Math.round(r.safety_score || 0)}%`;
+            document.getElementById('dAccuracy').innerText = `${Math.round(r.accuracy_score || 0)}%`;
+            document.getElementById('dSpeed').innerText = `${Math.round(r.speed_score || 0)}%`;
+            document.getElementById('dTasks').innerText = `${r.tasks_completed || 0}/${r.total_tasks || 7}`;
+
+            // Telemetry
+            document.getElementById('dFault').innerText = r.fault_type || 'N/A';
+            const temp = r.temp || 0;
+            document.getElementById('dTemp').innerHTML = temp > 800 ? `<span style="color:var(--danger)">${temp.toFixed(1)}°C (CRITICAL)</span>` : `${temp.toFixed(1)}°C`;
+            const vib = r.vibration || 0;
+            document.getElementById('dVib').innerHTML = vib > 5 ? `<span style="color:var(--danger)">${vib.toFixed(2)} ips (WARN)</span>` : `${vib.toFixed(2)} ips`;
+            document.getElementById('dLeak').innerHTML = r.leak ? `<span style="color:var(--danger)">TRUE</span>` : 'False';
+            document.getElementById('dPress').innerText = `${r.pressure || 0} MPa`;
+            document.getElementById('dTime').innerText = formatDuration(r.session_duration);
+            document.getElementById('dAI').innerText = r.ai_inquiries || 0;
+            document.getElementById('dTools').innerText = r.tool_actions || 0;
+
+            // Inspected Parts
+            const pCount = r.parts_inspected_count || 0;
+            document.getElementById('dPartCount').innerText = pCount;
+            const partsList = document.getElementById('dPartsList');
+            partsList.innerHTML = '';
+            if (pCount > 0 && Array.isArray(r.inspected_parts)) {
+                r.inspected_parts.forEach(part => {
+                    const li = document.createElement('li');
+                    li.innerText = part;
+                    partsList.appendChild(li);
+                });
+            } else {
+                partsList.innerHTML = '<li style="background:none; border:none; color:var(--text-dim); padding:0;">No parts inspected manually.</li>';
+            }
+
+            // Show Modal
+            document.getElementById('dossierModal').style.display = 'flex';
+        }
+
+        function closeDossier() {
+            document.getElementById('dossierModal').style.display = 'none';
+        }
+
+        // Close on outside click
+        window.onclick = function(e){
+            const modal = document.getElementById('dossierModal');
+            if(e.target == modal) {
+               closeDossier();
+            }
+        }
+
+        fetchLeaderboard();
+        // Refresh every 30 seconds for live updates
+        setInterval(fetchLeaderboard, 30000);
+    </script>
+</body>
+
+</html>
