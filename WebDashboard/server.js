@@ -648,7 +648,7 @@ app.get('/admin', (req, res) => {
 });
 
 // === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=`;
 
 async function callGemini(prompt) {
     const response = await fetch(`${GEMINI_API_URL}${GEMINI_API_KEY}`, {
@@ -748,7 +748,7 @@ app.post('/api/ai/proxy', async (req, res) => {
 
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY missing on server." });
 
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         const response = await fetch(googleUrl, {
             method: 'POST',
@@ -807,14 +807,11 @@ app.post('/api/device/session/join', async (req, res) => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const deviceId = req.body.deviceId || req.body.device_id;
-    const frameBase64 = req.body.frameBase64 || req.body.frame_base64;
-    const doctorCode = req.body.doctorCode || req.body.doctor_code;
-    const traineeName = req.body.traineeName || req.body.trainee_name;
+    const { deviceId, frame_base64, trainee_name, doctor_code, stats } = req.body;
     
     // Periodically log stream payload keys to avoid spamming the console 10 times a sec
     if (Math.random() < 0.05) {
-        console.log(`==> UNITY /stream sample payload keys from ${traineeName}:`, Object.keys(req.body));
+        console.log(`==> UNITY /stream sample payload keys from ${trainee_name}:`, Object.keys(req.body));
     }
     
     const deviceSecret = req.headers['x-device-secret'];
@@ -824,14 +821,16 @@ app.post('/api/device/stream', (req, res) => {
         return res.status(403).json({ error: 'Invalid device secret' });
     }
 
-    if (!deviceId || !frameBase64) return res.status(400).send('Missing data');
+    if (!deviceId || !frame_base64) return res.status(400).send('Missing data');
 
     const existing = deviceFrames[deviceId] || {};
     deviceFrames[deviceId] = {
-        data: frameBase64,
-        doctorCode: doctorCode || existing.doctorCode || null,
-        traineeName: traineeName || existing.traineeName || "Active Trainee",
+        data: frame_base64,
+        doctorCode: doctor_code || existing.doctorCode || null,
+        traineeName: trainee_name || existing.traineeName || "Active Trainee",
         atCode: existing.atCode || "AT-????",
+        // Extract stats from the incoming body
+        stats: stats || existing.stats || { score: 0, progress: 0, safetyScore: 0, tasks: 0, time: 0 },
         timestamp: Date.now()
     };
     res.json({ success: true });
