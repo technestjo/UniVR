@@ -220,7 +220,7 @@ app.post('/api/submit-report', async (req, res) => {
             exported_reports_count: payload.exported_reports_count || 0,
             chat_log: payload.chat_log || "No chat history.",
             score: calculateScore(payload),
-            deviceId: payload.deviceId || "Unknown"
+            deviceId: payload.deviceId || payload.device_id || "Unknown"
         });
 
         await newReport.save();
@@ -650,7 +650,10 @@ app.get('/admin', (req, res) => {
 
 // Unity signals "Session Started" (Trainee Join)
 app.post('/api/device/session/join', async (req, res) => {
-    const { deviceId, traineeName, doctorCode } = req.body;
+    const deviceId = req.body.deviceId || req.body.device_id;
+    const traineeName = req.body.traineeName || req.body.trainee_name;
+    const doctorCode = req.body.doctorCode || req.body.doctor_code;
+
     if (!deviceId) return res.status(400).json({ error: "Missing deviceId" });
 
     try {
@@ -683,7 +686,11 @@ app.post('/api/device/session/join', async (req, res) => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const { deviceId, frameBase64, doctorCode, traineeName } = req.body;
+    const deviceId = req.body.deviceId || req.body.device_id;
+    const frameBase64 = req.body.frameBase64 || req.body.frame_base64;
+    const doctorCode = req.body.doctorCode || req.body.doctor_code;
+    const traineeName = req.body.traineeName || req.body.trainee_name;
+    
     const deviceSecret = req.headers['x-device-secret'];
 
     // Security Check: Ensure only authenticated devices can stream
