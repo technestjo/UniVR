@@ -647,22 +647,28 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// === AI ANALYSIS ENDPOINTS ===
-let genAI = null;
-try {
-    if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10) {
-        genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        console.log(`[AI] Gemini initialized. Key prefix: ${GEMINI_API_KEY.substring(0, 8)}...`);
-    } else {
-        console.warn('[AI] GEMINI_API_KEY is missing or invalid. AI features disabled.');
+// === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=`;
+
+async function callGemini(prompt) {
+    const response = await fetch(`${GEMINI_API_URL}${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+        })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        const errMsg = data?.error?.message || 'Gemini API error';
+        throw new Error(errMsg);
     }
-} catch(e) {
-    console.error('[AI] Failed to initialize Gemini:', e.message);
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
-    if (!genAI) return res.status(500).json({ error: "Gemini API Key is missing. Please add GEMINI_API_KEY to your .env file." });
-    
+    if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY is missing in environment." });
+
     try {
         const { reportId } = req.body;
         const report = await Report.findById(reportId);
@@ -672,7 +678,6 @@ app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
             return res.status(403).json({ error: "You can only analyze your own students." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `أنت خبير في تقييم متدربي صيانة محركات الطيران. قم بتحليل تقرير المتدرب التالي في لعبة VR وقدم تحليلاً باللغة العربية يشمل:
 1. نقاط القوة.
 2. نقاط الضعف والمشاكل (إن وجدت).
@@ -689,8 +694,8 @@ app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
 القطع المفحوصة: ${report.parts_inspected_count}
 الرجاء استخدام تنسيق Markdown لترتيب الإجابة بعناوين واضحة وعريضة.`;
 
-        const result = await model.generateContent(prompt);
-        res.json({ analysis: result.response.text(), traineeName: report.trainee_name });
+        const analysis = await callGemini(prompt);
+        res.json({ analysis, traineeName: report.trainee_name });
     } catch (err) {
         console.error("[AI Student Error]:", err.message);
         res.status(500).json({ error: err.message || "Failed to generate AI analysis." });
@@ -698,8 +703,8 @@ app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
 });
 
 app.post('/api/ai/analyze-class', verifyToken, async (req, res) => {
-    if (!genAI) return res.status(500).json({ error: "Gemini API Key is missing. Please add GEMINI_API_KEY to your .env file." });
-    
+    if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY is missing in environment." });
+
     try {
         let reports;
         if (req.user.role === 'admin') {
@@ -710,7 +715,6 @@ app.post('/api/ai/analyze-class', verifyToken, async (req, res) => {
 
         if (!reports || reports.length === 0) return res.status(404).json({ error: "لا يوجد تقارير لتحليلها." });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         let summaryContext = reports.map(r => `- الطالب ${r.trainee_name}: الأمان ${Math.round(r.safety_score)}%, الدقة ${Math.round(r.accuracy_score)}%, المهام المكتملة ${r.tasks_completed}/${r.total_tasks}, أخطاء الآدوات ${r.tool_actions}, الوقت ${Math.round(r.session_duration)}ث.`).join('\n');
 
         const prompt = `أنت رئيس قسم صيانة محركات الطيران المتقدم في أكاديمية عالمية. لديك هذا الملخص لعمل طلاب في جلسات تدريب افتراضية (VR).
@@ -723,8 +727,8 @@ app.post('/api/ai/analyze-class', verifyToken, async (req, res) => {
 ${summaryContext}
 الرجاء استخدام تنسيق Markdown واستخدام فقرات مفصولة ونقاط (Bullet points) لقراءة مريحة للمدرب.`;
 
-        const result = await model.generateContent(prompt);
-        res.json({ analysis: result.response.text() });
+        const analysis = await callGemini(prompt);
+        res.json({ analysis });
     } catch (err) {
         console.error("[AI Class Error]:", err.message);
         res.status(500).json({ error: err.message || "Failed to generate class analysis." });
