@@ -10,6 +10,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -19,6 +20,7 @@ const DEVICE_STREAM_SECRET = process.env.DEVICE_STREAM_SECRET || 'AeroTwin_Devic
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://AeroTwin_db_user:BK3YRMlQuc3enIzn@cluster0.erhwmqm.mongodb.net/univr?retryWrites=true&w=majority&appName=Cluster0';
 const ADMIN_USER = process.env.ADMIN_USER || 'AeroTwin_SuperAdmin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'XR_Secure_Admin_Access_Pass_2026!!';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 // ─── SECURITY MIDDLEWARE ───
 app.use(helmet({
@@ -643,6 +645,80 @@ app.get('/api/admin/pages', verifyToken, async (req, res) => {
 // Fallback route for SPA / generic pages
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// === AI ANALYSIS ENDPOINTS ===
+const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+
+app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
+    if (!genAI) return res.status(500).json({ error: "Gemini API Key is missing. Please add GEMINI_API_KEY to your .env file." });
+    
+    try {
+        const { reportId } = req.body;
+        const report = await Report.findById(reportId);
+        if (!report) return res.status(404).json({ error: "Report not found." });
+
+        if (req.user.role !== 'admin' && report.doctor_code !== req.user.code) {
+            return res.status(403).json({ error: "You can only analyze your own students." });
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `أنت خبير في تقييم متدربي صيانة محركات الطيران. قم بتحليل تقرير المتدرب التالي في لعبة VR وقدم تحليلاً باللغة العربية يشمل:
+1. نقاط القوة.
+2. نقاط الضعف والمشاكل (إن وجدت).
+3. توصية موجزة لتحسين الأداء.
+التقرير:
+الاسم: ${report.trainee_name}
+المدة: ${report.session_duration} ثانية
+تقييم الأمان: ${report.safety_score}%
+تقييم السرعة: ${report.speed_score}%
+تقييم الدقة: ${report.accuracy_score}%
+أخطاء الواجهة: ${report.interface_actions}
+أخطاء الأدوات: ${report.tool_actions}
+المهام المنجزة: ${report.tasks_completed}/${report.total_tasks}
+القطع المفحوصة: ${report.parts_inspected_count}
+الرجاء استخدام تنسيق Markdown لترتيب الإجابة بعناوين واضحة وعريضة.`;
+
+        const result = await model.generateContent(prompt);
+        res.json({ analysis: result.response.text(), traineeName: report.trainee_name });
+    } catch (err) {
+        console.error("AI Error:", err);
+        res.status(500).json({ error: "Failed to generate AI analysis." });
+    }
+});
+
+app.post('/api/ai/analyze-class', verifyToken, async (req, res) => {
+    if (!genAI) return res.status(500).json({ error: "Gemini API Key is missing. Please add GEMINI_API_KEY to your .env file." });
+    
+    try {
+        let reports;
+        if (req.user.role === 'admin') {
+            reports = await Report.find({});
+        } else {
+            reports = await Report.find({ doctor_code: req.user.code });
+        }
+
+        if (!reports || reports.length === 0) return res.status(404).json({ error: "لا يوجد تقارير لتحليلها." });
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        let summaryContext = reports.map(r => `- الطالب ${r.trainee_name}: الأمان ${Math.round(r.safety_score)}%, الدقة ${Math.round(r.accuracy_score)}%, المهام المكتملة ${r.tasks_completed}/${r.total_tasks}, أخطاء الآدوات ${r.tool_actions}, الوقت ${Math.round(r.session_duration)}ث.`).join('\n');
+
+        const prompt = `أنت رئيس قسم صيانة محركات الطيران المتقدم في أكاديمية عالمية. لديك هذا الملخص لعمل طلاب في جلسات تدريب افتراضية (VR).
+قم بإعطاء تقرير شامل واحترافي باللغة العربية يشمل:
+1. تقييم والمتوسط العام للصف.
+2. أكثر الأخطاء شيوعاً التي واجهت المجموعة.
+3. أفضل الطلاب أداءً.
+4. الطلاب الذين يحتاجون متابعة خاصة وتدريب إضافي.
+المعطيات للطلاب:
+${summaryContext}
+الرجاء استخدام تنسيق Markdown واستخدام فقرات مفصولة ونقاط (Bullet points) لقراءة مريحة للمدرب.`;
+
+        const result = await model.generateContent(prompt);
+        res.json({ analysis: result.response.text() });
+    } catch (err) {
+        console.error("AI Class Error:", err);
+        res.status(500).json({ error: "Failed to generate class analysis." });
+    }
 });
 
 // App listen is handled inside MongoDB connection success block

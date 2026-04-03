@@ -19,6 +19,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "express-mongo-sanitize": "^2.2.0",
-    "compression": "^1.7.4"
+    "compression": "^1.7.4",
+    "@google/generative-ai": "^0.2.1"
   }
 }

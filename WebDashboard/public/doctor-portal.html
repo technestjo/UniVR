@@ -242,6 +242,7 @@
                     <div style="display: flex; gap: 10px; flex: 1; justify-content: flex-end; min-width: 300px;">
                         <input type="text" id="searchTrainee" placeholder="Search Trainee Name..." class="portal-input" style="margin-bottom: 0; padding: 10px 20px; flex: 1; max-width: 300px;" oninput="filterReports()">
                         <button onclick="fetchDoctorReports()" class="btn-secondary" style="margin: 0; padding: 8px 20px;">Refresh 🔃</button>
+                        <button onclick="analyzeClass(event)" class="btn-primary" style="background: linear-gradient(135deg, #7b2cbf, #9d4edd); border: none; padding: 8px 20px; font-weight: 800; display: flex; align-items: center; gap: 5px; box-shadow: 0 0 15px rgba(123, 44, 191, 0.4);">🤖 Class AI Insights</button>
                     </div>
                 </div>
                 <div class="reports-grid" id="reportsList">
@@ -282,7 +283,20 @@
         </div>
     </div>
 
+    <!-- MODAL FOR AI ANALYSIS -->
+    <div id="aiModal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 800px; padding: 0; background: #111827; border: 1px solid #7b2cbf;">
+            <div class="modal-header" style="padding: 20px; border-bottom: 1px solid rgba(123, 44, 191, 0.3); background: rgba(123, 44, 191, 0.05); border-radius: 12px 12px 0 0;">
+                <h2 id="aiModalTitle" style="font-size: 20px; color: #eebbff; display:flex; align-items:center; gap: 10px;"><span class="pulse">🤖</span> AI ANALYSIS</h2>
+                <button class="close-btn" onclick="document.getElementById('aiModal').style.display='none'" style="color: #fff;">&times;</button>
+            </div>
+            <div id="aiModalContent" style="padding: 30px; font-size: 15px; line-height: 1.6; color: #cbd5e1; max-height: 70vh; overflow-y: auto;" dir="auto">
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         let token = localStorage.getItem('adminToken');
         let userRole = localStorage.getItem('userRole');
@@ -488,51 +502,57 @@
                     return idMatch || nameMatch;
                 });
 
+                const scoreColor = r.score >= 80 ? '#00ff88' : (r.score >= 50 ? '#ffcc00' : '#ff3333');
                 const card = document.createElement('div');
                 card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
+                card.style = "padding: 25px; border-radius: 16px; margin-bottom: 20px;";
                 card.innerHTML = `
-                    <div class="rc-header">
+                    <div class="rc-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                         <div>
-                            <div class="rc-title">${r.trainee_name} ${isLive ? '<span class="pulse" style="color:#00ff88; font-size:10px;">● LIVE</span>' : ''}</div>
-                            <div class="rc-meta">Doc: ${r.doctor_code || 'N/A'} | ID: ${r.trainee_id || 'N/A'}</div>
+                            <div class="rc-title" style="font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px;">
+                                ${r.trainee_name} 
+                                ${isLive ? '<span class="pulse" style="color:#00ff88; font-size:12px; font-weight:800; display:flex; align-items:center;">● LIVE</span>' : ''}
+                            </div>
+                            <div class="rc-meta" style="color: var(--text-dim); font-size: 13px; margin-top: 5px;">Doc: ${r.doctor_code || 'N/A'} | ID: ${r.trainee_id || 'N/A'}</div>
                         </div>
-                        <div class="rc-score ${scoreClass}">${Math.round(r.score)}%</div>
+                        <div class="rc-score" style="font-size: 32px; font-weight: 900; color: ${scoreColor}; letter-spacing: -1px; text-shadow: 0 0 10px ${scoreColor}40;">${Math.round(r.score)}%</div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; font-size: 13px; color: #94a3b8; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                         <div>
-                            <div style="color: var(--portal-accent); font-weight: 700; margin-bottom: 5px;">TIME TAKEN</div>
-                            <div style="font-size: 14px; color: #fff;">${sessionTime}</div>
-                        </div>
-                        <div>
-                            <div style="color: #ff9900; font-weight: 700; margin-bottom: 5px;">TASKS</div>
-                            <div>Comp: <b>${r.tasks_completed || 0}</b><br>Pend: <b style="color: #ff9900;">${r.pending_tasks || 0}</b></div>
+                            <div style="color: var(--portal-accent); font-weight: 800; font-size: 11px; margin-bottom: 8px;">TIME TAKEN</div>
+                            <div style="font-size: 16px; color: #fff; font-weight: 600;">${sessionTime}</div>
                         </div>
                         <div>
-                            <div style="color: #00ff88; font-weight: 700; margin-bottom: 5px;">PARTS</div>
-                            <div>Insp: <b style="color:#fff;">${r.parts_inspected_count || 0} / 15</b></div>
+                            <div style="color: #ff9900; font-weight: 800; font-size: 11px; margin-bottom: 8px;">TASKS</div>
+                            <div style="line-height: 1.5;">Comp: <b style="color: #fff;">${r.tasks_completed || 0}</b><br>Pend: <b style="color: #ff9900;">${r.pending_tasks || 0}</b></div>
                         </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                        <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="color: var(--portal-accent); font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">PERFORMANCE</div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Speed Base</span> <b style="color:#ff9900;">${Math.round(r.speed_score || 0)}%</b></div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Accuracy</span> <b style="color:#00ff88;">${Math.round(r.accuracy_score || 0)}%</b></div>
-                            <div style="display:flex; justify-content:space-between; font-size: 12px; color: #94a3b8;"><span>Safety</span> <b style="color:#00f2ff;">${Math.round(r.safety_score || 0)}%</b></div>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="color: #fc5c65; font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">ERRORS OVERVIEW</div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>UI Errors</span> <b style="color:#fff;">${r.interface_actions || 0}</b></div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 12px; color: #94a3b8;"><span>Tool Fails</span> <b style="color:#fff;">${r.tool_actions || 0}</b></div>
-                            <div style="display:flex; justify-content:space-between; font-size: 12px; color: #94a3b8;"><span>AI Queries</span> <b style="color:#fff;">${r.ai_inquiries || 0}</b></div>
+                        <div>
+                            <div style="color: #00ff88; font-weight: 800; font-size: 11px; margin-bottom: 8px;">PARTS</div>
+                            <div style="line-height: 1.5;">Insp: <b style="color:#fff;">${r.parts_inspected_count || 0} / 15</b></div>
                         </div>
                     </div>
 
-                    <div class="rc-actions" style="margin-top:15px;">
-                        <button onclick='openChat("${r._id}")' class="btn-secondary" style="flex: 1.5;">💬 Log</button>
-                        ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="btn-primary pulse" style="flex: 2; height: 38px; display:flex; align-items:center; justify-content:center; gap:5px; background:#00ff88; color:#000; font-size:12px; font-weight:800; border:none; box-shadow: 0 0 15px rgba(0,255,136,0.3);">📽️ WATCH LIVE</button>` : `<button disabled class="btn-secondary" style="flex: 2; opacity: 0.5; cursor: not-allowed; font-size: 11px;">📡 Standby</button>`}
-                        <button onclick='deleteReport("${r._id}")' class="btn-icon text-danger" style="flex:0.5;">🗑</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="color: var(--portal-accent); font-size: 11px; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px;">PERFORMANCE</div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; color: #94a3b8;"><span>Speed Base</span> <b style="color:#ff9900;">${Math.round(r.speed_score || 0)}%</b></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; color: #94a3b8;"><span>Accuracy</span> <b style="color:#00ff88;">${Math.round(r.accuracy_score || 0)}%</b></div>
+                            <div style="display:flex; justify-content:space-between; font-size: 13px; color: #94a3b8;"><span>Safety</span> <b style="color:#00f2ff;">${Math.round(r.safety_score || 0)}%</b></div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="color: #fc5c65; font-size: 11px; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px;">ERRORS OVERVIEW</div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; color: #94a3b8;"><span>UI Errors</span> <b style="color:#fff;">${r.interface_actions || 0}</b></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; color: #94a3b8;"><span>Tool Fails</span> <b style="color:#fff;">${r.tool_actions || 0}</b></div>
+                            <div style="display:flex; justify-content:space-between; font-size: 13px; color: #94a3b8;"><span>AI Queries</span> <b style="color:#fff;">${r.ai_inquiries || 0}</b></div>
+                        </div>
+                    </div>
+
+                    <div class="rc-actions" style="margin-top:20px; display: flex; gap: 10px;">
+                        <button onclick='openChat("${r._id}")' style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.1); color: #fff; border: none; font-weight: 700; cursor: pointer; transition: 0.2s;">💬 Log</button>
+                        <button onclick='analyzeStudent("${r._id}")' style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(138, 43, 226, 0.2); color: #eebbff; border: 1px solid rgba(138, 43, 226, 0.4); font-weight: 700; cursor: pointer; transition: 0.2s;">🤖 AI Review</button>
+                        ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="pulse" style="flex: 1.5; padding: 12px; border-radius: 12px; background:#00ff88; color:#000; border:none; font-weight:900; cursor: pointer; box-shadow: 0 0 20px rgba(0,255,136,0.5);">📽️ WATCH LIVE</button>` : `<button disabled style="flex: 1.5; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); color: #94a3b8; border: none; font-weight: 700; opacity: 0.5; cursor: not-allowed;">📡 Standby</button>`}
+                        <button onclick='deleteReport("${r._id}")' style="padding: 12px 20px; border-radius: 12px; background: rgba(255,51,51,0.1); color: #ff3333; border: none; font-weight: 700; cursor: pointer; transition: 0.2s;">🗑</button>
                     </div>
                 `;
                 list.appendChild(card);
