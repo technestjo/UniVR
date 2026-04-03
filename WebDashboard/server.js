@@ -9,12 +9,13 @@ const mongoSanitize = require('express-mongo-sanitize');
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'AeroTwinXR_SuperSecretKey_2026';
 const DEVICE_STREAM_SECRET = process.env.DEVICE_STREAM_SECRET || 'AeroTwin_Device_Stream_Secure_Key_9988';
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://technestjo_db_user:QqaoVP8GaFQiCWID@cluster0.2evazsh.mongodb.net/univr?retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://AeroTwin_db_user:BK3YRMlQuc3enIzn@cluster0.erhwmqm.mongodb.net/univr?retryWrites=true&w=majority&appName=Cluster0';
 const ADMIN_USER = process.env.ADMIN_USER || 'AeroTwin_SuperAdmin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'XR_Secure_Admin_Access_Pass_2026!!';
 
@@ -36,15 +37,26 @@ app.use('/api/admin/login', limiter);
 const deviceFrames = {};
 
 // ─── MIDDLEWARE ───
+app.use(compression()); // Compress all responses for better site speed
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(mongoSanitize()); // Prevent NoSQL Injection
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' })); // Cache static files for 1 day
 
 // ─── MONGODB CONNECTION ───
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ Connected to MongoDB Atlas'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+    .then(() => {
+        console.log('✅ Connected to MongoDB Atlas');
+        
+        // ─── START SERVER ONLY AFTER DB CONNECTS ───
+        app.listen(PORT, () => {
+            console.log(`🚀 AeroTwin XR Dashboard running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err);
+        process.exit(1); // Properly exit to let Render detect the failure
+    });
 
 // ─── MODELS ───
 const DoctorSchema = new mongoose.Schema({
@@ -618,9 +630,7 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 AeroTwin XR Dashboard running on port ${PORT}`);
-});
+// App listen is handled inside MongoDB connection success block
 
 // === Live Stream & Session Endpoints ===
 
