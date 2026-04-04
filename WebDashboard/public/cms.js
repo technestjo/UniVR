@@ -115,7 +115,8 @@ async function applyCMS() {
                             
                             // Smart Auto-detect for Media (Video vs Image)
                             if (item.mediaUrl) {
-                                let isVideo = item.mediaUrl.toLowerCase().endsWith('.mp4') || item.mediaUrl.toLowerCase().endsWith('.webm');
+                                let rawUrl = item.mediaUrl.split('?')[0].toLowerCase();
+                                let isVideo = rawUrl.endsWith('.mp4') || rawUrl.endsWith('.webm') || rawUrl.endsWith('.ogg');
                                 item.videoDisplay = isVideo ? 'block' : 'none';
                                 item.imageDisplay = isVideo ? 'none' : 'block';
                             }

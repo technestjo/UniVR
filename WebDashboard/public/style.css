@@ -25,11 +25,11 @@ body {
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.4;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300f2ff' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300f2ff' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff' opacity='0.8'/%3E%3C/g%3E%3C/svg%3E") 6 6, auto;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300f2ff' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300f2ff' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff' opacity='0.8'/%3E%3C/g%3E%3C/svg%3E") 2 2, auto !important;
 }
 
-a, button, .pointer, .nav-btn, .cms-sidebar-btn {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300ff88' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300ff88' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff'/%3E%3Ccircle cx='10' cy='12' r='5' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 6 6, pointer !important;
+a, button, input, textarea, .pointer, .nav-btn, .cms-sidebar-btn {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300ff88' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300ff88' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff'/%3E%3Ccircle cx='10' cy='12' r='5' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 2 2, pointer !important;
 }
 
 /* ===================================================
@@ -73,6 +73,11 @@ a, button, .pointer, .nav-btn, .cms-sidebar-btn {
     .page-header h1 { font-size: 32px; }
     .cms-row { display: flex; flex-direction: column; gap: 10px; }
     .chat-bubble { max-width: 95%; }
+    .footer-grid { grid-template-columns: 1fr; gap: 30px; text-align: center; justify-items: center; }
+    .footer-col { display: flex; flex-direction: column; align-items: center; }
+    .pricing-card { padding: 20px; }
+    .glass-card { padding: 25px 15px; }
+    .stat-number { font-size: 48px; }
 }
 
 /* ─── UTILITIES ─── */
@@ -631,9 +636,11 @@ nav.scrolled {
 }
 
 @media (max-width: 1024px) {
-    nav { flex-direction: column; gap: 15px; padding: 15px 5%; }
+    nav { position: absolute; flex-direction: column; gap: 15px; padding: 15px 5%; background: rgba(5,8,10,0.98); border-bottom: 1px solid var(--border-cyan); }
     .nav-links { gap: 15px; overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 5px; justify-content: flex-start; scrollbar-width: none; }
     .nav-links::-webkit-scrollbar { display: none; }
+    .hero { min-height: auto; padding-top: 150px; padding-bottom: 80px; }
+    .page-header { padding: 180px 0 60px; }
 }
 
 /* ─── ADMIN PORTAL (admin.html) ─── */

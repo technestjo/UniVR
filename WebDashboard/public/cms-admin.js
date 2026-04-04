@@ -232,10 +232,10 @@ const TN_SCHEMA = {
                 fields: [
                     { key: "title", label: "Step Title", type: "text", width: "100%" },
                     { key: "desc", label: "Step Description", type: "textarea", width: "100%" },
-                    { key: "mediaUrl", label: "Media URL (Image, GIF, or MP4)", type: "text", width: "100%" },
+                    { key: "mediaUrl", label: "Media URL (Direct Internet HTTP Link or Local Path)", type: "text", width: "100%", placeholder: "e.g., https://example.com/video.mp4 or assets/img.png" },
                     { key: "type", label: "Media Badge Text (e.g. VIDEO, GIF, SETUP)", type: "text", width: "50%" },
-                    { key: "videoDisplay", label: "Show Video? (block/none)", type: "text", width: "25%" },
-                    { key: "imageDisplay", label: "Show Image? (block/none)", type: "text", width: "25%" }
+                    { key: "videoDisplay", label: "Autoplay Video? (Type 'block' for video, 'none' for image)", type: "text", width: "25%" },
+                    { key: "imageDisplay", label: "Show Image? (Type 'block' for image, 'none' for video)", type: "text", width: "25%" }
                 ]
             }
         ]
