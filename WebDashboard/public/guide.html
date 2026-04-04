@@ -4,252 +4,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroTwin XR | System Guide</title>
+    <title>AeroTwin XR | Immersive VR System Guide</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="logo.png">
-    <!-- Include GSAP for cool reveal animations -->
+
+    <!-- GSAP for core animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
-        .guide-body {
-            background: radial-gradient(circle at 50% 0%, #0c1524 0%, #030712 100%);
-            min-height: 100vh;
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700;800&display=swap');
+
+        :root {
+            --vr-cyan: #00f2ff;
+            --vr-purple: #b535f6;
+            --vr-blue: #092c55;
+            --vr-neon: #fff;
+            --vr-bg: #010308;
+            --tech-font: 'Share Tech Mono', monospace;
         }
 
-        .guide-header-box {
-            text-align: center;
-            padding: 150px 20px 80px;
+        body.guide-body {
+            background-color: var(--vr-bg);
+            color: #fff;
+            overflow-x: hidden;
+            font-family: 'Rajdhani', sans-serif;
             position: relative;
+        }
+
+        /* ----- 3D VR GRID BACKGROUND ----- */
+        .vr-grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: -2;
+            perspective: 800px;
             overflow: hidden;
         }
-
-        .guide-header-box::before {
-            content: "";
+        .vr-grid-bg::after {
+            content: '';
             position: absolute;
-            top: -50%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(0,242,255,0.05) 0%, transparent 70%);
-            z-index: 0;
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.1) 1px, transparent 1px);
+            background-size: 80px 80px;
+            transform: rotateX(60deg) translateY(0);
+            transform-origin: center center;
+            animation: gridMove 15s linear infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3));
+        }
+        @keyframes gridMove {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(80px); }
+        }
+        .vr-grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 50% 30%, transparent 0%, var(--vr-bg) 85%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .cyber-particles {
+            position: fixed;
+            top:0; left:0; width:100vw; height:100vh;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzIiBoZWlnaHQ9IjMiPjxyZWN0IHdpZHRoPSIzIiBoZWlnaHQ9IjMiIGZpbGw9IiMwMGYyZmYiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9zdmc+');
+            opacity: 0.3;
+            z-index: -1;
             pointer-events: none;
         }
 
-        .guide-header-box h1 {
-            font-size: 56px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #fff 0%, #00f2ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
+        /* ----- HEADER ----- */
+        .guide-header-box {
+            text-align: left;
+            padding: 200px 5% 100px;
             position: relative;
-            z-index: 1;
-        }
-
-        .guide-header-box p {
-            font-size: 20px;
-            color: #94a3b8;
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .guide-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 50px;
-            align-items: start;
-        }
-
-        @media (max-width: 992px) {
-            .guide-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Sticky Sidebar for quick navigation */
-        .sidebar {
-            position: sticky;
-            top: 120px;
-            background: rgba(10, 15, 20, 0.6);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 242, 255, 0.15);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .sidebar h3 {
-            color: #fff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .sidebar-links {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+            z-index: 10;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .guide-header-box h1 {
+            font-size: 85px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(0,242,255,0.4);
+            color: #fff;
+            position: relative;
+            display: inline-block;
+        }
+        .guide-header-box h1::before {
+            content: "SYSTEM_ROOT // VR_ENVIRONMENT";
+            position: absolute;
+            top: -40px;
+            left: 5px;
+            font-size: 16px;
+            font-family: var(--tech-font);
+            letter-spacing: 5px;
+            color: var(--vr-cyan);
+            text-shadow: 0 0 10px var(--vr-cyan);
+        }
+        .guide-header-box p {
+            font-size: 24px;
+            color: #cbd5e1;
+            max-width: 800px;
+            margin: 0;
+            font-weight: 400;
+            border-left: 4px solid var(--vr-cyan);
+            padding-left: 20px;
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.08) 0%, transparent 100%);
+            padding: 25px;
+            box-shadow: inset 5px 0 0 0 rgba(0,242,255,0.5);
+            font-family: var(--tech-font);
         }
 
-        .sidebar-links li a {
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        /* ----- CONTAINER & FEED ----- */
+        .guide-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 5% 100px;
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+        @media (max-width: 1024px) {
+            .guide-container { grid-template-columns: 1fr; }
+        }
+
+        /* Sidebar HUD */
+        .sidebar-hud {
+            position: sticky;
+            top: 120px;
+            background: rgba(3, 7, 18, 0.6);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 40px;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.05), inset 0 0 20px rgba(0,242,255,0.05);
+        }
+        .sidebar-hud h3 {
+            font-family: var(--tech-font);
+            color: var(--vr-cyan);
+            font-size: 16px;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            text-shadow: 0 0 10px rgba(0,242,255,0.5);
+        }
+        .sidebar-hud h3::before { 
+            content: ""; display: block; width: 12px; height: 12px; 
+            background: var(--vr-cyan); box-shadow: 0 0 10px var(--vr-cyan);
+            animation: pulse 1.5s infinite alternate; 
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0.3; }
+        }
+        
+        .hud-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; }
+        .hud-links li a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .hud-links li a:hover {
+            color: var(--vr-neon);
+            border-bottom-color: var(--vr-cyan);
+            padding-left: 15px;
+        }
+        .hud-links li a span.data { 
+            font-family: var(--tech-font); 
+            font-size: 12px; 
+            color: var(--vr-cyan);
+            opacity: 0.7; 
         }
 
-        .sidebar-links li a::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            background: rgba(0, 242, 255, 0.3);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-links li a:hover,
-        .sidebar-links li a.active {
-            color: #00f2ff;
-            transform: translateX(10px);
-        }
-
-        .sidebar-links li a:hover::before,
-        .sidebar-links li a.active::before {
-            background: #00f2ff;
-            box-shadow: 0 0 10px #00f2ff;
-        }
-
-        /* Guide Visual List Engine */
+        /* ----- INSANE 3D CARDS ----- */
         .guide-feed {
             display: flex;
             flex-direction: column;
-            gap: 60px;
+            gap: 150px;
         }
 
-        .guide-card {
-            background: rgba(20, 25, 35, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            overflow: hidden;
+        .guide-card-3d {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 60px;
             align-items: center;
+            position: relative;
         }
-        
-        .guide-card:nth-child(even) {
-            direction: rtl; /* Flip layout for visual variety */
-        }
-        .guide-card:nth-child(even) .guide-card-content {
-            direction: ltr; /* Keep text readable LTR */
-        }
-        
-        @media (max-width: 992px) {
-            .guide-card {
-                grid-template-columns: 1fr;
-                direction: ltr !important;
-            }
+        .guide-card-3d:nth-child(even) { grid-template-columns: 1fr 1.2fr; direction: rtl; }
+        .guide-card-3d:nth-child(even) .content-stack { direction: ltr; }
+        @media (max-width: 900px) {
+            .guide-card-3d { grid-template-columns: 1fr !important; direction: ltr !important; gap: 40px; }
         }
 
-        .guide-card:hover {
-            border-color: rgba(0, 242, 255, 0.4);
-            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.1);
-            transform: translateY(-8px);
+        /* 3D Media Box / Hologram Container */
+        .media-3d-wrapper {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            perspective: 2000px;
+            transform-style: preserve-3d;
         }
-
-        .guide-card-media {
+        
+        .media-3d-box {
             width: 100%;
             height: 100%;
-            min-height: 350px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 242, 255, 0.2);
             position: relative;
-            background: #000;
-            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
-            align-items: center;
             justify-content: center;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+            clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+            backdrop-filter: blur(5px);
         }
-        
-        .guide-card:nth-child(even) .guide-card-media {
-            border-right: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        .media-3d-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 242, 255, 0.05) 2px,
+                rgba(0, 242, 255, 0.05) 4px
+            );
+            pointer-events: none;
+            z-index: 2;
         }
 
-        .guide-card-media img,
-        .guide-card-media video {
+        /* Media Elements inside 3D */
+        .media-3d-box img,
+        .media-3d-box video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
-            transition: transform 0.5s ease;
+            transform: translateZ(60px);
+            transition: 0.5s;
+            filter: saturate(1.2) contrast(1.1);
+        }
+        .media-3d-wrapper:hover .media-3d-box img,
+        .media-3d-wrapper:hover .media-3d-box video {
+            transform: translateZ(100px) scale(1.05);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
 
-        .guide-card:hover .guide-card-media img,
-        .guide-card:hover .guide-card-media video {
-            transform: scale(1.03);
-        }
-
-        .guide-card-content {
-            padding: 40px;
-            position: relative;
-        }
-
-        .guide-card-content h2 {
-            font-size: 32px;
-            color: #fff;
-            margin-bottom: 20px;
-            font-weight: 800;
-        }
-
-        .guide-card-content p {
-            color: #cbd5e1;
-            font-size: 18px;
-            line-height: 1.8;
-        }
-
-        .media-badge {
+        /* Scanner Line Hologram Effect */
+        .scanner-line {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 242, 255, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 900;
-            color: #00f2ff;
-            text-transform: uppercase;
-            border: 1px solid rgba(0, 242, 255, 0.5);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--vr-cyan);
+            box-shadow: 0 0 15px var(--vr-cyan), 0 0 30px var(--vr-cyan);
+            transform: translateZ(90px);
+            animation: scanHolo 2.5s ease-in-out infinite alternate;
+            z-index: 5;
+        }
+        @keyframes scanHolo {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; height: 10px; background: rgba(0,242,255,0.5); }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* UI Accents on Media */
+        .crosshair {
+            position: absolute;
+            width: 40px; height: 40px;
+            border: 2px solid var(--vr-cyan);
+            pointer-events: none;
+            transform: translateZ(80px);
+            z-index: 10;
+        }
+        .crosshair.tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .crosshair.br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        
+        .vector-hud {
+            position: absolute;
+            bottom: 25px; left: 35px;
+            font-family: var(--tech-font);
+            color: var(--vr-cyan);
+            font-size: 14px;
+            transform: translateZ(120px);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 6px 12px;
+            border: 1px solid rgba(0, 242, 255, 0.4);
+            backdrop-filter: blur(5px);
             z-index: 10;
         }
 
-        .step-number {
-            position: absolute;
-            top: -30px;
-            left: 30px;
-            font-size: 80px;
+        /* Content Stack Typography */
+        .content-stack {
+            position: relative;
+            padding: 30px 0;
+            z-index: 2;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            font-family: var(--tech-font);
+            color: var(--vr-bg);
+            background: var(--vr-cyan);
+            padding: 6px 20px;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(0,242,255,0.4);
+            position: relative;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .content-stack h2 {
+            font-size: 45px;
             font-weight: 900;
-            color: rgba(255,255,255,0.03);
-            pointer-events: none;
-            z-index: -1;
+            margin-bottom: 25px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+        }
+        .content-stack p {
+            font-size: 20px;
+            color: #94a3b8;
+            line-height: 1.8;
+            margin: 0;
+        }
+        
+        /* Floating background text identifier */
+        .bg-watermark {
+             position: absolute;
+             top: -40px;
+             left: 0;
+             font-size: 140px;
+             font-weight: 900;
+             color: rgba(255,255,255,0.02);
+             font-family: var(--tech-font);
+             pointer-events: none;
+             z-index: -1;
+             white-space: nowrap;
+             user-select: none;
+        }
+        .guide-card-3d:nth-child(even) .bg-watermark {
+            left: auto; right: 0;
+            text-align: right;
+        }
+
+        /* Tech Detail Lines */
+        .tech-line {
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--vr-cyan), transparent);
+            margin-top: 30px;
         }
 
     </style>
@@ -257,84 +388,98 @@
 
 <body class="guide-body">
 
+    <!-- 3D VR Background Elements -->
+    <div class="vr-grid-bg"></div>
+    <div class="vr-grid-overlay"></div>
+    <div class="cyber-particles"></div>
+
     <!-- ─── NAVBAR ─── -->
-    <nav id="navbar">
+    <nav id="navbar" style="background: rgba(3,7,18,0.8); border-bottom: 1px solid rgba(0,242,255,0.1);">
         <a href="index.html" class="nav-logo">
             <img src="logo.png" alt="AeroTwin Logo">
-            AeroTwin XR
+            AeroTwin XR <span style="font-family: 'Share Tech Mono'; color: #00f2ff; font-size: 12px; margin-left: 10px;">[SYS.OP]</span>
         </a>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="news.html">News</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="features.html">Features</a></li>
-            <li><a href="guide.html" class="active">Guide</a></li>
-            <li><a href="leaderboard.html">Trainee Leaderboard</a></li>
-            <li><a href="doctor-portal.html" class="nav-join-link" style="color: var(--accent-cyan); font-weight: 800; border: 1px solid var(--accent-cyan); padding: 5px 15px; border-radius: 5px; margin-right: 10px;">JOIN</a></li>
-            <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
+            <li><a href="guide.html" class="active">VR Logic</a></li>
+            <li><a href="leaderboard.html">Leaderboard</a></li>
+            <li><a href="doctor-portal.html" class="nav-join-link" style="color: var(--vr-cyan); font-weight: 800; border: 1px solid var(--vr-cyan); padding: 5px 15px; border-radius: 5px; margin-right: 10px;">JOIN</a></li>
         </ul>
     </nav>
 
     <!-- ─── HEADER ─── -->
-    <header class="guide-header-box">
-        <h1 data-cms="guide-hero-title">System Documentation</h1>
-        <p data-cms="guide-hero-desc">Master the AeroTwin XR ecosystem with our comprehensive visual guide and technical documentation. Everything you need to operate the VR simulation flawlessly.</p>
+    <header class="guide-header-box gs-fade">
+        <h1 data-cms="guide-hero-title">VIRTUAL LOGIC</h1>
+        <p data-cms="guide-hero-desc">Explore the immersive capabilities of the AeroTwin VR environment. From in-game telemetry to the unified multiplayer communication systems, learn how our Unity-powered engine takes aviation to the next level.</p>
     </header>
 
     <!-- ─── MAIN CONTENT ─── -->
     <div class="guide-container">
-        <!-- Sticky Navigation -->
-        <aside class="sidebar gs-reveal">
-            <h3>Quick Actions</h3>
-            <ul class="sidebar-links">
-                <li><a href="#top" class="active">Top of Page</a></li>
-                <li><a href="features.html">Platform Features</a></li>
-                <li><a href="doctor-portal.html">Instructor Login</a></li>
-                <li><a href="admin.html">System Admin</a></li>
-                <li><a href="support.html">Contact Support</a></li>
+        
+        <!-- Sticky HUD Sidebar -->
+        <aside class="sidebar-hud gs-fade">
+            <h3>SYS_CONSOLE</h3>
+            <ul class="hud-links">
+                <li><a href="#top"><span>Core Engine</span> <span class="data">[OBJ.1]</span></a></li>
+                <li><a href="features.html"><span>Web Features</span> <span class="data">[OBJ.2]</span></a></li>
+                <li><a href="doctor-portal.html"><span>Instructor Link</span> <span class="data">[LINK.X]</span></a></li>
+                <li><a href="admin.html"><span>Root Access</span> <span class="data">[SUDO]</span></a></li>
             </ul>
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,242,255,0.2); font-family: var(--tech-font); color: #94a3b8; font-size: 12px; line-height: 1.8;">
+                > RENDER_TARGET: VRD-99 <br>
+                > ENGINE: UNITY_ATXR <br>
+                > LATENCY: 12ms <br>
+                <span class="pulse" style="display:inline-block; margin-top: 10px; color: #00ff88;">> SYS_ONLINE</span>
+            </div>
         </aside>
 
-        <!-- Dynamic Content Array -->
+        <!-- Dynamic Content Feed -->
         <main class="guide-feed" data-cms-array="guide-steps-array">
-            <article class="guide-card gs-reveal">
-                <div class="guide-card-media">
-                    <div class="media-badge">{{type}}</div>
-                    <!-- Smart rendering logic handled by cms.js auto-magically -->
-                    <video src="{{mediaUrl}}" autoplay loop muted playsinline style="display: {{videoDisplay}}"></video>
-                    <img src="{{mediaUrl}}" alt="{{title}}" style="display: {{imageDisplay}}">
+            <!-- This is the loop template executed by cms.js -->
+            <article class="guide-card-3d gs-fade">
+                
+                <div class="media-3d-wrapper js-tilt">
+                    <div class="media-3d-box">
+                        <div class="scanner-line"></div>
+                        <div class="crosshair tl"></div>
+                        <div class="crosshair br"></div>
+                        <div class="vector-hud">POS: X:14.2 Y:99 Z:0.1</div>
+                        
+                        <video src="{{mediaUrl}}" autoplay loop muted playsinline style="display: {{videoDisplay}}"></video>
+                        <img src="{{mediaUrl}}" alt="{{title}}" style="display: {{imageDisplay}}">
+                    </div>
                 </div>
-                <div class="guide-card-content">
-                    <div class="step-number">SYS</div>
+
+                <div class="content-stack">
+                    <div class="bg-watermark">ATXR_</div>
+                    <div class="tech-badge">ID_{{type}}</div>
                     <h2>{{title}}</h2>
                     <p>{{desc}}</p>
+                    <div class="tech-line"></div>
                 </div>
+
             </article>
         </main>
     </div>
 
     <!-- ─── CALL TO ACTION BANNER ─── -->
-    <section class="section-padding text-center">
-        <div class="container">
-            <div class="glass-panel" style="padding: 60px 40px; background: rgba(0,242,255,0.05); border-color: rgba(0,242,255,0.2);">
-                <h2 style="font-size: 36px; margin-bottom: 20px; color: #fff;">Need More Help?</h2>
-                <p style="color: #94a3b8; font-size: 18px; margin-bottom: 30px;">Reach out to our engineering support team for 24/7 technical assistance.</p>
-                <a href="support.html" class="btn-main" style="padding: 15px 40px; border-radius: 50px; font-size: 16px;">Contact Support</a>
-            </div>
+    <section style="padding: 100px 0;text-align: center;position: relative;z-index: 10;">
+        <div style="max-width: 800px; margin: 0 auto; background: rgba(0,242,255,0.05); padding: 60px; border: 1px solid rgba(0,242,255,0.2); backdrop-filter: blur(10px); clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);">
+            <h2 style="font-size: 40px; margin-bottom: 20px; color: #fff; font-weight: 800; font-family: var(--tech-font);">[ OVERRIDE_ACCESS ]</h2>
+            <p style="color: #94a3b8; font-size: 20px; margin-bottom: 40px;">Need deep technical modifications? Access the raw engineering documentations or contact VR support directly.</p>
+            <a href="support.html" class="btn-main" style="padding: 15px 40px; font-size: 16px; background: var(--vr-cyan); color: #000; font-weight: 900; font-family: var(--tech-font); letter-spacing: 2px;">INITIATE CHAT</a>
         </div>
     </section>
 
     <!-- ─── FOOTER ─── -->
-    <footer class="main-footer" data-cms="global-footer">
-        <div class="footer-bottom" style="margin-top: 0; padding-top: 40px;">
-            <div class="footer-bottom-logo">AEROTWIN</div>
-            <div class="footer-icons">
-                <span>📡</span> <span>⚙️</span> <span>☁️</span> <span>✈️</span>
-            </div>
+    <footer class="main-footer" data-cms="global-footer" style="position:relative; z-index: 10; background: rgba(3,7,18,0.9); border-top: 1px solid rgba(0,242,255,0.2);">
+        <div class="footer-bottom">
+            <div class="footer-bottom-logo" style="color: var(--vr-cyan); font-family: var(--tech-font);">AEROTWIN_OP</div>
             <div class="footer-copy">
                 <span data-cms="footer-copyright">Copyright © 2026</span>
-                <a href="privacy.html">Privacy Policy</a>
-                <a href="terms.html">Terms of Service</a>
             </div>
         </div>
     </footer>
@@ -348,26 +493,60 @@
             else nav.classList.remove('scrolled');
         });
 
-        // Initialize GSAP reveals after CMS loads content
-        function initAnimations() {
+        // Initialize GSAP & 3D Tilt Logic after CMS rendering
+        function initInteractions() {
+            // 1. GSAP Reveals
             gsap.registerPlugin(ScrollTrigger);
-            gsap.utils.toArray('.gs-reveal').forEach(function(elem) {
+            gsap.utils.toArray('.gs-fade').forEach(function(elem) {
                 ScrollTrigger.create({
                     trigger: elem,
-                    start: "top 85%",
+                    start: "top 80%",
                     onEnter: function() {
-                        gsap.fromTo(elem, { y: 50, opacity: 0 }, { duration: 1, y: 0, opacity: 1, ease: "power3.out", overwrite: "auto" });
+                        gsap.fromTo(elem, { y: 100, opacity: 0, rotationX: 10 }, { duration: 1.2, y: 0, opacity: 1, rotationX: 0, ease: "power4.out", overwrite: "auto" });
                     },
                     once: true
                 });
             });
+
+            // 2. 3D Mouse Tilt Effect for VR Cards
+            document.querySelectorAll('.js-tilt').forEach(el => {
+                const box = el.querySelector('.media-3d-box');
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const rotateX = ((y - centerY) / centerY) * -15; // Max 15deg
+                    const rotateY = ((x - centerX) / centerX) * 15;
+                    
+                    gsap.to(box, {
+                        duration: 0.3,
+                        rotationX: rotateX,
+                        rotationY: rotateY,
+                        transformPerspective: 1500,
+                        ease: "power2.out"
+                    });
+                });
+                
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(box, {
+                        duration: 1,
+                        rotationX: 0,
+                        rotationY: 0,
+                        ease: "elastic.out(1, 0.3)"
+                    });
+                });
+            });
         }
 
-        // Delay animation init to let CMS compile DOM
-        setTimeout(initAnimations, 1500);
+        // Delay init to allow CMS to inject DOM via array logic
+        setTimeout(initInteractions, 1500);
 
     </script>
-    <script src="cms.js?v=2.0"></script>
+    <script src="cms.js?v=3.0"></script>
 </body>
 
 </html>
