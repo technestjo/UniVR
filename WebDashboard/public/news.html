@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-cms="news-page-title">News | AeroTwin XR</title>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
 
@@ -37,7 +37,7 @@
     <section class="section-padding">
         <div class="container">
             <div class="grid-3" data-cms-array="news-articles-array">
-                <div class="card glass-panel" style="cursor: pointer; position: relative; overflow: hidden;" onclick="openNewsModal(this)">
+                <div class="card glass-panel" style="position: relative; overflow: hidden;" onclick="openNewsModal(this)">
                     <!-- Hidden data safely stored as HTML -->
                     <div class="n-full-title" style="display:none">{{title}}</div>
                     <div class="n-full-date" style="display:none">{{date}}</div>
@@ -149,5 +149,6 @@
 </body>
 
 </html>
+
 
 

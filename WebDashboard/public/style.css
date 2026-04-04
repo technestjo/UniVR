@@ -18,6 +18,20 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── GLOBAL CURSOR (Meta Quest Controller) ─── */
+html,
+html body,
+html body * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300f2ff' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300f2ff' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff' opacity='0.8'/%3E%3C/g%3E%3C/svg%3E") 2 2, auto !important;
+}
+
+html a, html button, html input, html select, html textarea,
+html .pointer, html .nav-btn, html .cms-sidebar-btn,
+html [onclick], html label, html [role="button"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300ff88' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300ff88' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff'/%3E%3Ccircle cx='10' cy='12' r='5' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 2 2, pointer !important;
+}
+
 html { scroll-behavior: smooth; }
 body {
     font-family: var(--font-body);
@@ -25,11 +39,6 @@ body {
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.4;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300f2ff' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300f2ff' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff' opacity='0.8'/%3E%3C/g%3E%3C/svg%3E") 2 2, auto !important;
-}
-
-a, button, input, textarea, .pointer, .nav-btn, .cms-sidebar-btn {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300ff88' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300ff88' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff'/%3E%3Ccircle cx='10' cy='12' r='5' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 2 2, pointer !important;
 }
 
 /* ===================================================
@@ -636,11 +645,31 @@ nav.scrolled {
 }
 
 @media (max-width: 1024px) {
-    nav { position: absolute; flex-direction: column; gap: 15px; padding: 15px 5%; background: rgba(5,8,10,0.98); border-bottom: 1px solid var(--border-cyan); }
-    .nav-links { gap: 15px; overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 5px; justify-content: flex-start; scrollbar-width: none; }
+    /* Nav stays STICKY (not absolute) so it follows the user on all pages while scrolling */
+    nav {
+        position: sticky !important;
+        top: 0 !important;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 5%;
+        background: rgba(5, 8, 10, 0.98) !important;
+        border-bottom: 1px solid var(--border-cyan);
+        z-index: 9000;
+        backdrop-filter: blur(12px);
+    }
+    .nav-links {
+        gap: 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+        padding-bottom: 5px;
+        justify-content: flex-start;
+        scrollbar-width: none;
+    }
     .nav-links::-webkit-scrollbar { display: none; }
-    .hero { min-height: auto; padding-top: 150px; padding-bottom: 80px; }
-    .page-header { padding: 180px 0 60px; }
+    /* Give hero extra top space since nav is now sticky and wraps */
+    .hero { min-height: auto; padding-top: 60px; padding-bottom: 80px; }
+    .page-header { padding: 80px 0 50px; }
 }
 
 /* ─── ADMIN PORTAL (admin.html) ─── */

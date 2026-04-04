@@ -133,8 +133,9 @@ async function applyCMS() {
                             });
                             // Clean up unmapped variables
                             itemStr = itemStr.replace(/{{[^{}]+}}/g, '');
-                            // Replace data-src with src to prevent 404s before render
+                            // Convert data-src (and media-lazy) to real src AFTER variable substitution
                             itemStr = itemStr.replace(/data-src=/g, 'src=');
+                            itemStr = itemStr.replace(/media-lazy=/g, 'src=');
                             finalHtml += itemStr;
                         });
                         
