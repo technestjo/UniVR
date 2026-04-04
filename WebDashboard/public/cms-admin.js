@@ -211,6 +211,35 @@ const TN_SCHEMA = {
             }
         ]
     },
+    guide: {
+        title: "System Guide Content",
+        sections: [
+            {
+                id: "guide-hero",
+                title: "Hero Section",
+                type: "fixed",
+                fields: [
+                    { key: "guide-hero-title", label: "Page Title", type: "text", width: "100%" },
+                    { key: "guide-hero-desc", label: "Description", type: "textarea", width: "100%" }
+                ]
+            },
+            {
+                id: "guide-steps",
+                title: "Documentation Steps",
+                type: "array",
+                arrayKey: "guide-steps-array",
+                defaultItem: { title: "New Step", desc: "Explain the system here...", mediaUrl: "assets/hero-bg.jpg", type: "IMAGE", videoDisplay: "none", imageDisplay: "block" },
+                fields: [
+                    { key: "title", label: "Step Title", type: "text", width: "100%" },
+                    { key: "desc", label: "Step Description", type: "textarea", width: "100%" },
+                    { key: "mediaUrl", label: "Media URL (Image, GIF, or MP4)", type: "text", width: "100%" },
+                    { key: "type", label: "Media Badge Text (e.g. VIDEO, GIF, SETUP)", type: "text", width: "50%" },
+                    { key: "videoDisplay", label: "Show Video? (block/none)", type: "text", width: "25%" },
+                    { key: "imageDisplay", label: "Show Image? (block/none)", type: "text", width: "25%" }
+                ]
+            }
+        ]
+    },
     global: {
         title: "Global Website Settings",
         sections: [

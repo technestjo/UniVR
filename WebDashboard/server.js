@@ -557,10 +557,20 @@ const seedData = [
         // Global / Footer
         { page: 'global', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
         { page: 'global', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
-        { page: 'global', key: 'index-video-src', content: 'https://media.w3.org/2010/05/sintel/trailer.mp4' },
+        { page: 'global', key: 'index-video-src', content: 'intro.mp4' },
         { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
         { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
-        { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' }
+        { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' },
+
+        // Guide Page
+        { page: 'guide', key: 'guide-hero-title', content: 'VIRTUAL REALITY LOGIC & FEATURES' },
+        { page: 'guide', key: 'guide-hero-desc', content: 'Explore the immersive capabilities of the AeroTwin VR environment. From in-game telemetry to the unified multiplayer communication systems, learn how our Unity-powered engine takes aviation to the next level.' },
+        { page: 'guide', key: 'guide-steps-array', content: JSON.stringify([
+            { title: "In-Game Voice & Chat Console", desc: "Our unified comms system allows trainees to interface directly with instructors. The in-game VR floating chat panel utilizes spatial audio and text decoding to synchronize global comms seamlessly.", mediaUrl: "assets/hero-bg.jpg", type: "COMMUNICATION" },
+            { title: "Interactive Haptic Panels", desc: "Every button, dial, and switch inside the Unity cockpit requires physical touch interaction. Haptic feedback enables trainees to feel precise tension points when inspecting the aircraft engine or toggling emergency functions.", mediaUrl: "intro.mp4", type: "HAPTICS" },
+            { title: "Live Telemetry Overlay", desc: "Inside the VR lenses, pilots have a dedicated HUD overlay tracking Engine Temps, Vibrations, and Oil Pressure. The data reacts in real-time, syncing over the Photon Network directly to the instructor portal.", mediaUrl: "assets/hero-bg-new.webp", type: "HUD ANALYTICS" },
+            { title: "Defect Identification Tool", desc: "Using the VR smart flashlight and scanner tool, trainees can detect microscopic oil leaks and stress fractures on engine components. The tool triggers specific events logged exactly to their evaluation scores.", mediaUrl: "assets/hero-bg.jpg", type: "DIAGNOSTICS" }
+        ])}
     ];
 
 app.get('/api/admin/seed', verifyToken, async (req, res) => {
@@ -811,7 +821,7 @@ app.post('/api/device/session/join', async (req, res) => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const { deviceId, frame_base64, trainee_name, doctor_code, stats } = req.body;
+    const { deviceId, frame_base64, trainee_name, doctor_code, doctorCode, stats } = req.body;
     
     // Periodically log stream payload keys to avoid spamming the console 10 times a sec
     if (Math.random() < 0.05) {
@@ -828,9 +838,11 @@ app.post('/api/device/stream', (req, res) => {
     if (!deviceId || !frame_base64) return res.status(400).send('Missing data');
 
     const existing = deviceFrames[deviceId] || {};
+    const finalDocCode = doctorCode || doctor_code || existing.doctorCode || null;
+    
     deviceFrames[deviceId] = {
         data: frame_base64,
-        doctorCode: doctor_code || existing.doctorCode || null,
+        doctorCode: finalDocCode,
         traineeName: trainee_name || existing.traineeName || "Active Trainee",
         atCode: existing.atCode || "AT-????",
         // Extract stats from the incoming body
@@ -848,8 +860,12 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
     for (const [id, frame] of Object.entries(deviceFrames)) {
         // Only show frames from the last 30 seconds
         if (now - frame.timestamp < 30000) {
-            // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame
-            let isAllowed = (req.user.role === 'admin') || (String(frame.doctorCode) === String(req.user.code));
+            // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame (case-insensitive)
+            const rDoc = req.user.code ? String(req.user.code).toLowerCase().trim() : null;
+            const fDoc = frame.doctorCode ? String(frame.doctorCode).toLowerCase().trim() : null;
+            
+            let isAllowed = (req.user.role === 'admin') || (fDoc && rDoc && fDoc === rDoc) || (!fDoc && req.user.role === 'doctor'); // Allow if doctorCode was somehow missed but stream is active? No, let's keep it strict but case-insensitive.
+            isAllowed = (req.user.role === 'admin') || (fDoc === rDoc);
 
             if (isAllowed) {
                 active.push({

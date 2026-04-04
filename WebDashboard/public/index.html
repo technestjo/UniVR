@@ -22,6 +22,7 @@
             <li><a href="news.html">News</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="features.html">Features</a></li>
+            <li><a href="guide.html">Guide</a></li>
             <li><a href="leaderboard.html">Trainee Leaderboard</a></li>
             <li><a href="doctor-portal.html" class="nav-join-link" style="color: var(--accent-cyan); font-weight: 800; border: 1px solid var(--accent-cyan); padding: 5px 15px; border-radius: 5px; margin-right: 10px;">JOIN</a></li>
             <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
@@ -55,7 +56,7 @@
 
         <!-- The Video that appears "behind" the lenses once inside -->
         <div class="video-container" id="video-container">
-            <video id="demo-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-cms="index-video-src" poster="assets/hero-bg.jpg" loop muted playsinline crossorigin="anonymous"></video>
+            <video id="demo-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-cms="index-video-src" poster="assets/hero-bg.jpg" loop muted playsinline></video>
             <div class="video-overlay-ui">
                 <div class="ui-recording" data-cms="index-video-rec">🔴 REC</div>
                 <div class="ui-crosshair"></div>
@@ -121,6 +122,7 @@
                     <li><a href="news.html">News</a></li>
                     <li><a href="about.html">About</a></li>
                     <li><a href="features.html">Features</a></li>
+                    <li><a href="guide.html">Guide</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -185,21 +187,20 @@
 
         // Auto-detect & preload images sequentially
         function loadNextImage(index) {
+            // Stop searching to prevent 404s, we have 35 frames
+            if (index >= 35) {
+                if (images.length === 0) render();
+                return;
+            }
+
             const img = new Image();
             img.onload = () => {
                 images.push(img);
-                consecutiveMisses = 0;
                 if (index === 0) render(); // initial paint once first frame is found
                 loadNextImage(index + 1);  // keep probing
             };
             img.onerror = () => {
-                consecutiveMisses++;
-                // Stop searching after 2 consecutive missing files to prevent infinite 404s
-                if (consecutiveMisses < 2 && index < 300) {
-                    loadNextImage(index + 1);
-                } else {
-                    if (images.length === 0) render(); // Still empty, show placeholder
-                }
+                if (images.length === 0) render(); // Still empty, show placeholder
             };
             img.src = `frames/${(index + 1).toString().padStart(4, '0')}.png`;
         }

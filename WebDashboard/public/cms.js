@@ -112,6 +112,14 @@ async function applyCMS() {
                         
                         items.forEach(item => {
                             let itemStr = template;
+                            
+                            // Smart Auto-detect for Media (Video vs Image)
+                            if (item.mediaUrl) {
+                                let isVideo = item.mediaUrl.toLowerCase().endsWith('.mp4') || item.mediaUrl.toLowerCase().endsWith('.webm');
+                                item.videoDisplay = isVideo ? 'block' : 'none';
+                                item.imageDisplay = isVideo ? 'none' : 'block';
+                            }
+
                             // Replace all {{key}} with actual value
                             Object.keys(item).forEach(k => {
                                 let val = item[k] || '';
