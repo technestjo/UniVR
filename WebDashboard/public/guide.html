@@ -443,7 +443,7 @@
                         <div class="scanner-line"></div>
                         <div class="crosshair tl"></div>
                         <div class="crosshair br"></div>
-                        <div class="vector-hud">POS: X:14.2 Y:99 Z:0.1</div>
+                        <div class="vector-hud">POS: X:00.0 Y:00.0 Z:0.0</div>
                         
                         <video src="{{mediaUrl}}" autoplay loop muted playsinline style="display: {{videoDisplay}}"></video>
                         <img src="{{mediaUrl}}" alt="{{title}}" style="display: {{imageDisplay}}">
@@ -518,6 +518,14 @@
                     toc.appendChild(li);
                 });
             }
+
+            // 0.5 Randomize Vector HUD Coordinates
+            document.querySelectorAll('.vector-hud').forEach(hud => {
+                const rx = (Math.random() * 200 - 100).toFixed(1);
+                const ry = (Math.random() * 100).toFixed(1);
+                const rz = (Math.random() * 10 - 5).toFixed(2);
+                hud.innerText = `POS: X:${rx} Y:${ry} Z:${rz}`;
+            });
 
             // 1. Array of crazy Entry Animations for GSAP
             gsap.registerPlugin(ScrollTrigger);

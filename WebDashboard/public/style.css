@@ -25,6 +25,11 @@ body {
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.4;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300f2ff' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300f2ff' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff' opacity='0.8'/%3E%3C/g%3E%3C/svg%3E") 6 6, auto;
+}
+
+a, button, .pointer, .nav-btn, .cms-sidebar-btn {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='translate(6,6) rotate(-35 10 10)'%3E%3Cellipse cx='10' cy='10' rx='10' ry='5' fill='none' stroke='%2300ff88' stroke-width='2'/%3E%3Cpath d='M7 13 L13 13 L12 28 C12 30 8 30 8 28 Z' fill='%23222' stroke='%2300ff88' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='12' r='3' fill='%23fff'/%3E%3Ccircle cx='10' cy='12' r='5' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 6 6, pointer !important;
 }
 
 /* ─── UTILITIES ─── */
