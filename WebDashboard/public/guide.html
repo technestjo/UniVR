@@ -422,11 +422,8 @@
         <!-- Sticky HUD Sidebar -->
         <aside class="sidebar-hud gs-fade">
             <h3>SYS_CONSOLE</h3>
-            <ul class="hud-links">
-                <li><a href="#top"><span>Core Engine</span> <span class="data">[OBJ.1]</span></a></li>
-                <li><a href="features.html"><span>Web Features</span> <span class="data">[OBJ.2]</span></a></li>
-                <li><a href="doctor-portal.html"><span>Instructor Link</span> <span class="data">[LINK.X]</span></a></li>
-                <li><a href="admin.html"><span>Root Access</span> <span class="data">[SUDO]</span></a></li>
+            <ul class="hud-links" id="dynamic-toc">
+                <!-- Links will be dynamically populated via JS -->
             </ul>
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,242,255,0.2); font-family: var(--tech-font); color: #94a3b8; font-size: 12px; line-height: 1.8;">
                 > RENDER_TARGET: VRD-99 <br>
@@ -495,14 +492,71 @@
 
         // Initialize GSAP & 3D Tilt Logic after CMS rendering
         function initInteractions() {
-            // 1. GSAP Reveals
+            // 0. Dynamic Sidebar HUD Integration (Table of Contents)
+            const toc = document.getElementById('dynamic-toc');
+            if (toc) {
+                toc.innerHTML = '';
+                const cards = document.querySelectorAll('.guide-card-3d');
+                cards.forEach((card, index) => {
+                    const id = 'sys-step-' + index;
+                    card.id = id; // Set unique ID for scrolling anchor
+                    
+                    const titleEl = card.querySelector('h2');
+                    const title = titleEl ? titleEl.innerText : 'SYS_OBJ_' + index;
+                    
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#${id}"><span>${title}</span> <span class="data">[OBJ.${index+1}]</span></a>`;
+                    
+                    li.querySelector('a').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const headerOffset = 100;
+                        const elementPosition = card.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                    });
+                    
+                    toc.appendChild(li);
+                });
+            }
+
+            // 1. Array of crazy Entry Animations for GSAP
             gsap.registerPlugin(ScrollTrigger);
-            gsap.utils.toArray('.gs-fade').forEach(function(elem) {
+            
+            const animationStyles = [
+                { x: -200, rotationY: 45, opacity: 0 }, // Slide from Left, twisted
+                { x: 200, rotationY: -45, opacity: 0 }, // Slide from Right, twisted
+                { y: 200, scale: 0.7, opacity: 0 },     // Grow from bottom
+                { z: -500, rotationX: 45, opacity: 0 }  // Fly in from deep Z-space
+            ];
+
+            gsap.utils.toArray('.gs-fade').forEach(function(elem, i) {
+                // Determine animation style
+                let startProps = { opacity: 0 };
+                
+                // Keep sidebar and headers standard
+                if (elem.classList.contains('guide-header-box') || elem.classList.contains('sidebar-hud')) {
+                    startProps.y = 100;
+                    startProps.rotationX = 10;
+                } else {
+                    // It's a card. Cycle through the 4 styles so every new card has a fresh animation!
+                    // 'i' includes the header and sidebar we just skipped, so subtract 2 for true index
+                    const styleIdx = Math.max(0, i - 2) % animationStyles.length;
+                    startProps = { ...animationStyles[styleIdx] };
+                }
+
                 ScrollTrigger.create({
                     trigger: elem,
-                    start: "top 80%",
+                    start: "top 85%",
                     onEnter: function() {
-                        gsap.fromTo(elem, { y: 100, opacity: 0, rotationX: 10 }, { duration: 1.2, y: 0, opacity: 1, rotationX: 0, ease: "power4.out", overwrite: "auto" });
+                        gsap.fromTo(elem, startProps, { 
+                            duration: 1.4, 
+                            x: 0, y: 0, z: 0, 
+                            scale: 1, 
+                            opacity: 1, 
+                            rotationX: 0, rotationY: 0, 
+                            ease: "power3.out", 
+                            overwrite: "auto" 
+                        });
                     },
                     once: true
                 });
