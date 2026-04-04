@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AeroTwin XR | Immersive VR System Guide</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4">
     <link rel="icon" type="image/png" href="logo.png">
 
     <!-- GSAP for core animations -->
@@ -445,8 +445,8 @@
                         <div class="crosshair br"></div>
                         <div class="vector-hud">POS: X:00.0 Y:00.0 Z:0.0</div>
                         
-                        <video src="{{mediaUrl}}" autoplay loop muted playsinline style="display: {{videoDisplay}}"></video>
-                        <img src="{{mediaUrl}}" alt="{{title}}" style="display: {{imageDisplay}}">
+                        <video data-src="{{mediaUrl}}" autoplay loop muted playsinline style="display: {{videoDisplay}}"></video>
+                        <img data-src="{{mediaUrl}}" alt="{{title}}" style="display: {{imageDisplay}}">
                     </div>
                 </div>
 
