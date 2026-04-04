@@ -1,16 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
+const fs = require('fs');
+const path = require('path');
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-cms="features-page-title">Features | AeroTwin XR</title>
-    <link rel="stylesheet" href="style.css?v=5">
-    <link rel="icon" type="image/png" href="logo.png">
-</head>
+const publicDir = path.join(__dirname, 'public');
 
-<body>
-        <nav id="navbar">
+const standardNav = \    <nav id="navbar">
         <a href="index.html" class="nav-logo">
             <img src="logo.png" alt="AeroTwin Logo">
             AeroTwin XR
@@ -19,35 +12,15 @@
             <li><a href="index.html" class="nav-home">Home</a></li>
             <li><a href="news.html" class="nav-news">News</a></li>
             <li><a href="about.html" class="nav-about">About</a></li>
-            <li><a href="features.html" class="nav-features active">Features</a></li>
+            <li><a href="features.html" class="nav-features">Features</a></li>
             <li><a href="guide.html" class="nav-guide">Guide</a></li>
             <li><a href="leaderboard.html" class="nav-leaderboard">Leaderboard</a></li>
             <li><a href="doctor-portal.html" class="nav-join-link" style="color: var(--accent-cyan); font-weight: 800; border: 1px solid var(--accent-cyan); padding: 5px 15px; border-radius: 5px; margin-right: 10px;">JOIN</a></li>
             <li><a href="pricing.html" class="btn-get-started">Get Started</a></li>
         </ul>
-    </nav>
+    </nav>\;
 
-    <header class="page-header">
-        <div class="container">
-            <h1 class="text-cyan" data-cms="features-hero-title">Unparalleled Features</h1>
-            <p class="text-dim" data-cms="features-hero-desc">Cutting-edge technology for the ultimate flight simulation
-                experience.</p>
-        </div>
-    </header>
-
-    <section class="section-padding">
-        <div class="container">
-            <div class="grid-3" data-cms-array="features-detailed-array">
-                <div class="card glass-panel">
-                    <div style="font-size: 40px; color: var(--accent-cyan); margin-bottom: 20px;">{{icon}}</div>
-                    <h3 style="font-family: var(--font-heading); margin-bottom: 15px;">{{title}}</h3>
-                    <p class="text-dim">{{desc}}</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-        <footer class="main-footer" data-cms="global-footer">
+const standardFooter = \    <footer class="main-footer" data-cms="global-footer">
         <div class="footer-grid">
             <div class="footer-brand">
                 <div class="footer-logo-box">
@@ -87,18 +60,46 @@
         <div class="footer-bottom">
             <div class="footer-bottom-logo">AEROTWIN</div>
             <div class="footer-icons">
-                <span>📡</span> <span>⚙️</span> <span>☁️</span> <span>✈️</span>
+                <span>??</span> <span>??</span> <span>??</span> <span>??</span>
             </div>
             <div class="footer-copy">
-                <span>Copyright © 2026</span>
+                <span>Copyright � 2026</span>
                 <a href="privacy.html">Privacy Policy</a>
                 <a href="terms.html">Terms of Service</a>
             </div>
         </div>
-    </footer>
-    <script src="cms.js"></script>
-</body>
+    </footer>\;
 
-</html>
+const files = ['index.html', 'about.html', 'contact.html', 'faq.html', 'features.html', 'guide.html', 'leaderboard.html', 'news.html', 'pricing.html', 'privacy.html', 'support.html', 'terms.html', 'updates.html'];
 
+files.forEach(file => {
+    const filePath = path.join(publicDir, file);
+    if (!fs.existsSync(filePath)) return;
+    
+    let content = fs.readFileSync(filePath, 'utf8');
 
+    // 1. Replace CSS cache buster
+    content = content.replace(/href="style\.css\?.*?"/g, 'href="style.css?v=5"');
+
+    // 2. Replace Nav
+    // Using regex to grab from <nav ...> to </nav>
+    content = content.replace(/<nav[\s\S]*?<\/nav>/, standardNav);
+    
+    // 3. Set Active Class
+    const fileBase = file.split('.')[0]; 
+    if(fileBase !== 'index') {
+        const classTarget = 'nav-' + fileBase;
+        // make sure there's no rogue 'class="active"' if we just pasted it, but standardNav has none except home
+        // actually standardNav above doesn't have active class. We'll add it.
+        const regexActive = new RegExp('(class="' + classTarget + '")', 'g');
+        content = content.replace(regexActive, '\ active');
+    } else {
+        content = content.replace(/class="nav-home"/, 'class="nav-home active"');
+    }
+
+    // 4. Replace Footer
+    content = content.replace(/<footer[\s\S]*?<\/footer>/, standardFooter);
+
+    fs.writeFileSync(filePath, content);
+    console.log('Fixed:', file);
+});
