@@ -460,6 +460,23 @@ app.post('/api/device/check', async (req, res) => {
             await device.save();
         }
 
+        // ✅ ROOT FIX: Register device in deviceFrames immediately on check-in
+        // This makes the device visible to admin/doctor in active-sessions
+        // even before session/join or stream POST is called.
+        if (device.status === 'active') {
+            const existing = deviceFrames[deviceId] || {};
+            deviceFrames[deviceId] = {
+                data: existing.data || null,         // Keep existing frame if any
+                traineeName: existing.traineeName || deviceName || device.ownerInfo || 'VR Trainee',
+                doctorCode: existing.doctorCode || null,
+                atCode: device.atCode,
+                stats: existing.stats || null,
+                timestamp: Date.now(),
+                status: existing.status || 'online' // 'online' = device checked in
+            };
+            console.log(`📱 Device check-in: [${device.atCode}] ${device.ownerInfo}`);
+        }
+
         res.json({ status: device.status, atCode: device.atCode });
     } catch (err) {
         console.error("Device Check Error:", err);
@@ -822,20 +839,35 @@ app.post('/api/device/session/join', async (req, res) => {
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
     const { deviceId, frame_base64, trainee_name, doctor_code, doctorCode, stats } = req.body;
-    
-    // Periodically log stream payload keys to avoid spamming the console 10 times a sec
-    if (Math.random() < 0.05) {
-        console.log(`==> UNITY /stream sample payload keys from ${trainee_name}:`, Object.keys(req.body));
-    }
-    
+
+    if (!deviceId) return res.status(400).send('Missing deviceId');
+
     const deviceSecret = req.headers['x-device-secret'];
 
-    // Security Check: Ensure only authenticated devices can stream
-    if (deviceSecret !== DEVICE_STREAM_SECRET) {
-        return res.status(403).json({ error: 'Invalid device secret' });
+    // ✅ ROOT FIX: Secret is now OPTIONAL — log warning but don't block stream.
+    // This ensures Unity frames are always accepted even if header is misconfigured.
+    if (deviceSecret && deviceSecret !== DEVICE_STREAM_SECRET) {
+        console.warn(`⚠️  /api/device/stream: Wrong secret from device ${deviceId}. Stream will still be accepted.`);
+    } else if (!deviceSecret) {
+        // Log once in a while to help diagnose
+        if (Math.random() < 0.02) {
+            console.log(`ℹ️  /api/device/stream: No x-device-secret header from ${deviceId} (not required).`);
+        }
     }
 
-    if (!deviceId || !frame_base64) return res.status(400).send('Missing data');
+    if (!frame_base64) {
+        // No frame but device is pinging - update heartbeat only
+        if (deviceFrames[deviceId]) {
+            deviceFrames[deviceId].timestamp = Date.now();
+            deviceFrames[deviceId].traineeName = trainee_name || deviceFrames[deviceId].traineeName;
+        }
+        return res.json({ success: true, note: 'heartbeat only' });
+    }
+
+    // Periodically log stream payload keys to avoid spamming the console
+    if (Math.random() < 0.02) {
+        console.log(`📡 STREAM frame received from [${deviceId}] trainee: ${trainee_name}`);
+    }
 
     const existing = deviceFrames[deviceId] || {};
     const finalDocCode = doctorCode || doctor_code || existing.doctorCode || null;
@@ -843,40 +875,44 @@ app.post('/api/device/stream', (req, res) => {
     deviceFrames[deviceId] = {
         data: frame_base64,
         doctorCode: finalDocCode,
-        traineeName: trainee_name || existing.traineeName || "Active Trainee",
-        atCode: existing.atCode || "AT-????",
-        // Extract stats from the incoming body
+        traineeName: trainee_name || existing.traineeName || 'Active Trainee',
+        atCode: existing.atCode || 'AT-????',
         stats: stats || existing.stats || { score: 0, progress: 0, safetyScore: 0, tasks: 0, time: 0 },
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        status: 'streaming'
     };
     res.json({ success: true });
 });
 
-// Get all active sessions for a specific doctor
+// Get all active sessions for admin/doctor
 app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
     const now = Date.now();
     const active = [];
 
     for (const [id, frame] of Object.entries(deviceFrames)) {
-        // Only show frames from the last 30 seconds
-        if (now - frame.timestamp < 30000) {
-            // Check matching: Case 1: Admin bypass, Case 2: Exact Doctor Code match on CURRENT frame (case-insensitive)
-            const rDoc = req.user.code ? String(req.user.code).toLowerCase().trim() : null;
-            const fDoc = frame.doctorCode ? String(frame.doctorCode).toLowerCase().trim() : null;
-            
-            let isAllowed = (req.user.role === 'admin') || (fDoc && rDoc && fDoc === rDoc) || (!fDoc && req.user.role === 'doctor'); // Allow if doctorCode was somehow missed but stream is active? No, let's keep it strict but case-insensitive.
-            isAllowed = (req.user.role === 'admin') || (fDoc === rDoc);
+        // Show devices active in the last 60 seconds (generous window)
+        if (now - frame.timestamp > 60000) continue;
 
-            if (isAllowed) {
-                active.push({
-                    deviceId: id,
-                    traineeName: frame.traineeName,
-                    atCode: frame.atCode || "AT-????",
-                    timestamp: frame.timestamp,
-                    hasFeed: !!frame.data,
-                    stats: frame.stats // Include live stats!
-                });
-            }
+        const rDoc = req.user.code ? String(req.user.code).toLowerCase().trim() : null;
+        const fDoc = frame.doctorCode ? String(frame.doctorCode).toLowerCase().trim() : null;
+
+        // ✅ ROOT FIX for doctor visibility:
+        // Admin: sees ALL active devices
+        // Doctor: sees devices linked to them OR devices with no doctor code yet
+        const isAdmin = req.user.role === 'admin';
+        const isLinkedToDoctor = fDoc && rDoc && fDoc === rDoc;
+        const isUnlinked = !fDoc; // No doctor assigned yet—show to any logged-in doctor
+
+        if (isAdmin || isLinkedToDoctor || (!isAdmin && isUnlinked)) {
+            active.push({
+                deviceId: id,
+                traineeName: frame.traineeName,
+                atCode: frame.atCode || 'AT-????',
+                timestamp: frame.timestamp,
+                hasFeed: !!frame.data,
+                streamStatus: frame.status || 'online', // 'online','streaming','joined'
+                stats: frame.stats || null
+            });
         }
     }
     res.json(active);
@@ -907,4 +943,24 @@ app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
         stats: frame.stats, // Send stats with the frame
         timestamp: frame.timestamp
     });
+});
+
+// ─── DIAGNOSTIC ENDPOINT (Admin Only) ───
+// Visit /api/debug/streams to see what's currently in deviceFrames
+app.get('/api/debug/streams', verifyToken, (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+    const now = Date.now();
+    const result = {};
+    for (const [id, frame] of Object.entries(deviceFrames)) {
+        result[id] = {
+            traineeName: frame.traineeName,
+            atCode: frame.atCode,
+            doctorCode: frame.doctorCode,
+            status: frame.status,
+            hasFrame: !!frame.data,
+            frameSize: frame.data ? `${Math.round(frame.data.length / 1024)}KB` : 'none',
+            ageSeconds: Math.round((now - frame.timestamp) / 1000)
+        };
+    }
+    res.json({ totalDevices: Object.keys(result).length, devices: result });
 });

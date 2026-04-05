@@ -65,14 +65,20 @@ async function applyCMS() {
                 if (el.tagName === 'IMG') {
                     el.src = cmsData[key];
                 } else if (el.tagName === 'VIDEO') {
-                    // Only update src if it actually changed, then reload
+                    // Update the inner <source> element if it exists, otherwise set src directly
                     const newSrc = cmsData[key];
                     const currentSrc = el.getAttribute('data-cms-loaded') || '';
                     if (currentSrc !== newSrc) {
                         el.setAttribute('data-cms-loaded', newSrc);
-                        el.src = newSrc;
+                        const sourceEl = el.querySelector('source');
+                        if (sourceEl) {
+                            sourceEl.src = newSrc;
+                        } else {
+                            el.src = newSrc;
+                        }
                         el.load(); // Critical: browser must re-load after src change
                     }
+
                 } else if (el.tagName === 'SOURCE') {
                     el.src = cmsData[key];
                     if (el.parentElement && el.parentElement.tagName === 'VIDEO') {
