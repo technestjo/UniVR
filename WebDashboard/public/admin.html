@@ -739,8 +739,12 @@
                     
                     if (data.status === 'online') {
                         frameImg.src = `data:image/jpeg;base64,${data.frame}`;
-                        statusText.innerText = `● LIVE (Last: ${new Date(data.timestamp).toLocaleTimeString()})`;
+                        statusText.innerText = `● LIVE  (${new Date(data.timestamp).toLocaleTimeString()})`;
                         statusText.style.color = 'var(--success)';
+                    } else if (data.status === 'waiting') {
+                        // Session joined but no frames yet (VR not streaming yet)
+                        statusText.innerText = `⏳ ${data.traineeName || 'Trainee'} joined — waiting for video stream...`;
+                        statusText.style.color = '#ffcc00';
                     } else {
                         statusText.innerText = '● STREAM OFFLINE / WAITING';
                         statusText.style.color = 'var(--danger)';
@@ -751,7 +755,8 @@
                 }
                 
                 if (streamActive) {
-                    requestAnimationFrame(() => setTimeout(fetchFrame, 100));
+                    // Poll every 200ms to reduce server load while keeping feed smooth
+                    setTimeout(fetchFrame, 200);
                 }
             };
             

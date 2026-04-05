@@ -886,9 +886,19 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
 app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
     const frame = deviceFrames[req.params.deviceId];
     
-    // If no frame exists or it's older than 10 seconds -> Return "Offline" status (No 404 to avoid console Clutter)
-    if (!frame || (Date.now() - frame.timestamp > 10000)) {
+    // If no frame exists or it's older than 30 seconds -> Return "Offline" status
+    // (matches the 30s window used by active-sessions endpoint)
+    if (!frame || (Date.now() - frame.timestamp > 30000)) {
         return res.json({ status: 'offline' });
+    }
+
+    // If we have session metadata but no frame data yet, return "waiting" state
+    if (!frame.data) {
+        return res.json({ 
+            status: 'waiting',
+            traineeName: frame.traineeName,
+            atCode: frame.atCode
+        });
     }
 
     res.json({ 

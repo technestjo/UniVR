@@ -62,8 +62,22 @@ async function applyCMS() {
         elements.forEach(el => {
             const key = el.getAttribute('data-cms');
             if (cmsData[key]) {
-                if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'SOURCE') {
+                if (el.tagName === 'IMG') {
                     el.src = cmsData[key];
+                } else if (el.tagName === 'VIDEO') {
+                    // Only update src if it actually changed, then reload
+                    const newSrc = cmsData[key];
+                    const currentSrc = el.getAttribute('data-cms-loaded') || '';
+                    if (currentSrc !== newSrc) {
+                        el.setAttribute('data-cms-loaded', newSrc);
+                        el.src = newSrc;
+                        el.load(); // Critical: browser must re-load after src change
+                    }
+                } else if (el.tagName === 'SOURCE') {
+                    el.src = cmsData[key];
+                    if (el.parentElement && el.parentElement.tagName === 'VIDEO') {
+                        el.parentElement.load();
+                    }
                 } else if (el.tagName === 'A') {
                     // Quick check if it's a URL or text
                     if(cmsData[key].startsWith('http') || cmsData[key].startsWith('/')) {
