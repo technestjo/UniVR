@@ -20,7 +20,8 @@ const DEVICE_STREAM_SECRET = process.env.DEVICE_STREAM_SECRET || 'AeroTwin_Devic
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://AeroTwin_db_user:BK3YRMlQuc3enIzn@cluster0.erhwmqm.mongodb.net/univr?retryWrites=true&w=majority&appName=Cluster0';
 const ADMIN_USER = process.env.ADMIN_USER || 'AeroTwin_SuperAdmin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'XR_Secure_Admin_Access_Pass_2026!!';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDmh3NhaYNFAtQbYkFy3-IG0U_mqYX29VI';
+
 
 // ─── SECURITY MIDDLEWARE ───
 app.use(helmet({
