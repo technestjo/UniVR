@@ -7,34 +7,127 @@
     <link rel="stylesheet" href="style.css?v=6">
     <link rel="icon" type="image/png" href="logo.png">
     <style>
-        /* Live Stream Modal */
+        /* Live Stream Modal Next-Gen */
         #liveStreamModal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(10, 15, 25, 0.95);
             z-index: 10000;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
         }
-        #liveStreamModal img {
-            max-width: 95%;
-            max-height: 90%;
-            border: 2px solid var(--accent-blue);
-            box-shadow: 0 0 40px rgba(0,186,242,0.5);
+        .stream-container {
+            width: 95%;
+            max-width: 1400px;
+            height: 85vh;
+            background: #0f141e;
+            border: 1px solid rgba(0, 242, 255, 0.2);
             border-radius: 12px;
-            background: #000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
-        .stream-controls {
-            margin-top: 20px;
+        .stream-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+        }
+        .stream-title {
             display: flex;
             align-items: center;
-            gap: 20px;
-            background: rgba(255,255,255,0.05);
-            padding: 10px 20px;
-            border-radius: 50px;
+            gap: 12px;
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+        .stream-title .pulse {
+            width: 10px; height: 10px;
+            background: #00ff88;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #00ff88;
+        }
+        .stream-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .stream-video-area {
+            flex: 7;
+            background: #05080c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .stream-video-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        /* Telemetry Panel */
+        .stream-telemetry {
+            flex: 3;
+            background: #0b1018;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .tel-title {
+            color: #00f2ff;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        .tel-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .tel-label {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .tel-value {
+            color: #fff;
+            font-size: 32px;
+            font-weight: 900;
+        }
+        .tel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .btn-stream-action {
+            margin-top: auto;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.1);
         }
         .admin-only.hidden-role { display: none !important; }
     </style>
@@ -43,11 +136,53 @@
 
     <!-- Live Stream Modal -->
     <div id="liveStreamModal">
-        <h2 id="streamTitle" style="color: var(--accent-blue); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px;">LIVE VR FEED</h2>
-        <img id="liveFrame" src="" alt="Waiting for stream...">
-        <div class="stream-controls">
-            <span id="streamStatus" style="color: var(--text-dim); font-size: 14px; font-weight: 600;">Connecting...</span>
-            <button class="btn-secondary" onclick="closeLiveStream()" style="border-color: var(--danger); color: var(--danger); padding: 8px 25px; border-radius: 20px;">Close Feed</button>
+        <div class="stream-container">
+            <div class="stream-header">
+                <div class="stream-title">
+                    <span class="pulse"></span>
+                    <span id="streamTitleName">AAAAAAAAAAA</span>
+                    <span style="color: #00ff88; font-size: 12px;">● LIVE</span>
+                </div>
+                <button onclick="closeLiveStream()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; font-weight: bold;">×</button>
+            </div>
+            
+            <div class="stream-content">
+                <div class="stream-video-area">
+                    <img id="liveFrame" src="" alt="Waiting for secure video transmission...">
+                </div>
+                
+                <div class="stream-telemetry">
+                    <div class="tel-title">MISSION TELEMETRY</div>
+                    
+                    <div class="tel-card">
+                        <div class="tel-label">CURRENT PROGRESS</div>
+                        <div class="tel-value" id="telProgress">0%</div>
+                    </div>
+                    
+                    <div class="tel-grid">
+                        <div class="tel-card" style="border-color: rgba(0, 255, 136, 0.3);">
+                            <div class="tel-label" style="color: #00ff88;">SAFETY</div>
+                            <div class="tel-value" id="telSafety">100%</div>
+                        </div>
+                        <div class="tel-card" style="border-color: rgba(255, 153, 0, 0.3);">
+                            <div class="tel-label" style="color: #ff9900;">TASKS</div>
+                            <div class="tel-value" id="telTasks">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tel-card">
+                        <div class="tel-label">SESSION ACTIVE TIME</div>
+                        <div class="tel-value" id="telTime" style="font-size: 24px;">0s</div>
+                    </div>
+
+                    <div class="tel-card" style="padding:15px; border-color: rgba(255, 51, 51, 0.3);">
+                        <div class="tel-label" style="color: #fc5c65;">AI INQUIRIES / ERRORS</div>
+                        <div class="tel-value" id="telErrors" style="font-size: 20px;">0 / 0</div>
+                    </div>
+                    
+                    <div class="btn-stream-action" id="streamStatusBtn">TRANSMITTING...</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -112,6 +247,10 @@
                         <input type="text" id="filterDoctor" placeholder="Filter by Instructor Code/Name..." class="admin-input search" oninput="filterReports()">
                         <button onclick="fetchReports()" class="btn-secondary" style="margin-top: 0;">🔃 Refresh</button>
                     </div>
+                </div>
+
+                <div id="activeSessionsList" style="margin-bottom: 30px;">
+                    <!-- Active sessions populated here -->
                 </div>
 
                 <div class="reports-grid" id="reportsList">
@@ -422,8 +561,10 @@
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 activeSessions = await actRes.json();
+                // Render Active Sessions at the top
+                renderActiveSessionsCards(activeSessions);
                 
-                renderReports(allReports);
+                renderReports(filteredReports);
             } catch (err) {
                 console.error(err);
                 document.getElementById('reportsList').innerHTML = `<div class="loading-state text-danger">Failed to connect to backend server.</div>`;
@@ -443,32 +584,70 @@
             }
         }
 
+        // ─── ACTIVE SESSIONS (Real-time tracking without historical mixups) ───
+        function renderActiveSessionsCards(sessions) {
+            const container = document.getElementById('activeSessionsList');
+            container.innerHTML = '';
+
+            const liveSessions = sessions.filter(s => s.hasFeed);
+            if (liveSessions.length === 0) return; // Hide section if none are live
+
+            let html = `<div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <span class="pulse" style="width:12px; height:12px; background:#00ff88; border-radius:50%; box-shadow: 0 0 10px #00ff88;"></span>
+                <span style="color: #00ff88; font-weight: 900; letter-spacing: 1px; font-size: 14px;">ACTIVE VR SIMULATIONS (${liveSessions.length})</span>
+            </div>
+            <div class="devices-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-bottom: 20px;">`;
+
+            liveSessions.forEach(s => {
+                const sTime = s.stats && s.stats.time ? formatDuration(s.stats.time) : "00:00";
+                html += `
+                    <div class="glass-panel" style="padding: 20px; border-radius: 14px; border: 1px solid rgba(0, 255, 136, 0.4); background: linear-gradient(145deg, rgba(0,255,136,0.05) 0%, rgba(0,0,0,0.5) 100%);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #fff; font-size: 18px; margin: 0 0 5px 0;">${s.traineeName || 'Student'}</h3>
+                                <span style="background: rgba(0,0,0,0.5); color: #94a3b8; font-size: 11px; padding: 3px 8px; border-radius: 4px;">Device: ${s.atCode || 'N/A'}</span>
+                            </div>
+                            <span class="pulse" style="background: #00ff88; color: #000; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 20px;">LIVE</span>
+                        </div>
+                        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <div style="color: #00ff88; font-size: 11px; font-weight: 800; margin-bottom: 4px;">SAFETY</div>
+                                <div style="color: #fff; font-size: 16px; font-weight: 700;">${s.stats ? Math.round(s.stats.safetyScore || 0) : 0}%</div>
+                            </div>
+                            <div>
+                                <div style="color: #ff9900; font-size: 11px; font-weight: 800; margin-bottom: 4px;">TASKS</div>
+                                <div style="color: #fff; font-size: 16px; font-weight: 700;">${s.stats ? (s.stats.tasks || 0) : 0}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--accent-blue); font-size: 11px; font-weight: 800; margin-bottom: 4px;">TIME</div>
+                                <div style="color: #fff; font-size: 16px; font-weight: 700;">${sTime}</div>
+                            </div>
+                        </div>
+                        <button onclick="openLiveStream('${s.deviceId}', '${s.traineeName}')" style="width: 100%; padding: 12px; border-radius: 8px; background: #00ff88; color: #000; border: none; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: transform 0.2s;">
+                            👁️ WATCH LIVE NOW
+                        </button>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
         function renderReports(reports) {
             const container = document.getElementById('reportsList');
             container.innerHTML = '';
 
             if (reports.length === 0) {
-                container.innerHTML = `<div class="loading-state">No reports found in dynamic database.</div>`;
+                container.innerHTML = `<div class="loading-state">No reports found.</div>`;
                 return;
             }
 
             reports.forEach(r => {
-                const scoreClass = r.score >= 80 ? 'green' : (r.score >= 50 ? 'orange' : 'red');
+                const scoreColor = r.score >= 80 ? '#00ff88' : (r.score >= 50 ? '#ffcc00' : '#ff3333');
                 const sessionTime = formatDuration(r.session_duration);
                 const isCritical = r.vibration > 5 || r.temp > 800 || r.leak;
 
-                // Intensive logging and robust live check
-                const isLive = activeSessions.find(s => {
-                    const saneDeviceId = r.deviceId && r.deviceId !== "Unknown" ? r.deviceId : null;
-                    const idMatch = saneDeviceId && s.deviceId === saneDeviceId;
-                    const nameMatch = s.traineeName && r.trainee_name && s.traineeName.toLowerCase().trim() === r.trainee_name.toLowerCase().trim();
-                    if(idMatch || nameMatch) {
-                        console.log(`[LIVE MATCH Admin] Report '${r.trainee_name}' bound to Stream '${s.traineeName}'. ID_Match:${!!idMatch} Name_Match:${!!nameMatch}`);
-                    }
-                    return idMatch || nameMatch;
-                });
-
-                const scoreColor = r.score >= 80 ? '#00ff88' : (r.score >= 50 ? '#ffcc00' : '#ff3333');
                 const card = document.createElement('div');
                 card.className = `admin-report-card glass-panel ${isCritical ? 'border-red' : ''}`;
                 card.style = "padding: 25px; border-radius: 16px; margin-bottom: 20px;";
@@ -477,7 +656,6 @@
                         <div>
                             <div class="rc-title" style="font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px;">
                                 ${r.trainee_name} 
-                                ${isLive ? '<span class="pulse" style="color:#00ff88; font-size:12px; font-weight:800; display:flex; align-items:center;">● LIVE</span>' : ''}
                             </div>
                             <div class="rc-meta" style="color: var(--text-dim); font-size: 13px; margin-top: 5px;">Doc: ${r.doctor_code || 'N/A'} | ID: ${r.trainee_id || 'N/A'}</div>
                         </div>
@@ -516,9 +694,8 @@
 
                     <div class="rc-actions" style="margin-top:20px; display: flex; gap: 10px;">
                         <button onclick='openModalById("${r._id}")' style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.1); color: #fff; border: none; font-weight: 700; cursor: pointer; transition: 0.2s;">💬 Log</button>
-                        <button onclick='analyzeStudent("${r._id}", event)' style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(138, 43, 226, 0.2); color: #eebbff; border: 1px solid rgba(138, 43, 226, 0.4); font-weight: 700; cursor: pointer; transition: 0.2s;">🤖 AI Review</button>
-                        ${isLive ? `<button onclick="openLiveStream('${isLive.deviceId}', '${r.trainee_name}')" class="pulse" style="flex: 1.5; padding: 12px; border-radius: 12px; background:#00ff88; color:#000; border:none; font-weight:900; cursor: pointer; box-shadow: 0 0 20px rgba(0,255,136,0.5);">📽️ WATCH LIVE</button>` : `<button disabled style="flex: 1.5; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); color: #94a3b8; border: none; font-weight: 700; opacity: 0.5; cursor: not-allowed;">📡 Standby</button>`}
-                        <button onclick='deleteReport("${r._id}")' style="padding: 12px 20px; border-radius: 12px; background: rgba(255,51,51,0.1); color: #ff3333; border: none; font-weight: 700; cursor: pointer; transition: 0.2s;">🗑</button>
+                        <button onclick='analyzeStudent("${r._id}", event)' style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(138, 43, 226, 0.2); color: #eebbff; border: 1px solid rgba(138, 43, 226, 0.4); font-weight: 700; cursor: pointer; transition: 0.2s;">🤖 Dashboard AI</button>
+                        <button onclick='deleteReport("${r._id}")' style="padding: 12px 20px; border-radius: 12px; background: rgba(255,51,51,0.1); color: #ff3333; border: none; font-weight: 700; cursor: pointer; transition: 0.2s;">🗑 Clear</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -732,17 +909,25 @@
         }
         window.onclick = function(e){ if(e.target == document.getElementById('chatModal')) closeModal(); }
 
-        /* Live Stream Logic */
+        /* Live Stream Logic Next-Gen */
         let streamActive = false;
         async function openLiveStream(deviceId, name) {
             document.getElementById('liveStreamModal').style.display = 'flex';
-            document.getElementById('streamTitle').innerText = `LIVE FEED: ${name.toUpperCase()}`;
+            document.getElementById('streamTitleName').innerText = name.toUpperCase();
             
             const frameImg = document.getElementById('liveFrame');
-            const statusText = document.getElementById('streamStatus');
+            const statusBtn = document.getElementById('streamStatusBtn');
             
-            statusText.innerText = "Connecting to device...";
-            statusText.style.color = "var(--text-dim)";
+            // Stats elements
+            const elProg = document.getElementById('telProgress');
+            const elSafe = document.getElementById('telSafety');
+            const elTask = document.getElementById('telTasks');
+            const elTime = document.getElementById('telTime');
+            const elErr = document.getElementById('telErrors');
+            
+            statusBtn.innerText = "CONNECTING...";
+            statusBtn.style.color = "var(--text-dim)";
+            statusBtn.style.borderColor = "var(--text-dim)";
 
             streamActive = true;
             
@@ -758,24 +943,36 @@
                     
                     if (data.status === 'online') {
                         frameImg.src = `data:image/jpeg;base64,${data.frame}`;
-                        statusText.innerText = `● LIVE  (${new Date(data.timestamp).toLocaleTimeString()})`;
-                        statusText.style.color = 'var(--success)';
+                        statusBtn.innerText = `TRANSMITTING... (${new Date(data.timestamp).toLocaleTimeString()})`;
+                        statusBtn.style.color = '#00ff88';
+                        statusBtn.style.borderColor = '#00ff88';
+                        
+                        // Update Telemetry Data live
+                        if(data.stats) {
+                            elProg.innerText = Math.round(data.stats.progress || 0) + '%';
+                            elSafe.innerText = Math.round(data.stats.safetyScore || 0) + '%';
+                            elTask.innerText = data.stats.tasks || '0';
+                            elTime.innerText = formatDuration(data.stats.time || 0);
+                            // If stats carries errors count, else default 0
+                            elErr.innerText = `${data.stats.errors || 0} / ${data.stats.aiInquiries || 0}`;
+                        }
                     } else if (data.status === 'waiting') {
-                        // Session joined but no frames yet (VR not streaming yet)
-                        statusText.innerText = `⏳ ${data.traineeName || 'Trainee'} joined — waiting for video stream...`;
-                        statusText.style.color = '#ffcc00';
+                        statusBtn.innerText = `WAITING FOR VIDEO...`;
+                        statusBtn.style.color = '#ffcc00';
+                        statusBtn.style.borderColor = '#ffcc00';
                     } else {
-                        statusText.innerText = '● STREAM OFFLINE / WAITING';
-                        statusText.style.color = 'var(--danger)';
+                        statusBtn.innerText = 'OFFLINE / STANDBY';
+                        statusBtn.style.color = 'var(--danger)';
+                        statusBtn.style.borderColor = 'var(--danger)';
                     }
                 } catch (err) {
-                    statusText.innerText = '● STREAM OFFLINE / WAITING';
-                    statusText.style.color = 'var(--danger)';
+                    statusBtn.innerText = 'CONNECTION ERROR';
+                    statusBtn.style.color = 'var(--danger)';
                 }
                 
                 if (streamActive) {
-                    // Poll every 200ms to reduce server load while keeping feed smooth
-                    setTimeout(fetchFrame, 200);
+                    // Update every 60ms for a very smooth ~16 FPS feed
+                    setTimeout(fetchFrame, 60);
                 }
             };
             

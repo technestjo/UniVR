@@ -20,7 +20,7 @@ const DEVICE_STREAM_SECRET = process.env.DEVICE_STREAM_SECRET || 'AeroTwin_Devic
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://AeroTwin_db_user:BK3YRMlQuc3enIzn@cluster0.erhwmqm.mongodb.net/univr?retryWrites=true&w=majority&appName=Cluster0';
 const ADMIN_USER = process.env.ADMIN_USER || 'AeroTwin_SuperAdmin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'XR_Secure_Admin_Access_Pass_2026!!';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDmh3NhaYNFAtQbYkFy3-IG0U_mqYX29VI';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Must be set in .env or Render Dashboard
 
 
 // ─── SECURITY MIDDLEWARE ───
@@ -135,6 +135,7 @@ const ReportSchema = new mongoose.Schema({
     chat_log: String,
     score: Number,
     deviceId: String, // Link to the VR headset used
+    session_id: String, // Unique session ID to isolate streams
     createdAt: { type: Date, default: Date.now }
 });
 const Report = mongoose.model('Report', ReportSchema);
@@ -224,7 +225,8 @@ app.post('/api/submit-report', async (req, res) => {
             exported_reports_count: payload.exported_reports_count || 0,
             chat_log: payload.chat_log || "No chat history.",
             score: calculateScore(payload),
-            deviceId: payload.deviceId || payload.device_id || "Unknown"
+            deviceId: payload.deviceId || payload.device_id || "Unknown",
+            session_id: payload.session_id || "None"
         });
 
         await newReport.save();
@@ -764,20 +766,22 @@ ${summaryContext}
     }
 });
 
-// --- SECURE AI PROXY FOR UNITY ---
-// This endpoint allows Unity to use Gemini without hardcoding the API key.
 app.post('/api/ai/proxy', async (req, res) => {
     try {
-        // Optional security check: Unity can send the DEVICE_STREAM_SECRET for basic auth
+        // --- STRICT PROXY SECURITY ---
         const appSecret = req.headers['x-app-secret'];
-        if (process.env.DEVICE_STREAM_SECRET && appSecret !== process.env.DEVICE_STREAM_SECRET) {
-            // console.warn("[AI Proxy] Unauthorized request attempt from Unity.");
-            // We'll let it pass for now if secret isn't set, but log warning if it is.
+        if (!appSecret || appSecret !== DEVICE_STREAM_SECRET) {
+            console.error("[AI Proxy] Blocked unauthorized request. Invalid app secret.");
+            return res.status(401).json({ error: "Unauthorized: Invalid App Secret." });
         }
 
-        if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY missing on server." });
+        // Use client-provided key if available (allows Unity to use the new key instantly before Render restarts), otherwise use server env key
+        const clientApiKey = req.headers['x-api-key'];
+        const activeKey = clientApiKey || GEMINI_API_KEY;
 
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        if (!activeKey) return res.status(500).json({ error: "GEMINI_API_KEY missing." });
+
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
         
         const response = await fetch(googleUrl, {
             method: 'POST',
@@ -839,7 +843,7 @@ app.post('/api/device/session/join', async (req, res) => {
 
 // Upload a frame from VR Device (Base64 JPG)
 app.post('/api/device/stream', (req, res) => {
-    const { deviceId, frame_base64, trainee_name, doctor_code, doctorCode, stats } = req.body;
+    const { deviceId, session_id, frame_base64, trainee_name, doctor_code, doctorCode, stats } = req.body;
 
     if (!deviceId) return res.status(400).send('Missing deviceId');
 
@@ -876,6 +880,7 @@ app.post('/api/device/stream', (req, res) => {
     deviceFrames[deviceId] = {
         data: frame_base64,
         doctorCode: finalDocCode,
+        sessionId: session_id || existing.sessionId || "None",
         traineeName: trainee_name || existing.traineeName || 'Active Trainee',
         atCode: existing.atCode || 'AT-????',
         stats: stats || existing.stats || { score: 0, progress: 0, safetyScore: 0, tasks: 0, time: 0 },
@@ -907,6 +912,7 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
         if (isAdmin || isLinkedToDoctor || (!isAdmin && isUnlinked)) {
             active.push({
                 deviceId: id,
+                sessionId: frame.sessionId || "None",
                 traineeName: frame.traineeName,
                 atCode: frame.atCode || 'AT-????',
                 timestamp: frame.timestamp,

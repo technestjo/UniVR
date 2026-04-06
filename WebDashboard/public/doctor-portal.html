@@ -216,6 +216,128 @@
             color: #fff;
             font-weight: 700;
         }
+
+        /* Live Stream Modal Next-Gen */
+        #liveStreamModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 25, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            backdrop-filter: blur(15px);
+        }
+        .stream-container {
+            width: 95%;
+            max-width: 1400px;
+            height: 85vh;
+            background: #0f141e;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+        .stream-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+        }
+        .stream-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+        .stream-title .pulse {
+            width: 10px; height: 10px;
+            background: #00ff88;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #00ff88;
+        }
+        .stream-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .stream-video-area {
+            flex: 7;
+            background: #05080c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .stream-video-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .stream-telemetry {
+            flex: 3;
+            background: #0b1018;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .tel-title {
+            color: #00f2ff;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        .tel-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .tel-label {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .tel-value {
+            color: #fff;
+            font-size: 32px;
+            font-weight: 900;
+        }
+        .tel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .btn-stream-action {
+            margin-top: auto;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.1);
+        }
     </style>
 </head>
 <body class="doctor-portal-body doctor-body">
@@ -323,57 +445,52 @@
     </div>
 
     <!-- MODAL FOR LIVE STREAM -->
-    <div id="liveStreamModal" class="modal">
-        <div class="modal-content glass-panel" style="max-width: 1200px; padding: 0; overflow: hidden; border: 1px solid var(--portal-accent);">
-            <div class="modal-header" style="padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div class="pulse" style="width: 10px; height: 10px; background: #00ff88; border-radius: 50%;"></div>
-                    <h2 id="streamTitle" style="font-size: 18px; color: #fff; margin: 0; letter-spacing: 1px;">LIVE MISSION MONITOR</h2>
-                    <span id="streamStatus" style="font-size: 12px; color: #00ff88; font-weight: 700; opacity: 0.8;">CONNECTING...</span>
+    <div id="liveStreamModal">
+        <div class="stream-container">
+            <div class="stream-header">
+                <div class="stream-title">
+                    <span class="pulse"></span>
+                    <span id="streamTitleName">AAAAAAAAAAA</span>
+                    <span style="color: #00ff88; font-size: 12px;">● LIVE</span>
                 </div>
-                <button class="close-btn" onclick="closeLiveStream()">&times;</button>
+                <button onclick="closeLiveStream()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; font-weight: bold;">×</button>
             </div>
             
-            <div class="stream-container-grid" style="display: grid; grid-template-columns: 1fr 320px; background: #000;">
-                <!-- VIDEO SECTION -->
-                <div style="position: relative; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.05);">
-                    <img id="liveFrame" src="" alt="Live Stream" style="width: 100%; height: 100%; object-fit: contain; display: none;">
-                    <div id="streamPlaceholder" style="color: #444; text-align: center;">
-                        <div class="pulse" style="font-size: 50px; margin-bottom: 15px;">📡</div>
-                        <div style="font-weight: 700; letter-spacing: 2px;">WAITING FOR DATA</div>
-                        <div style="font-size: 12px; color: #222; margin-top: 5px;">ESTABLISHING ENCRYPTED LINK...</div>
-                    </div>
+            <div class="stream-content">
+                <div class="stream-video-area">
+                    <img id="liveFrame" src="" alt="Waiting for secure video transmission...">
                 </div>
-
-                <!-- LIVE STATS SIDEBAR -->
-                <div style="background: #0a0f1d; padding: 25px; display: flex; flex-direction: column; gap: 20px;">
-                    <div style="color: var(--portal-accent); font-weight: 800; font-size: 14px; letter-spacing: 1px; border-bottom: 1px solid rgba(0,242,255,0.1); padding-bottom: 10px;">MISSION TELEMETRY</div>
+                
+                <div class="stream-telemetry">
+                    <div class="tel-title">MISSION TELEMETRY</div>
                     
-                    <div class="live-stat-item">
-                        <div style="color: #94a3b8; font-size: 11px; font-weight: 700;">CURRENT PROGRESS</div>
-                        <div id="live-progress-val" style="font-size: 28px; font-weight: 900; color: #fff;">0%</div>
-                        <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 8px;">
-                            <div id="live-progress-bar" style="width: 0%; height: 100%; background: var(--portal-accent); box-shadow: 0 0 10px var(--portal-accent); transition: width 0.5s;"></div>
+                    <div class="tel-card">
+                        <div class="tel-label">CURRENT PROGRESS</div>
+                        <div class="tel-value" id="telProgress">0%</div>
+                    </div>
+                    
+                    <div class="tel-grid">
+                        <div class="tel-card" style="border-color: rgba(0, 255, 136, 0.3);">
+                            <div class="tel-label" style="color: #00ff88;">SAFETY</div>
+                            <div class="tel-value" id="telSafety">100%</div>
+                        </div>
+                        <div class="tel-card" style="border-color: rgba(255, 153, 0, 0.3);">
+                            <div class="tel-label" style="color: #ff9900;">TASKS</div>
+                            <div class="tel-value" id="telTasks">0</div>
                         </div>
                     </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="live-stat-item" style="background: rgba(0,255,136,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(0,255,136,0.1);">
-                            <div style="color: #00ff88; font-size: 10px; font-weight: 800;">SAFETY</div>
-                            <div id="live-safety-val" style="font-size: 20px; font-weight: 900;">0%</div>
-                        </div>
-                        <div class="live-stat-item" style="background: rgba(255,204,0,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,204,0,0.1);">
-                            <div style="color: #ffcc00; font-size: 10px; font-weight: 800;">TASKS</div>
-                            <div id="live-tasks-val" style="font-size: 20px; font-weight: 900;">0</div>
-                        </div>
+                    
+                    <div class="tel-card">
+                        <div class="tel-label">SESSION ACTIVE TIME</div>
+                        <div class="tel-value" id="telTime" style="font-size: 24px;">0s</div>
                     </div>
 
-                    <div style="margin-top: auto; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="color: #94a3b8; font-size: 11px; font-weight: 700; margin-bottom: 5px;">SESSION ACTIVE TIME</div>
-                        <div id="live-time-val" style="font-size: 22px; font-weight: 700; color: #fff; font-family: monospace;">00:00:00</div>
+                    <div class="tel-card" style="padding:15px; border-color: rgba(255, 51, 51, 0.3);">
+                        <div class="tel-label" style="color: #fc5c65;">AI INQUIRIES / ERRORS</div>
+                        <div class="tel-value" id="telErrors" style="font-size: 20px;">0 / 0</div>
                     </div>
-
-                    <div id="live-status-tag" style="text-align: center; font-size: 11px; font-weight: 800; color: #00ff88; background: rgba(0,255,136,0.1); padding: 8px; border-radius: 8px; text-transform: uppercase;">TRANSMITTING...</div>
+                    
+                    <div class="btn-stream-action" id="streamStatusBtn">TRANSMITTING...</div>
                 </div>
             </div>
         </div>
@@ -746,25 +863,25 @@
             document.getElementById('chatModal').style.display = 'none';
         }
 
-        // Live Stream Recursive Polling Logic (High Performance)
+        /* Live Stream Logic Next-Gen */
         let streamActive = false;
-        function openLiveStream(deviceId, traineeName) {
+        async function openLiveStream(deviceId, name) {
             document.getElementById('liveStreamModal').style.display = 'flex';
-            document.getElementById('streamTitle').innerText = traineeName.toUpperCase();
+            document.getElementById('streamTitleName').innerText = name.toUpperCase();
             
             const frameImg = document.getElementById('liveFrame');
-            const placeholder = document.getElementById('streamPlaceholder');
-            const statusText = document.getElementById('streamStatus');
+            const statusBtn = document.getElementById('streamStatusBtn');
             
             // Stats elements
-            const progVal = document.getElementById('live-progress-val');
-            const progBar = document.getElementById('live-progress-bar');
-            const safeVal = document.getElementById('live-safety-val');
-            const taskVal = document.getElementById('live-tasks-val');
-            const timeVal = document.getElementById('live-time-val');
-
-            statusText.innerText = "SYNCING...";
-            statusText.style.color = "#94a3b8";
+            const elProg = document.getElementById('telProgress');
+            const elSafe = document.getElementById('telSafety');
+            const elTask = document.getElementById('telTasks');
+            const elTime = document.getElementById('telTime');
+            const elErr = document.getElementById('telErrors');
+            
+            statusBtn.innerText = "CONNECTING...";
+            statusBtn.style.color = "var(--text-dim)";
+            statusBtn.style.borderColor = "var(--text-dim)";
 
             streamActive = true;
             
@@ -775,44 +892,41 @@
                         headers: { 'Authorization': `Bearer ${token}` },
                         cache: 'no-store'
                     });
+                    if (!res.ok) throw new Error('Network Error');
                     const data = await res.json();
                     
-                    if (data.status === 'online' && data.frame) {
+                    if (data.status === 'online') {
                         frameImg.src = `data:image/jpeg;base64,${data.frame}`;
-                        frameImg.style.display = 'block';
-                        placeholder.style.display = 'none';
-                        statusText.innerText = `● LIVE`;
-                        statusText.style.color = '#00ff88';
-
-                        // Update Live Stats
-                        if (data.stats) {
-                            const s = data.stats;
-                            progVal.innerText = `${Math.round(s.progress || 0)}%`;
-                            progBar.style.width = `${Math.round(s.progress || 0)}%`;
-                            safeVal.innerText = `${Math.round(s.safetyScore || 0)}%`;
-                            taskVal.innerText = `${s.tasks || 0}`;
-                            timeVal.innerText = formatDuration(s.time || 0);
+                        statusBtn.innerText = `TRANSMITTING... (${new Date(data.timestamp).toLocaleTimeString()})`;
+                        statusBtn.style.color = '#00ff88';
+                        statusBtn.style.borderColor = '#00ff88';
+                        
+                        // Update Telemetry Data live
+                        if(data.stats) {
+                            elProg.innerText = Math.round(data.stats.progress || 0) + '%';
+                            elSafe.innerText = Math.round(data.stats.safetyScore || 0) + '%';
+                            elTask.innerText = data.stats.tasks || '0';
+                            elTime.innerText = formatDuration(data.stats.time || 0);
+                            // If stats carries errors count, else default 0
+                            elErr.innerText = `${data.stats.errors || 0} / ${data.stats.aiInquiries || 0}`;
                         }
                     } else if (data.status === 'waiting') {
-                        // Session joined, VR not streaming yet
-                        frameImg.style.display = 'none';
-                        placeholder.style.display = 'block';
-                        placeholder.innerHTML = `<div class="pulse" style="font-size:50px; margin-bottom:15px;">⏳</div><div style="font-weight:700; letter-spacing:2px; color:#ffcc00;">${data.traineeName || 'TRAINEE'} JOINED</div><div style="font-size:12px; color:#555; margin-top:5px;">Session active — waiting for VR stream...</div>`;
-                        statusText.innerText = '⏳ WAITING FOR STREAM';
-                        statusText.style.color = '#ffcc00';
+                        statusBtn.innerText = `WAITING FOR VIDEO...`;
+                        statusBtn.style.color = '#ffcc00';
+                        statusBtn.style.borderColor = '#ffcc00';
                     } else {
-                        frameImg.style.display = 'none';
-                        placeholder.style.display = 'block';
-                        placeholder.innerHTML = `<div class="pulse" style="font-size:50px; margin-bottom:15px;">📡</div><div style="font-weight:700; letter-spacing:2px;">WAITING FOR DATA</div><div style="font-size:12px; color:#222; margin-top:5px;">ESTABLISHING ENCRYPTED LINK...</div>`;
-                        statusText.innerText = '● STANDBY';
-                        statusText.style.color = '#ff3333';
+                        statusBtn.innerText = 'OFFLINE / STANDBY';
+                        statusBtn.style.color = 'var(--danger)';
+                        statusBtn.style.borderColor = 'var(--danger)';
                     }
                 } catch (err) {
-                    statusText.innerText = '● ERROR';
+                    statusBtn.innerText = 'CONNECTION ERROR';
+                    statusBtn.style.color = 'var(--danger)';
                 }
                 
                 if (streamActive) {
-                    setTimeout(fetchFrame, 200);
+                    // Update every 60ms for a very smooth ~16 FPS feed
+                    setTimeout(fetchFrame, 60);
                 }
             };
             
@@ -825,7 +939,7 @@
         }
 
         window.onclick = (e) => { 
-            if(e.target.classList.contains('modal')) {
+            if(e.target.classList.contains('modal') || e.target.id === 'liveStreamModal') {
                 closeModal();
                 closeLiveStream();
             }
