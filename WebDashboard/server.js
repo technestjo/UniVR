@@ -679,9 +679,9 @@ app.get('/admin', (req, res) => {
 
 // === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
 const GEMINI_MODELS = [
-    'gemini-2.5-flash',   // Primary model
-    'gemini-2.0-flash',   // Fallback if 2.5 is overloaded
-    'gemini-1.5-flash'    // Last resort fallback
+    'gemini-2.5-flash',   // Primary: latest, fastest
+    'gemini-1.5-flash',   // Fallback: stable, widely available
+    'gemini-1.5-pro'      // Last resort: most capable fallback
 ];
 
 async function callGemini(prompt, modelIndex = 0) {
@@ -702,16 +702,19 @@ async function callGemini(prompt, modelIndex = 0) {
         });
         lastData = await lastResponse.json();
 
-        if (lastResponse.status !== 503) break; // Success or non-retriable error
+        // 503 = overloaded, 404 = model not found/unavailable — both should trigger fallback
+        const shouldRetry = lastResponse.status === 503;
+        if (!shouldRetry) break;
 
-        console.warn(`[Gemini] 503 on ${model} (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${attempt * 2}s...`);
+        console.warn(`[Gemini] ${lastResponse.status} on ${model} (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${attempt * 2}s...`);
         await new Promise(r => setTimeout(r, attempt * 2000));
     }
 
-    // If still 503 after retries, try next model as fallback
-    if (lastResponse.status === 503 && modelIndex + 1 < GEMINI_MODELS.length) {
+    // If 503 or 404, try next model as fallback
+    const needsFallback = (lastResponse.status === 503 || lastResponse.status === 404) && modelIndex + 1 < GEMINI_MODELS.length;
+    if (needsFallback) {
         const nextModel = GEMINI_MODELS[modelIndex + 1];
-        console.warn(`[Gemini] All retries failed for ${model}. Switching to ${nextModel}...`);
+        console.warn(`[Gemini] ${model} unavailable (${lastResponse.status}). Switching to ${nextModel}...`);
         return callGemini(prompt, modelIndex + 1);
     }
 
@@ -825,17 +828,19 @@ app.post('/api/ai/proxy', async (req, res) => {
                 });
                 lastData = await lastResponse.json();
 
+                // Only retry on 503 (overloaded). 404 means model unavailable — break immediately to try next model.
                 if (lastResponse.status !== 503) { success = true; break; }
 
                 console.warn(`[AI Proxy] 503 on ${activeModel} (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${attempt * 2}s...`);
                 await new Promise(r => setTimeout(r, attempt * 2000));
             }
 
-            if (success || lastResponse.status !== 503) break; // Success or stop if non-503 error
+            // 503 after all retries OR 404 (model unavailable) → try next model
+            const needsNextModel = (lastResponse.status === 503 || lastResponse.status === 404);
+            if (!needsNextModel) break; // success or other error, stop
 
-            // Still 503? Try next model
             if (modelIdx + 1 < GEMINI_MODELS.length) {
-                console.warn(`[AI Proxy] ${activeModel} overloaded. Falling back to ${GEMINI_MODELS[modelIdx + 1]}...`);
+                console.warn(`[AI Proxy] ${activeModel} unavailable (${lastResponse.status}). Falling back to ${GEMINI_MODELS[modelIdx + 1]}...`);
             }
         }
 
