@@ -678,23 +678,49 @@ app.get('/admin', (req, res) => {
 });
 
 // === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=`;
+const GEMINI_MODELS = [
+    'gemini-2.5-flash',   // Primary model
+    'gemini-2.0-flash',   // Fallback if 2.5 is overloaded
+    'gemini-1.5-flash'    // Last resort fallback
+];
 
-async function callGemini(prompt) {
-    const response = await fetch(`${GEMINI_API_URL}${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-        })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-        console.error("[Gemini API Internal Error]:", JSON.stringify(data, null, 2));
-        const errMsg = data?.error?.message || 'Gemini API error';
+async function callGemini(prompt, modelIndex = 0) {
+    const MAX_RETRIES = 3;
+    const model = GEMINI_MODELS[modelIndex] || GEMINI_MODELS[0];
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+
+    let lastResponse = null;
+    let lastData = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        lastResponse = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+        lastData = await lastResponse.json();
+
+        if (lastResponse.status !== 503) break; // Success or non-retriable error
+
+        console.warn(`[Gemini] 503 on ${model} (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${attempt * 2}s...`);
+        await new Promise(r => setTimeout(r, attempt * 2000));
+    }
+
+    // If still 503 after retries, try next model as fallback
+    if (lastResponse.status === 503 && modelIndex + 1 < GEMINI_MODELS.length) {
+        const nextModel = GEMINI_MODELS[modelIndex + 1];
+        console.warn(`[Gemini] All retries failed for ${model}. Switching to ${nextModel}...`);
+        return callGemini(prompt, modelIndex + 1);
+    }
+
+    if (!lastResponse.ok) {
+        console.error("[Gemini API Internal Error]:", JSON.stringify(lastData, null, 2));
+        const errMsg = lastData?.error?.message || 'Gemini API error';
         throw new Error(errMsg);
     }
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return lastData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 app.post('/api/ai/analyze-student', verifyToken, async (req, res) => {
@@ -775,25 +801,48 @@ app.post('/api/ai/proxy', async (req, res) => {
             return res.status(401).json({ error: "Unauthorized: Invalid App Secret." });
         }
 
-        // Use client-provided key if available (allows Unity to use the new key instantly before Render restarts), otherwise use server env key
         const clientApiKey = req.headers['x-api-key'];
         const activeKey = clientApiKey || GEMINI_API_KEY;
 
         if (!activeKey) return res.status(500).json({ error: "GEMINI_API_KEY missing." });
 
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
-        
-        const response = await fetch(googleUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body)
-        });
+        // --- RETRY LOGIC for 503 (high demand) with model fallback ---
+        const MAX_RETRIES = 3;
+        let lastResponse = null;
+        let lastData = null;
+        let activeModel = null;
 
-        const data = await response.json();
-        if (!response.ok) {
-            console.error("[AI Proxy Internal Error]:", JSON.stringify(data, null, 2));
+        for (let modelIdx = 0; modelIdx < GEMINI_MODELS.length; modelIdx++) {
+            activeModel = GEMINI_MODELS[modelIdx];
+            const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${activeKey}`;
+            let success = false;
+
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                lastResponse = await fetch(googleUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(req.body)
+                });
+                lastData = await lastResponse.json();
+
+                if (lastResponse.status !== 503) { success = true; break; }
+
+                console.warn(`[AI Proxy] 503 on ${activeModel} (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${attempt * 2}s...`);
+                await new Promise(r => setTimeout(r, attempt * 2000));
+            }
+
+            if (success || lastResponse.status !== 503) break; // Success or stop if non-503 error
+
+            // Still 503? Try next model
+            if (modelIdx + 1 < GEMINI_MODELS.length) {
+                console.warn(`[AI Proxy] ${activeModel} overloaded. Falling back to ${GEMINI_MODELS[modelIdx + 1]}...`);
+            }
         }
-        res.status(response.status).json(data);
+
+        if (!lastResponse.ok) {
+            console.error(`[AI Proxy Internal Error] (model: ${activeModel}):`, JSON.stringify(lastData, null, 2));
+        }
+        res.status(lastResponse.status).json(lastData);
     } catch (err) {
         console.error("[AI Proxy Error]:", err.message);
         res.status(500).json({ error: "Internal server error during AI proxy." });
