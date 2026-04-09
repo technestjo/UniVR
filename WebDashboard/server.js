@@ -695,9 +695,8 @@ app.get('/admin', (req, res) => {
 
 // === AI ANALYSIS ENDPOINTS (Direct HTTP - same as Unity) ===
 const GEMINI_MODELS = [
-    'gemini-2.5-flash',        // Primary: latest, fastest
-    'gemini-1.5-flash',        // Fallback: stable, widely available
-    'gemini-1.5-flash-latest', // Last resort
+    'gemini-2.5-flash',   // Primary: latest stable (confirmed available)
+    'gemini-2.0-flash',   // Fallback: fast stable model (confirmed available)
 ];
 
 async function callGemini(prompt, modelIndex = 0) {
