@@ -51,7 +51,7 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' })); // Ca
 mongoose.connect(MONGO_URI)
     .then(async () => {
         console.log('✅ Connected to MongoDB Atlas');
-        
+
         // Auto-seed CMS if empty
         try {
             const count = await Content.countDocuments();
@@ -85,7 +85,7 @@ const DoctorSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-DoctorSchema.pre('save', async function(next) {
+DoctorSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     try {
         const salt = await bcrypt.genSalt(12);
@@ -243,9 +243,9 @@ function calculateScore(data) {
         const safetyW = 0.40;
         const accuracyW = 0.35;
         const speedW = 0.25;
-        let weighted = (data.safety_score || 0) * safetyW + 
-                       (data.accuracy_score || 0) * accuracyW + 
-                       (data.speed_score || 0) * speedW;
+        let weighted = (data.safety_score || 0) * safetyW +
+            (data.accuracy_score || 0) * accuracyW +
+            (data.speed_score || 0) * speedW;
 
         if (data.total_tasks > 0) {
             const taskRatio = (data.tasks_completed || 0) / data.total_tasks;
@@ -267,7 +267,7 @@ function calculateScore(data) {
 // Admin & Doctor Login (Unified with Enhanced Security)
 app.post('/api/admin/login', async (req, res) => {
     const { username, password } = req.body;
-    
+
     if (!username || !password) {
         return res.status(400).json({ success: false, message: "Missing credentials" });
     }
@@ -277,11 +277,11 @@ app.post('/api/admin/login', async (req, res) => {
         if (username === ADMIN_USER && password === ADMIN_PASS) {
             const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '8h' });
             return res.json({ success: true, token, role: 'admin' });
-        } 
-        
+        }
+
         // 2. Check Doctor (via Hashed DB Password)
         // Search by code OR name (case-insensitive)
-        const doc = await Doctor.findOne({ 
+        const doc = await Doctor.findOne({
             $or: [
                 { code: username },
                 { name: { $regex: new RegExp(`^${username}$`, 'i') } }
@@ -298,7 +298,7 @@ app.post('/api/admin/login', async (req, res) => {
                 if (password === doc.password) {
                     isMatch = true;
                     // Automatically upgrade to hashed password for security
-                    doc.password = password; 
+                    doc.password = password;
                     await doc.save();
                     console.log(`✅ Hashed legacy password for doctor: ${doc.name}`);
                 }
@@ -339,7 +339,7 @@ app.delete('/api/admin/reports/:id', verifyToken, async (req, res) => {
         if (req.user.role === 'doctor') {
             query.doctor_code = req.user.code;
         }
-        
+
         const deletedReport = await Report.findOneAndDelete(query);
         if (!deletedReport) {
             return res.status(403).json({ error: "Access Denied or Report not found" });
@@ -411,10 +411,10 @@ app.post('/api/admin/devices/:id/status', verifyToken, async (req, res) => {
 async function generateAtCode() {
     let code = '';
     let exists = true;
-    while(exists) {
+    while (exists) {
         code = 'AT-' + Math.floor(1000 + Math.random() * 9000);
         const check = await Device.findOne({ atCode: code });
-        if(!check) exists = false;
+        if (!check) exists = false;
     }
     return code;
 }
@@ -426,11 +426,11 @@ app.post('/api/device/check', async (req, res) => {
         if (!deviceId) return res.status(400).json({ error: "No device ID provided" });
 
         let device = await Device.findOne({ deviceId });
-        
+
         if (!device) {
             const newAtCode = await generateAtCode();
-            device = new Device({ 
-                deviceId, 
+            device = new Device({
+                deviceId,
                 ownerInfo: deviceName || "Unknown VR Headset",
                 deviceModel: deviceModel || "Unknown Model",
                 status: 'active',
@@ -444,13 +444,13 @@ app.post('/api/device/check', async (req, res) => {
             await device.save();
         } else {
             device.lastSeen = new Date();
-            if(deviceName && (device.ownerInfo === "Unknown VR Headset" || !device.ownerInfo)) {
-               device.ownerInfo = deviceName;
+            if (deviceName && (device.ownerInfo === "Unknown VR Headset" || !device.ownerInfo)) {
+                device.ownerInfo = deviceName;
             }
-            if(deviceModel) device.deviceModel = deviceModel;
+            if (deviceModel) device.deviceModel = deviceModel;
 
             // Generate atCode if missing (for existing devices)
-            if(!device.atCode) {
+            if (!device.atCode) {
                 device.atCode = await generateAtCode();
             }
 
@@ -459,7 +459,7 @@ app.post('/api/device/check', async (req, res) => {
             if (cpu) device.cpu = cpu;
             if (ram) device.ram = ram;
             if (gpu) device.gpu = gpu;
-            
+
             await device.save();
         }
 
@@ -515,83 +515,99 @@ app.get('/api/admin/raw-content', verifyToken, async (req, res) => {
 // Seed CMS Data (One-time use / Admin only)
 const seedData = [
     // Home Page
-        { page: 'home', key: 'index-hero-title', content: 'ULTIMATE VR FLIGHT SIMULATION' },
-        { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
-        { page: 'home', key: 'index-btn-primary', content: 'START MISSION' },
-        { page: 'home', key: 'index-btn-secondary', content: 'EXPLORE HUB' },
-        { page: 'home', key: 'home-features-array', content: JSON.stringify([
+    { page: 'home', key: 'index-hero-title', content: 'ULTIMATE VR FLIGHT SIMULATION' },
+    { page: 'home', key: 'index-hero-desc', content: 'Experience the Thrill of Aviation with Cutting-Edge Virtual Reality. Master the Skies from Any Cockpit.' },
+    { page: 'home', key: 'index-btn-primary', content: 'START MISSION' },
+    { page: 'home', key: 'index-btn-secondary', content: 'EXPLORE HUB' },
+    {
+        page: 'home', key: 'home-features-array', content: JSON.stringify([
             { title: "Real-Time Multiplayer", desc: "Train simultaneously with co-pilots across the globe with zero latency networking.", icon: "⚡" },
             { title: "True-to-Life Telemetry", desc: "Every switch, gauge, and flight model matches real-world aerospace physics.", icon: "🌐" },
             { title: "Dynamic Weather", desc: "Experience intense weather variations and severe turbulence precisely simulated.", icon: "🌧️" },
             { title: "AI-Powered Instructor", desc: "Automated debriefs, voice recognition, and personalized skill tracking in real-time.", icon: "🤖" }
-        ])},
-        { page: 'home', key: 'home-stats-array', content: JSON.stringify([
+        ])
+    },
+    {
+        page: 'home', key: 'home-stats-array', content: JSON.stringify([
             { val: "500K+", label: "Flight Hours Logged" },
             { val: "40+", label: "Aircraft Models" },
             { val: "99.9%", label: "Reality Match" }
-        ])},
-        
-        // Features Page
-        { page: 'features', key: 'features-hero-title', content: 'NEXT-GEN VR CAPABILITIES' },
-        { page: 'features', key: 'features-hero-desc', content: 'Dive deep into the technical excellence of AeroTwin XR.' },
-        { page: 'features', key: 'features-detailed-array', content: JSON.stringify([
+        ])
+    },
+
+    // Features Page
+    { page: 'features', key: 'features-hero-title', content: 'NEXT-GEN VR CAPABILITIES' },
+    { page: 'features', key: 'features-hero-desc', content: 'Dive deep into the technical excellence of AeroTwin XR.' },
+    {
+        page: 'features', key: 'features-detailed-array', content: JSON.stringify([
             { title: "Tactical Multiplayer", desc: "Global synchronization with ultra-low latency.", icon: "🎮" },
             { title: "Dynamic Systems", desc: "Real-time weather and physics simulation.", icon: "🌪" }
-        ])},
-        
-        // About Us Page
-        { page: 'about', key: 'about-hero-title', content: 'OUR MISSION' },
-        { page: 'about', key: 'about-mission-text', content: 'AeroTwin was founded to bridge the gap between simulation and reality. We believe that training should be safe, immersive, and accessible to everyone.' },
-        { page: 'about', key: 'about-team-array', content: JSON.stringify([
+        ])
+    },
+
+    // About Us Page
+    { page: 'about', key: 'about-hero-title', content: 'OUR MISSION' },
+    { page: 'about', key: 'about-mission-text', content: 'AeroTwin was founded to bridge the gap between simulation and reality. We believe that training should be safe, immersive, and accessible to everyone.' },
+    {
+        page: 'about', key: 'about-team-array', content: JSON.stringify([
             { name: "Sarah Jenkins", role: "Chief Flight Instructor", bio: "Former commercial pilot with 10k hours." },
             { name: "David Chen", role: "VR Architect", bio: "Engineering reality since 2012." }
-        ])},
-        
-        // Pricing Page
-        { page: 'pricing', key: 'pricing-title', content: 'AIRCRAFT LICENSING' },
-        { page: 'pricing', key: 'pricing-tiers-array', content: JSON.stringify([
+        ])
+    },
+
+    // Pricing Page
+    { page: 'pricing', key: 'pricing-title', content: 'AIRCRAFT LICENSING' },
+    {
+        page: 'pricing', key: 'pricing-tiers-array', content: JSON.stringify([
             { name: "Cadet License", price: "$49", details: "Basic Aircraft\nSingle Player\nStandard Weather" },
             { name: "Captain License", price: "$199", details: "All Aircraft\nMultiplayer\nDynamic Weather\nAI Coach" },
             { name: "Enterprise", price: "Custom", details: "White-label\nLMS Integration\nDedicated Server" }
-        ])},
-        
-        // News Page
-        { page: 'news', key: 'news-articles-array', content: JSON.stringify([
+        ])
+    },
+
+    // News Page
+    {
+        page: 'news', key: 'news-articles-array', content: JSON.stringify([
             { title: "PATCH v4.2 NOW LIVE", date: "April 1, 2026", desc: "Added multiplayer support and new engine diagnostics tools." },
             { title: "AeroTwin Partners with Boeing", date: "March 15, 2026", desc: "We are thrilled to announce a strategic partnership for next-gen 737MAX simulations." }
-        ])},
+        ])
+    },
 
-        // Leaderboard Page
-        { page: 'leaderboard', key: 'leaderboard-title', content: 'Global Trainee Rankings' },
-        { page: 'leaderboard', key: 'leaderboard-desc', content: 'Top performers across all operational parameters.' },
-        { page: 'leaderboard', key: 'leaderboard-visible', content: 'yes' },
+    // Leaderboard Page
+    { page: 'leaderboard', key: 'leaderboard-title', content: 'Global Trainee Rankings' },
+    { page: 'leaderboard', key: 'leaderboard-desc', content: 'Top performers across all operational parameters.' },
+    { page: 'leaderboard', key: 'leaderboard-visible', content: 'yes' },
 
-        // Updates Page
-        { page: 'updates', key: 'updates-title', content: 'Latest Platform Updates' },
-        { page: 'updates', key: 'updates-desc', content: 'Stay informed about new features, improvements, and bug fixes.' },
-        { page: 'updates', key: 'updates-array', content: JSON.stringify([
+    // Updates Page
+    { page: 'updates', key: 'updates-title', content: 'Latest Platform Updates' },
+    { page: 'updates', key: 'updates-desc', content: 'Stay informed about new features, improvements, and bug fixes.' },
+    {
+        page: 'updates', key: 'updates-array', content: JSON.stringify([
             { version: "Version 2.5.0 - Major Release", date: "March 27, 2026", badgeClass: "badge-green", badgeText: "LATEST", intro: "Major improvements to rendering pipeline.", features: "F-35 Lightning II aircraft now available\nAdvanced weather simulation system", fixes: "Fixed controller calibration issues\nResolved data sync delays" },
             { version: "Version 2.4.5 - Maintenance", date: "March 15, 2026", badgeClass: "badge-orange", badgeText: "STABLE", intro: "Performance optimization.", features: "Improved graphics rendering", fixes: "Network stability improvements" }
-        ])},
+        ])
+    },
 
-        // Global / Footer
-        { page: 'global', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
-        { page: 'global', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
-        { page: 'global', key: 'index-video-src', content: 'intro.mp4' },
-        { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
-        { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
-        { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' },
+    // Global / Footer
+    { page: 'global', key: 'home-cta-title', content: 'AEROTWIN XR MISSION SYSTEMS' },
+    { page: 'global', key: 'home-cta-desc', content: 'Comprehensive navigation and resource management for pilots, instructors, and licensing.' },
+    { page: 'global', key: 'index-video-src', content: 'intro.mp4' },
+    { page: 'global', key: 'footer-copyright', content: 'AEROTWIN XR © 2026 | MISSION CONTROL' },
+    { page: 'global', key: 'footer-status', content: 'ALL SYSTEMS NOMINAL' },
+    { page: 'global', key: 'index-hero-bg', content: 'assets/hero-bg.jpg' },
 
-        // Guide Page
-        { page: 'guide', key: 'guide-hero-title', content: 'VIRTUAL REALITY LOGIC & FEATURES' },
-        { page: 'guide', key: 'guide-hero-desc', content: 'Explore the immersive capabilities of the AeroTwin VR environment. From in-game telemetry to the unified multiplayer communication systems, learn how our Unity-powered engine takes aviation to the next level.' },
-        { page: 'guide', key: 'guide-steps-array', content: JSON.stringify([
+    // Guide Page
+    { page: 'guide', key: 'guide-hero-title', content: 'VIRTUAL REALITY LOGIC & FEATURES' },
+    { page: 'guide', key: 'guide-hero-desc', content: 'Explore the immersive capabilities of the AeroTwin VR environment. From in-game telemetry to the unified multiplayer communication systems, learn how our Unity-powered engine takes aviation to the next level.' },
+    {
+        page: 'guide', key: 'guide-steps-array', content: JSON.stringify([
             { title: "In-Game Voice & Chat Console", desc: "Our unified comms system allows trainees to interface directly with instructors. The in-game VR floating chat panel utilizes spatial audio and text decoding to synchronize global comms seamlessly.", mediaUrl: "assets/hero-bg.jpg", type: "COMMUNICATION" },
             { title: "Interactive Haptic Panels", desc: "Every button, dial, and switch inside the Unity cockpit requires physical touch interaction. Haptic feedback enables trainees to feel precise tension points when inspecting the aircraft engine or toggling emergency functions.", mediaUrl: "intro.mp4", type: "HAPTICS" },
             { title: "Live Telemetry Overlay", desc: "Inside the VR lenses, pilots have a dedicated HUD overlay tracking Engine Temps, Vibrations, and Oil Pressure. The data reacts in real-time, syncing over the Photon Network directly to the instructor portal.", mediaUrl: "assets/hero-bg-new.webp", type: "HUD ANALYTICS" },
             { title: "Defect Identification Tool", desc: "Using the VR smart flashlight and scanner tool, trainees can detect microscopic oil leaks and stress fractures on engine components. The tool triggers specific events logged exactly to their evaluation scores.", mediaUrl: "assets/hero-bg.jpg", type: "DIAGNOSTICS" }
-        ])}
-    ];
+        ])
+    }
+];
 
 app.get('/api/admin/seed', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ error: "Forbidden: Admin Only" });
@@ -619,7 +635,7 @@ app.post('/api/admin/content', verifyToken, async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) {
-         res.status(500).json({ error: "Failed to save content" });
+        res.status(500).json({ error: "Failed to save content" });
     }
 });
 
@@ -681,7 +697,6 @@ app.get('/admin', (req, res) => {
 const GEMINI_MODELS = [
     'gemini-2.5-flash',   // Primary: latest, fastest
     'gemini-1.5-flash',   // Fallback: stable, widely available
-    'gemini-1.5-pro'      // Last resort: most capable fallback
 ];
 
 async function callGemini(prompt, modelIndex = 0) {
@@ -806,8 +821,121 @@ app.post('/api/ai/proxy', async (req, res) => {
 
         const clientApiKey = req.headers['x-api-key'];
         const activeKey = clientApiKey || GEMINI_API_KEY;
+        const aiProvider = req.headers['x-ai-provider'] || 'gemini';
+
+        // Helper to extract modalities
+        const parts = req.body && req.body.contents && req.body.contents[0] ? req.body.contents[0].parts : [];
+        let textPrompt = '';
+        let base64Img = null;
+        let base64Audio = null;
+        
+        for (const p of parts) {
+            if (p.text) textPrompt = p.text;
+            if (p.inlineData && p.inlineData.mimeType) {
+                if (p.inlineData.mimeType.startsWith('image')) {
+                    base64Img = `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`;
+                } else if (p.inlineData.mimeType.startsWith('audio')) {
+                    base64Audio = p.inlineData.data; // Raw base64 for whisper
+                }
+            }
+        }
+
+        // ChatGPT Handler
+        if (aiProvider === 'chatgpt') {
+            const openaiKey = process.env.OPENAI_API_KEY;
+            if (!openaiKey) return res.status(500).json({ error: "OPENAI_API_KEY missing." });
+            
+            try {
+                // Audio Transcription via Whisper
+                if (base64Audio) {
+                    const boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW';
+                    const audioBuffer = Buffer.from(base64Audio, 'base64');
+                    let bodyStr = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.wav"\r\nContent-Type: audio/wav\r\n\r\n`;
+                    let bodyEndStr = `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n--${boundary}--`;
+                    
+                    const payload = Buffer.concat([Buffer.from(bodyStr, 'utf8'), audioBuffer, Buffer.from(bodyEndStr, 'utf8')]);
+                    
+                    const oaResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': 'Bearer ' + openaiKey,
+                            'Content-Type': `multipart/form-data; boundary=${boundary}`
+                        },
+                        body: payload
+                    });
+                    const oaData = await oaResponse.json();
+                    if (!oaResponse.ok) return res.status(oaResponse.status).json(oaData);
+                    
+                    res.setHeader('X-AI-Provider-Used', 'chatgpt_whisper');
+                    return res.json({
+                        candidates: [{ content: { parts: [{ text: oaData.text || "" }] } }]
+                    });
+                }
+
+                // Normal Text / Vision Completion
+                let oaiContent = [];
+                if (textPrompt) oaiContent.push({ type: "text", text: textPrompt });
+                if (base64Img) oaiContent.push({ type: "image_url", image_url: { url: base64Img } });
+                
+                const openaiUrl = 'https://api.openai.com/v1/chat/completions';
+                const oaResponse = await fetch(openaiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + openaiKey },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: [{ role: "user", content: oaiContent.length > 0 ? oaiContent : textPrompt }]
+                    })
+                });
+                const oaData = await oaResponse.json();
+                if (!oaResponse.ok) return res.status(oaResponse.status).json(oaData);
+                
+                const outText = oaData.choices && oaData.choices[0] && oaData.choices[0].message ? oaData.choices[0].message.content : "";
+                res.setHeader('X-AI-Provider-Used', 'chatgpt');
+                return res.json({
+                    candidates: [{ content: { parts: [{ text: outText }] } }]
+                });
+            } catch (err) {
+                console.error("[ChatGPT Proxy Error]", err);
+                return res.status(500).json({ error: "ChatGPT API failure." });
+            }
+        }
+
+        // DeepSeek Handler
+        if (aiProvider === 'deepseek') {
+            const deepseekKey = process.env.DEEPSEEK_API_KEY;
+            
+            // DeepSeek doesn't support Voice or Vision. If payload has audio or image, silently fall back to Gemini!
+            if (!base64Img && !base64Audio) {
+                if (!deepseekKey) return res.status(500).json({ error: "DEEPSEEK_API_KEY missing." });
+                try {
+                    const dsUrl = 'https://api.api.deepseek.com/chat/completions';
+                    const dsResponse = await fetch('https://api.deepseek.com/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + deepseekKey },
+                        body: JSON.stringify({
+                            model: "deepseek-chat",
+                            messages: [{ role: "user", content: textPrompt }]
+                        })
+                    });
+                    const dsData = await dsResponse.json();
+                    if (!dsResponse.ok) return res.status(dsResponse.status).json(dsData);
+                    
+                    const outText = dsData.choices && dsData.choices[0] && dsData.choices[0].message ? dsData.choices[0].message.content : "";
+                    res.setHeader('X-AI-Provider-Used', 'deepseek');
+                    return res.json({
+                        candidates: [{ content: { parts: [{ text: outText }] } }]
+                    });
+                } catch (err) {
+                    console.error("[DeepSeek Proxy Error]", err);
+                    return res.status(500).json({ error: "DeepSeek API failure." });
+                }
+            }
+            // IF Audio or Vision requested on DeepSeek, it falls through to Gemini logic below
+        }
 
         if (!activeKey) return res.status(500).json({ error: "GEMINI_API_KEY missing." });
+        
+        res.setHeader('X-AI-Provider-Used', 'gemini');
 
         // --- RETRY LOGIC for 503 (high demand) with model fallback ---
         const MAX_RETRIES = 3;
@@ -881,7 +1009,7 @@ app.post('/api/device/session/join', async (req, res) => {
 
         // Pre-initialize or update high-level metadata in memory
         if (!deviceFrames[deviceId]) deviceFrames[deviceId] = { data: null };
-        
+
         deviceFrames[deviceId].traineeName = traineeName || "Active Trainee";
         deviceFrames[deviceId].doctorCode = doctorCode || null;
         deviceFrames[deviceId].atCode = atCode;
@@ -930,7 +1058,7 @@ app.post('/api/device/stream', (req, res) => {
 
     const existing = deviceFrames[deviceId] || {};
     const finalDocCode = doctorCode || doctor_code || existing.doctorCode || null;
-    
+
     deviceFrames[deviceId] = {
         data: frame_base64,
         doctorCode: finalDocCode,
@@ -982,7 +1110,7 @@ app.get('/api/admin/active-sessions', verifyToken, async (req, res) => {
 // Retrieve latest frame for Admin Dashboard (ADMIN PROTECTED)
 app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
     const frame = deviceFrames[req.params.deviceId];
-    
+
     // If no frame exists or it's older than 30 seconds -> Return "Offline" status
     // (matches the 30s window used by active-sessions endpoint)
     if (!frame || (Date.now() - frame.timestamp > 30000)) {
@@ -991,14 +1119,14 @@ app.get('/api/device/stream/:deviceId', verifyToken, (req, res) => {
 
     // If we have session metadata but no frame data yet, return "waiting" state
     if (!frame.data) {
-        return res.json({ 
+        return res.json({
             status: 'waiting',
             traineeName: frame.traineeName,
             atCode: frame.atCode
         });
     }
 
-    res.json({ 
+    res.json({
         status: 'online',
         frame: frame.data,
         stats: frame.stats, // Send stats with the frame
